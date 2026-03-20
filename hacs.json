@@ -1,5 +1,6 @@
 {
-  "name": "Weather Card Extended",
+  "name": "Deatailed Weather Forecast Card",
+  "description": "A Home Assistant card to display a detailed weather forecast.",
   "render_readme": true,
   "filename": "detailedweatherforecast.js",
   "content_in_root": false
