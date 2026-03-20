@@ -1,0 +1,686 @@
+ha-card {
+  /* Auto-size by default, but also respect explicit heights from the parent */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.weather {
+  width: 100%;
+  min-height: var(--dwf-header-height, calc(2.3 * var(--row-height, 56px)));
+  /* Background image will be set via JS */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-top-left-radius: var(--ha-card-border-radius, 12px);
+  border-top-right-radius: var(--ha-card-border-radius, 12px);
+  flex-shrink: 0;
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.weather.header-only {
+  height: 100%;
+  flex: 1 1 auto;
+  border-bottom-left-radius: var(--ha-card-border-radius, 12px);
+  border-bottom-right-radius: var(--ha-card-border-radius, 12px);
+}
+
+.weather .header-content {
+  display: flex;
+  flex-direction: column;
+  padding-block: var(--dwf-header-padding-block, 16px);
+  padding-inline: var(--dwf-header-padding-inline, 16px);
+  gap: var(--dwf-header-content-gap, 12px);
+  width: 100%;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.weather .header-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.weather .header-main {
+  margin-left: auto;
+  padding-left: var(--dwf-header-columns-gap, 16px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--dwf-header-main-gap, 10px);
+  align-self: stretch;
+  min-height: 0;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.weather .header-attributes {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--dwf-header-attribute-gap, 8px);
+  align-self: stretch;
+  min-height: 0;
+  flex: 1 1 0;
+  min-width: 30%;
+}
+
+.weather .attribute-chip {
+  font-size: var(--ha-font-size-m);
+  line-height: calc(6px + var(--ha-font-size-m));
+  background-color: rgba(0, 0, 0, 0.35);
+  padding: 4px 12px;
+  border-radius: 25px;
+  color: inherit;
+  max-width: 100%;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  overflow: hidden;
+}
+
+.weather .attribute-chip .chip-icon {
+  margin-right: 6px;
+  --mdc-icon-size: 20px;
+  color: inherit;
+}
+
+.weather .attribute-chip.has-action {
+  cursor: pointer;
+}
+
+.weather .attribute-chip.has-action:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 2px;
+}
+
+.weather .attribute-chip.missing {
+  opacity: 0.8;
+  font-style: italic;
+}
+
+.weather .condition {
+  font-size: var(--ha-font-size-xl);
+  line-height: calc(10px + var(--ha-font-size-xl));
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 4px 15px;
+  border-radius: 25px;
+  max-width: 70%;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.weather .temp.has-action,
+.weather .condition.has-action {
+  cursor: pointer;
+}
+
+.weather .temp.has-action:focus-visible,
+.weather .condition.has-action:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 2px;
+}
+
+.weather .temp {
+  font-size: var(--ha-font-size-5xl);
+  line-height: calc(10px + var(--ha-font-size-xl));
+  font-weight: bolder;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 2px 17px;
+  border-radius: 25px;
+  max-width: 100%;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.weather .header-pill-text {
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: normal;
+}
+
+.weather .nowcast-panel {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  padding: 12px 12px 6px 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.weather dwf-nowcast {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.weather .nowcast-bars {
+  display: flex;
+  align-items: stretch;
+  gap: var(--dwf-nowcast-gap, 5px);
+  flex: 1 1 auto;
+  min-height: 24px;
+}
+
+.weather .nowcast-bar {
+  flex: 1 1 0;
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 999px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  min-height: 6px;
+  height: auto;
+  align-self: stretch;
+}
+
+.weather .nowcast-bar-fill {
+  width: 100%;
+  height: 0%;
+  background: var(--dwf-nowcast-fill-color, #4aafff);
+  border-radius: inherit;
+  transition: height 0.35s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .weather .nowcast-bar-fill {
+    transition: none;
+  }
+
+  .weather .nowcast-labels {
+    transition: none;
+  }
+}
+
+.weather .nowcast-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--ha-font-size-s);
+  color: white;
+  transition: transform 0.35s ease;
+  will-change: transform;
+}
+
+.forecast-container {
+  /* Allow the forecast section to grow when the card is taller */
+  width: 100%;
+  display: flex;
+  flex: 0 1 auto;
+  padding-top: 4px;
+  padding-bottom: 20px;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.divider {
+  background-color: var(--primary-background-color);
+}
+
+.card-divider {
+  height: 4px;
+}
+
+.forecast-divider {
+  border-radius: 2px;
+}
+
+.forecast-container > .forecast-divider {
+  height: 4px;
+  margin: 14px 16px 4px 16px;
+}
+
+.forecast-daily-container,
+.forecast-hourly-container {
+  position: relative; /* Fading overlays should be relative positioned */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  flex: 0 1 auto;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+}
+
+.fade-left,
+.fade-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.fade-left {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    var(--card-background-color) 0%,
+    var(--card-background-color) 2px,
+    transparent 100%
+  );
+}
+
+.fade-right {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    var(--card-background-color) 0%,
+    var(--card-background-color) 2px,
+    transparent 100%
+  );
+}
+
+.forecast {
+  --forecast-inline-padding: 16px;
+  /* Allow this row to expand when parent is taller */
+  flex: 0 1 auto;
+  height: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: var(--forecast-inline-padding);
+  scroll-padding-right: var(--forecast-inline-padding);
+  overflow-x: auto;
+  overflow-y: clip; /* no vertical scrolling in case of a few px overflow */
+  display: flex;
+  align-items: stretch; /* stretch items so they can use additional height */
+  justify-content: space-around;
+  gap: var(--dynamic-gap, 20px); /* fallback */
+  padding: 8px var(--forecast-inline-padding) 0px;
+}
+
+@supports (-webkit-touch-callout: none) {
+  .forecast {
+    padding-bottom: 12px; /* a touch more space on Safari */
+  }
+}
+
+/* Make custom element wrappers layout-transparent so their children
+   become direct flex items of the forecast container */
+.forecast dwf-daily-list,
+.forecast dwf-hourly-list {
+  display: contents;
+}
+
+.forecast.daily {
+  --min-gap: 30px;
+  --icon-size: 60px;
+  --icon-container-width: 60px;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.forecast.hourly {
+  padding-top: 32px;
+  --min-gap: 16px;
+  --icon-size: 60px;
+  --icon-container-width: 60px;
+  --day-marker-width: 60px;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.forecast.hourly.dragging,
+.forecast.hourly.momentum,
+.forecast.daily.dragging,
+.forecast.daily.momentum {
+  scroll-snap-type: none;
+}
+
+.forecast.hourly.grabbing,
+.forecast.daily.grabbing {
+  cursor: grabbing;
+}
+
+.forecast::-webkit-scrollbar {
+  height: 0px;
+}
+
+.forecast::-webkit-scrollbar-thumb,
+.forecast::-webkit-scrollbar-track,
+.forecast::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.forecast {
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox, Safari 18.2+, Chromium 121+ */
+}
+.forecast::-webkit-scrollbar {
+  display: none; /* Older Safari and Chromium */
+}
+
+.forecast-item {
+  scroll-snap-align: start;
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.forecast.hourly .forecast-item {
+  width: var(--icon-container-width);
+  align-items: center;
+  overflow: visible;
+}
+
+.forecast.hourly .day-marker {
+  --day-marker-translate-x: calc(
+    (var(--dynamic-gap, 20px) + var(--icon-container-width) - var(--day-marker-width)) / 2
+  );
+  flex: 0 0 auto;
+  align-self: start;
+  position: sticky;
+  left: calc((((var(--day-marker-width) - var(--icon-container-width)) / 2) * -1) - var(--day-marker-translate-x));
+  transform: translateX(var(--day-marker-translate-x)) translateY(-100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-weight: 600;
+  color: white;
+  background-color: var(--state-climate-cool-color);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 3;
+  scroll-snap-align: none;
+  width: var(--day-marker-width);
+  margin-right: calc(var(--day-marker-width) * -1 - var(--dynamic-gap) / 2); /* Fallback if round() not available */
+  margin-right: calc(round(up, var(--day-marker-width) * -1 - var(--dynamic-gap) / 2, 1px));
+  margin-left: calc(var(--dynamic-gap) * -1 / 2);
+}
+
+.forecast .day-of-month {
+  margin-top: -4px;
+  font-size: 13px;
+  opacity: 0.3;
+}
+
+.forecast .date.sunrise {
+  color: var(--orange-color, #ff9800);
+  font-weight: 500;
+}
+
+.forecast .date.sunset {
+  color: var(--purple-color, #926bc7);
+  font-weight: 500;
+}
+
+.forecast.daily .date.selected {
+  background-color: var(--state-climate-cool-color);
+  color: white;
+  border-radius: 999px;
+}
+
+.forecast.hourly .date {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-container-width);
+  margin: 0 auto;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.forecast.hourly .date.selected {
+  background-color: var(--state-climate-cool-color);
+  color: white;
+  border-radius: 999px;
+}
+
+.forecast .ampm {
+  font-size: 11px;
+  opacity: 0.3;
+}
+
+.forecast .temp {
+  font-size: var(--ha-font-size-xl);
+  font-weight: bolder;
+}
+
+.forecast .templow {
+  opacity: 0.5;
+  font-weight: bolder;
+  font-size: var(--ha-font-size-l);
+}
+
+.forecast .precipitation,
+.forecast .precipitationprobability {
+  opacity: 0.3;
+  color: var(--state-climate-cool-color);
+  min-height: 20px;
+}
+
+.forecast .hourly-extra {
+  opacity: 0.6;
+  color: var(--primary-text-color);
+  min-height: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.forecast .hourly-extra.dimmed {
+  opacity: 0.3;
+}
+
+.forecast .precipitation {
+  --precipitation-fill: 0%;
+  --dwf-precipitation-indicator-color: var(--state-climate-cool-color);
+  --dwf-precipitation-indicator-opacity: 0.2;
+  --dwf-precipitation-indicator-padding-inline: 8px;
+  --dwf-precipitation-indicator-padding-block: 0px;
+  --dwf-precipitation-indicator-offset-top: 0px;
+  --dwf-precipitation-indicator-offset-bottom: 0px;
+  position: relative;
+  display: inline-block;
+  padding-inline: var(--dwf-precipitation-indicator-padding-inline);
+  padding-block: var(--dwf-precipitation-indicator-padding-block);
+  border-radius: var(--dwf-precipitation-indicator-radius, 4px);
+  overflow: hidden;
+  z-index: 0;
+}
+
+.forecast .precipitation::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: calc(100% - var(--precipitation-fill, 0%) - var(--dwf-precipitation-indicator-offset-top, 0px));
+  bottom: calc(0px - var(--dwf-precipitation-indicator-offset-bottom, 0px));
+  background-color: var(--dwf-precipitation-indicator-color, var(--state-climate-cool-color));
+  opacity: var(--dwf-precipitation-indicator-opacity, 0.2);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  transition: top 150ms ease-in-out, background-color 150ms ease-in-out;
+}
+
+.forecast .precipitation.overflow {
+  --dwf-precipitation-indicator-color: var(--red-color, #f44336);
+  color: var(--red-color, #f44336);
+}
+
+.forecast.daily .forecast-item > .precipitation {
+  line-height: 18px;
+}
+
+.forecast .precipitation.active,
+.forecast .precipitationprobability.active {
+  opacity: 1;
+}
+
+.forecast .daily-extra {
+  opacity: 0.6;
+  color: var(--primary-text-color);
+  min-height: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.forecast .daily-extra.dimmed {
+  opacity: 0.3;
+}
+
+.forecast.daily .daily-extra.precipitationprobability {
+  color: var(--state-climate-cool-color);
+  opacity: 0.3;
+  display: block !important;
+}
+
+.forecast .daily-extra.precipitationprobability.active {
+  opacity: 1;
+}
+
+.forecast.daily .forecast-item {
+  display: grid;
+  grid-auto-rows: max-content;
+  align-content: start;
+}
+
+/* Ensure the first two text rows don't overlap and size to their content */
+.forecast.daily .forecast-item > .date,
+.forecast.daily .forecast-item > .day-of-month,
+.forecast.daily .forecast-item > .precipitation,
+.forecast.daily .forecast-item > .precipitationprobability,
+.forecast.daily .forecast-item > .daily-extra {
+  min-height: auto;
+}
+
+.forecast.daily .forecast-item > .date {
+  grid-row: 1;
+}
+.forecast.daily .forecast-item > .day-of-month {
+  grid-row: 2;
+}
+.forecast.daily .forecast-item > .forecast-image-icon {
+  grid-row: 3;
+}
+.forecast.daily .forecast-item > .temp {
+  grid-row: 4;
+}
+.forecast.daily .forecast-item > .templow {
+  grid-row: 5;
+}
+.forecast.daily .forecast-item > .precipitation {
+  grid-row: 6;
+}
+.forecast.daily .forecast-item > .precipitationprobability {
+  grid-row: 7;
+}
+.forecast.daily .forecast-item > .daily-extra {
+  grid-row: 8;
+  justify-self: center;
+  text-align: center;
+  width: var(--icon-size);
+}
+
+.forecast-image-icon {
+  display: flex;
+  justify-content: center;
+}
+
+.forecast-image-icon > * {
+  width: var(--icon-size);
+  height: var(--icon-size);
+}
+
+.forecast-image-icon ha-icon {
+  --mdc-icon-size: var(--icon-size);
+}
+
+/* Styles from weather.ts */
+.rain {
+  fill: var(--weather-icon-rain-color, #30b3ff);
+}
+.sun {
+  fill: var(--weather-icon-sun-color, #fdd93c);
+}
+.moon {
+  fill: var(--weather-icon-moon-color, #fcf497);
+}
+.cloud-back {
+  fill: var(--weather-icon-cloud-back-color, #d4d4d4);
+}
+.cloud-front {
+  fill: var(--weather-icon-cloud-front-color, #f9f9f9);
+}
+.snow {
+  fill: var(--weather-icon-snow-color, #f9f9f9);
+  stroke: var(--weather-icon-snow-stroke-color, #d4d4d4);
+  stroke-width: 1;
+  paint-order: stroke;
+}
+
+dwf-current-weather-attributes {
+  display: contents;
+}
+
+.dwf-current-attributes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ha-space-1, 4px);
+  min-width: 0;
+  padding: 8px 16px;
+}
+
+.dwf-current-attribute {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ha-space-1, 4px);
+  font-size: var(--ha-font-size-m, 14px);
+  line-height: var(--ha-line-height-condensed);
+  color: var(--primary-text-color, #212121);
+  white-space: nowrap;
+}
+
+.dwf-current-attribute-icon {
+  color: var(--state-icon-color, #616161);
+  padding-left: var(--ha-space-2, 8px);
+}
+
+.dwf-current-attribute-value,
+.dwf-current-attribute-name {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.dwf-current-attribute-name {
+  text-overflow: ellipsis;
+  padding-left: var(--ha-space-4, 16px);
+  flex: 1;
+}
+
+.forecast-condition {
+  text-align: center;
+  font-weight: bold;
+  padding: 8px 16px;
+  font-size: var(--ha-font-size-m, 14px);
+  color: var(--primary-text-color, #212121);
+}
