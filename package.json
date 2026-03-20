@@ -1,46 +1,40 @@
 {
   "type": "module",
   "source": "src/index.ts",
-  "module": "dist/detailedweatherforecast.js",
-  "debug": "dist/detailedweatherforecast.js",
+  "module": "dist/detailed-weather-forecast.js",
   "targets": {
     "module": {
       "distDir": "./dist",
       "publicUrl": "/hacsfiles/detailed-weather-forecast/",
-      "includeNodeModules": true
-    },
-    "debug": {
-      "distDir": "Z:/www/community/detailed-weather-forecast",
-      "publicUrl": "/hacsfiles/detailed-weather-forecast/",
-      "includeNodeModules": true
+      "includeNodeModules": true,
+      "sourceMap": false
     }
   },
   "scripts": {
-    "build": "parcel build --target module",
-    "build:all": "parcel build",
-    "debug": "parcel build --target debug",
-    "watch": "parcel watch --target debug",
+    "build": "parcel build",
+    "watch": "parcel watch",
     "lint": "eslint . --ext .ts,.js",
     "format": "prettier --write ."
   },
   "devDependencies": {
+    "@parcel/optimizer-data-url": "^2.16.4",
     "@parcel/transformer-inline-string": "^2.8.3",
-    "parcel": "^2.8.3",
-    "prettier": "^2.8.8",
-    "eslint": "^8.40.0",
-    "@typescript-eslint/parser": "^5.59.3",
     "@typescript-eslint/eslint-plugin": "^5.59.3",
+    "@typescript-eslint/parser": "^5.59.3",
+    "eslint": "^8.40.0",
+    "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-lit": "^1.8.3",
-    "eslint-config-prettier": "^8.8.0"
+    "parcel": "^2.8.3",
+    "prettier": "^2.8.8"
   },
   "dependencies": {
     "@lit-labs/observers": "^2.0.5",
     "custom-card-helpers": "^1.9.0",
     "home-assistant-js-websocket": "^8.0.1",
+    "lightningcss": "^1.30.1",
     "lit": "^2.7.4",
     "memoize-one": "^6.0.0",
-    "suncalc": "^1.9.0",
-    "lightningcss": "^1.30.1"
+    "suncalc": "^1.9.0"
   },
   "version": "0.1.1"
 }
