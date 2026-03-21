@@ -4,59 +4,13 @@ import type { HomeAssistant, LovelaceCardEditor } from 'custom-card-helpers';
 import { localize } from '../localize';
 import {
   WEATHER_CONDITIONS,
-  type HeaderChip,
+  type HeaderAttribute,
   type WeatherCondition,
   type DetailedWeatherForecastConfig,
 } from '../types';
 import './entity-info-editor';
 import './forecast-attribute-editor';
 import { formatWeatherAttributeName, type ForecastEvent, type WeatherEntity } from '../weather';
-
-const HEADER_CHIP_INDEXES = [0, 1, 2] as const;
-
-type HeaderChipFieldName =
-  | `header_chip_${1 | 2 | 3}_type`
-  | `header_chip_${1 | 2 | 3}_attribute`
-  | `header_chip_${1 | 2 | 3}_entity`
-  | `header_chip_${1 | 2 | 3}_icon`
-  | `header_chip_${1 | 2 | 3}_tap_action`
-  | `header_chip_${1 | 2 | 3}_unit`
-  | `header_chip_${1 | 2 | 3}_divisor`;
-
-type EditorFormData = DetailedWeatherForecastConfig & Partial<Record<HeaderChipFieldName, any>>;
-
-const chipTypeFieldName = (index: number): HeaderChipFieldName =>
-  `header_chip_${index + 1}_type` as HeaderChipFieldName;
-const chipAttributeFieldName = (index: number): HeaderChipFieldName =>
-  `header_chip_${index + 1}_attribute` as HeaderChipFieldName;
-const chipEntityFieldName = (index: number): HeaderChipFieldName =>
-  `header_chip_${index + 1}_entity` as HeaderChipFieldName;
-const chipIconFieldName = (index: number): HeaderChipFieldName =>
-  `header_chip_${index + 1}_icon` as HeaderChipFieldName;
-const chipActionFieldName = (index: number): HeaderChipFieldName =>
-  `header_chip_${index + 1}_tap_action` as HeaderChipFieldName;
-const chipUnitFieldName = (index: number): HeaderChipFieldName =>
-  `header_chip_${index + 1}_unit` as HeaderChipFieldName;
-const chipDivisorFieldName = (index: number): HeaderChipFieldName =>
-  `header_chip_${index + 1}_divisor` as HeaderChipFieldName;
-
-const CHIP_FORM_FIELD_NAMES = HEADER_CHIP_INDEXES.reduce<HeaderChipFieldName[]>((names, index) => {
-  names.push(
-    chipTypeFieldName(index),
-    chipAttributeFieldName(index),
-    chipEntityFieldName(index),
-    chipIconFieldName(index),
-    chipActionFieldName(index),
-    chipUnitFieldName(index),
-    chipDivisorFieldName(index),
-  );
-  return names;
-}, []);
-
-const CHIP_TYPE_OPTIONS: Array<{ value: 'attribute' | 'entity'; label: string }> = [
-  { value: 'attribute', label: localize('editor.chip.attribute', '', '') },
-  { value: 'entity', label: localize('editor.chip.entity', '', '') },
-];
 
 const SOLAR_FORECAST_OPTION = 'solar_forecast';
 const FORECAST_OPTIONS_CACHE = new Map<string, { hourly: string[]; daily: string[] }>();
@@ -90,7 +44,7 @@ type HaFormSelector =
   | { select: { options: Array<{ value: string; label: string }>; custom_value?: boolean; multiple?: boolean } };
 
 type HaFormSchema = {
-  name: keyof DetailedWeatherForecastConfig | 'entity' | HeaderChipFieldName;
+  name: keyof DetailedWeatherForecastConfig | 'entity';
   selector: HaFormSelector;
   optional?: boolean;
   disabled?: boolean;
@@ -127,25 +81,29 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
   @property({ attribute: false }) public hass!: HomeAssistant;
 
   @state() private _config?: DetailedWeatherForecastConfig;
-  @state() private _chipTypes: Record<number, 'attribute' | 'entity'> = {
-    0: 'attribute',
-    1: 'attribute',
-    2: 'attribute',
-  };
+
   @state() private _hourlyExtraOptions: string[] = [];
+
   @state() private _dailyExtraOptions: string[] = [];
+
   @state() private _forecastOptionsLoading: Record<ModernForecastType, boolean> = {
     hourly: false,
     daily: false,
     twice_daily: false,
   };
+
   @state() private _solarForecastOptions: Array<{ value: string; label: string }> = [];
+
   @state() private _solarForecastEntryIds: string[] = [];
+
   @state() private _expandedSections: Record<string, boolean> = {};
 
   private _forecastOptionSubscriptions: Partial<Record<ModernForecastType, Promise<() => void> | undefined>> = {};
+
   private _forecastOptionsEntity?: string;
+
   private _solarForecastOptionsLoaded = false;
+
   private _solarForecastOptionsPromise?: Promise<void>;
 
   static styles = css`
@@ -346,6 +304,12 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       flex: 1;
     }
 
+    .chip-editor {
+      border: 1px solid var(--divider-color);
+      padding: 12px;
+      border-radius: 12px;
+    }
+
     .forecast-info-item {
       display: flex;
       align-items: flex-start;
@@ -363,7 +327,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
   public setConfig(config: DetailedWeatherForecastConfig): void {
     const normalizedChips = this._normalizeHeaderChips(config);
-    this._chipTypes = this._buildChipTypeState(normalizedChips);
 
     this._config = {
       type: 'custom:detailed-weather-forecast-card',
@@ -397,11 +360,10 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       general: generalSchema,
       header: headerSchema,
       nowcast: nowcastSchema,
-      chips: chipSchema,
       hourly: hourlySchema,
       daily: dailySchema,
     } = this._buildSchemas();
-    const formData = this._createFormData();
+    const formData = this._config;
 
     return html`
       <ha-form
@@ -519,13 +481,22 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
               localize('editor.section.chips', '', ''),
               html`
                 <p class="chips-hint">${localize('editor.section.chips_description', '', '')}</p>
-                <ha-form
-                  .hass=${this.hass}
-                  .data=${formData}
-                  .schema=${chipSchema}
-                  .computeLabel=${this._computeLabel}
-                  @value-changed=${this._handleValueChanged}
-                ></ha-form>
+                ${[0, 1, 2].map(
+                  (index) => html`
+                    <div class="chip-editor">
+                      <header-entity-editor
+                        .hass=${this.hass}
+                        .weatherEntity=${this._config?.entity}
+                        .config=${this._config?.header_chips?.[index] || {
+                          type: 'attribute',
+                          attribute: '',
+                          name: '',
+                        }}
+                        @header-info-config-changed=${(e: CustomEvent) => this._headerChipChanged(e, index)}
+                      ></header-entity-editor>
+                    </div>
+                  `,
+                )}
               `,
               { nested: true },
             )}
@@ -549,21 +520,21 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
               localize('editor.section.header_info', '', ''),
               html`
                 <p class="chips-hint">${localize('editor.section.header_info_description', '', '')}</p>
-                ${this._config.header_info?.map((info, index) => {
-                  return html`
-                        <div class="header-info-item">
-                            <header-entity-editor
-                                .hass=${this.hass}
-                                .weatherEntity=${this._config?.entity}
-                                .config=${info}
-                                @header-info-config-changed=${(e: CustomEvent) => this._headerInfoChanged(e, index)}
-                            ></header-entity-editor>
-                            <ha-icon-button @click=${() => this._deleteHeaderInfo(index)}>
-                                <ha-icon icon="mdi:delete"></ha-icon>
-                            </mwc-icon-button>
-                        </div>
-                    `;
-                })}
+                ${this._config.header_info?.map(
+                  (info, index) => html`
+                    <div class="header-info-item">
+                      <header-entity-editor
+                        .hass=${this.hass}
+                        .weatherEntity=${this._config?.entity}
+                        .config=${info}
+                        @header-info-config-changed=${(e: CustomEvent) => this._headerInfoChanged(e, index)}
+                      ></header-entity-editor>
+                      <ha-icon-button @click=${() => this._deleteHeaderInfo(index)}>
+                        <ha-icon icon="mdi:delete"></ha-icon>
+                      </ha-icon-button>
+                    </div>
+                  `,
+                )}
                 <ha-button @click=${this._addHeaderInfo}>
                   ${localize('editor.section.add_attribute', '', '')}
                 </ha-button>
@@ -650,8 +621,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
               localize('editor.section.daily_forecast_info', '', ''),
               html`
                 <p class="chips-hint">${localize('editor.section.daily_forecast_info_description', '', '')}</p>
-                ${this._config.daily_info?.map((info, index) => {
-                  return html`
+                ${this._config.daily_info?.map(
+                  (info, index) => html`
                     <div class="forecast-info-item">
                       <forecast-attribute-editor
                         .hass=${this.hass}
@@ -663,8 +634,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
                         <ha-icon icon="mdi:delete"></ha-icon>
                       </ha-icon-button>
                     </div>
-                  `;
-                })}
+                  `,
+                )}
                 <ha-button @click=${this._addDailyInfo}>
                   ${localize('editor.section.add_attribute', '', '')}
                 </ha-button>
@@ -762,8 +733,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
               localize('editor.section.hourly_forecast_info', '', ''),
               html`
                 <p class="chips-hint">${localize('editor.section.hourly_forecast_info_description', '', '')}</p>
-                ${this._config.hourly_info?.map((info, index) => {
-                  return html`
+                ${this._config.hourly_info?.map(
+                  (info, index) => html`
                     <div class="forecast-info-item">
                       <forecast-attribute-editor
                         .hass=${this.hass}
@@ -775,8 +746,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
                         <ha-icon icon="mdi:delete"></ha-icon>
                       </ha-icon-button>
                     </div>
-                  `;
-                })}
+                  `,
+                )}
                 <ha-button @click=${this._addHourlyInfo}>
                   ${localize('editor.section.add_attribute', '', '')}
                 </ha-button>
@@ -789,37 +760,34 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     `;
   }
 
-  private _handleValueChanged(event: CustomEvent<{ value: EditorFormData }>) {
+  private _headerChipChanged(e: CustomEvent, index: number) {
+    if (!this._config) {
+      return;
+    }
+    const newChips = [...(this._config.header_chips ?? [])];
+    while (newChips.length <= index) {
+      newChips.push({ type: 'attribute', attribute: '', name: '' });
+    }
+    newChips[index] = e.detail;
+
+    while (newChips.length > 0) {
+      const lastChip = newChips[newChips.length - 1];
+      const isEmpty =
+        (lastChip.type === 'attribute' && !lastChip.attribute && !lastChip.name) ||
+        (lastChip.type === 'entity' && !lastChip.entity && !lastChip.name);
+      if (isEmpty) {
+        newChips.pop();
+      } else {
+        break;
+      }
+    }
+
+    this._updateConfig({ header_chips: newChips });
+  }
+
+  private _handleValueChanged(event: CustomEvent<{ value: DetailedWeatherForecastConfig }>) {
     event.stopPropagation();
-    const mergedFormValue: EditorFormData = {
-      ...this._createFormData(),
-      ...event.detail.value,
-    };
-
-    const chipTypesUpdate: Record<number, 'attribute' | 'entity'> = { ...this._chipTypes };
-    HEADER_CHIP_INDEXES.forEach((index) => {
-      const typeField = chipTypeFieldName(index);
-      const typeValue = (mergedFormValue[typeField] as 'attribute' | 'entity' | undefined) ?? 'attribute';
-      chipTypesUpdate[index] = !typeValue ? 'attribute' : typeValue;
-    });
-    this._chipTypes = chipTypesUpdate;
-
-    const headerChips = this._extractHeaderChips(mergedFormValue);
-
-    const configUpdate: Partial<DetailedWeatherForecastConfig> = {
-      ...mergedFormValue,
-      header_chips: headerChips,
-      header_attributes: headerChips
-        .filter((chip) => chip.type === 'attribute')
-        .map((chip) => chip.attribute)
-        .filter((attribute) => typeof attribute === 'string' && attribute.trim().length > 0),
-    };
-
-    CHIP_FORM_FIELD_NAMES.forEach((name) => {
-      delete (configUpdate as Record<string, unknown>)[name];
-    });
-
-    this._updateConfig(configUpdate);
+    this._updateConfig(event.detail.value);
   }
 
   private _computeLabel = (schema: HaFormSchema) => {
@@ -831,28 +799,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
     if (haTranslation) {
       return haTranslation;
-    }
-
-    if (typeof schema.name === 'string' && schema.name.startsWith('header_chip_')) {
-      const parts = schema.name.split('_');
-      const indexStr = parts[2];
-      const index = Number(indexStr);
-      const labelIndex = Number.isFinite(index) && index > 0 ? index : 1;
-      let key = 'label';
-      if (schema.name.endsWith('_type')) {
-        key = 'type';
-      } else if (schema.name.endsWith('_attribute')) {
-        key = 'attribute';
-      } else if (schema.name.endsWith('_icon')) {
-        key = 'icon';
-      } else if (schema.name.endsWith('_tap_action')) {
-        key = 'tap_action';
-      } else if (schema.name.endsWith('_unit')) {
-        key = 'unit';
-      } else if (schema.name.endsWith('_divisor')) {
-        key = 'divisor';
-      }
-      return localize(`editor.main.header_chip.${key}`, '{index}', String(labelIndex));
     }
 
     const customKey = `editor.main.${schema.name}`;
@@ -1108,47 +1054,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     return this._solarForecastEntryIds;
   }
 
-  private _createFormData(): EditorFormData {
-    if (!this._config) {
-      return {} as EditorFormData;
-    }
-
-    const formData: EditorFormData = {
-      ...this._config,
-    };
-
-    const headerChips = this._config.header_chips ?? [];
-
-    HEADER_CHIP_INDEXES.forEach((index) => {
-      const typeField = chipTypeFieldName(index);
-      const attributeField = chipAttributeFieldName(index);
-      const entityField = chipEntityFieldName(index);
-      const iconField = chipIconFieldName(index);
-      const actionField = chipActionFieldName(index);
-      const unitField = chipUnitFieldName(index);
-      const divisorField = chipDivisorFieldName(index);
-      const configuredChip = headerChips[index];
-      const type = this._chipTypes[index] ?? configuredChip?.type ?? 'attribute';
-
-      formData[typeField] = type;
-      formData[actionField] = configuredChip?.tap_action;
-      formData[iconField] = configuredChip?.icon ?? '';
-
-      if (type === 'entity') {
-        formData[entityField] = configuredChip?.type === 'entity' ? configuredChip.entity : '';
-        formData[attributeField] = '';
-        formData[unitField] = '';
-      } else {
-        formData[attributeField] = configuredChip?.type === 'attribute' ? configuredChip.attribute : '';
-        formData[entityField] = '';
-        formData[unitField] = configuredChip?.type === 'attribute' ? configuredChip.unit : '';
-        formData[divisorField] = configuredChip?.type === 'attribute' ? configuredChip.divisor : undefined;
-      }
-    });
-
-    return formData;
-  }
-
   private _renderExpander(
     id: string,
     title: string,
@@ -1275,62 +1180,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     return Array.from(entries);
   }
 
-  private _extractHeaderChips(formValue: EditorFormData): HeaderChip[] {
-    const chips: HeaderChip[] = [];
-
-    HEADER_CHIP_INDEXES.forEach((index) => {
-      const typeField = chipTypeFieldName(index);
-      const attributeField = chipAttributeFieldName(index);
-      const entityField = chipEntityFieldName(index);
-      const actionField = chipActionFieldName(index);
-      const iconField = chipIconFieldName(index);
-      const unitField = chipUnitFieldName(index);
-      const divisorField = chipDivisorFieldName(index);
-
-      const type = (formValue[typeField] as 'attribute' | 'entity' | undefined) ?? 'attribute';
-      const tapAction = formValue[actionField];
-      const iconRaw = formValue[iconField];
-      const iconValue = typeof iconRaw === 'string' ? iconRaw.trim() : '';
-
-      if (type === 'entity') {
-        const entityRaw = formValue[entityField];
-        const entityValue = typeof entityRaw === 'string' ? entityRaw.trim() : '';
-        const chip: HeaderChip = { type: 'entity', entity: entityValue };
-        if (tapAction) {
-          (chip as any).tap_action = tapAction;
-        }
-        if (tapAction) {
-          (chip as any).tap_action = tapAction;
-        }
-        if (iconValue) {
-          (chip as any).icon = iconValue;
-        }
-        chips.push(chip);
-        return;
-      }
-
-      const attributeRaw = formValue[attributeField];
-      const attributeValue = typeof attributeRaw === 'string' ? attributeRaw.trim() : '';
-      const unitRaw = formValue[unitField];
-      const unitValue = typeof unitRaw === 'string' ? unitRaw.trim() : '';
-      const divisorRaw = formValue[divisorField];
-      const divisorValue = Number(divisorRaw);
-      const chip: HeaderChip = { type: 'attribute', attribute: attributeValue, unit: unitValue };
-      if (Number.isFinite(divisorValue)) {
-        (chip as any).divisor = divisorValue;
-      }
-      if (tapAction) {
-        (chip as any).tap_action = tapAction;
-      }
-      if (iconValue) {
-        (chip as any).icon = iconValue;
-      }
-      chips.push(chip);
-    });
-
-    return chips;
-  }
-
   private _buildAttributeOptions(): Array<{ value: string; label: string }> {
     if (!this.hass) {
       return [{ value: '', label: localize('editor.common.none', '', '') }];
@@ -1404,7 +1253,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     general: HaFormSchema[];
     header: HaFormSchema[];
     nowcast: HaFormSchema[];
-    chips: HaFormSchema[];
     hourly: HaFormSchema[];
     daily: HaFormSchema[];
   } {
@@ -1441,7 +1289,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       },
     ];
 
-    const attributeOptions = this._buildAttributeOptions();
     const hourlySchema: HaFormSchema[] = [
       {
         name: 'hourly_extra_attribute',
@@ -1487,71 +1334,11 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
         optional: true,
       },
     ];
-    const chipsSchema: HaFormSchema[] = [];
-
-    HEADER_CHIP_INDEXES.forEach((index) => {
-      const typeField = chipTypeFieldName(index);
-      chipsSchema.push({
-        name: typeField,
-        selector: {
-          select: {
-            options: CHIP_TYPE_OPTIONS,
-          },
-        },
-        optional: true,
-      });
-
-      const chipType = this._chipTypes[index] ?? 'attribute';
-      if (chipType === 'entity') {
-        chipsSchema.push({
-          name: chipEntityFieldName(index),
-          selector: { entity: {} },
-          optional: true,
-        });
-      } else {
-        chipsSchema.push({
-          name: chipAttributeFieldName(index),
-          selector: {
-            select: {
-              options: attributeOptions,
-              custom_value: true,
-            },
-          },
-          optional: true,
-          disabled: !this._config?.entity,
-        });
-
-        chipsSchema.push({
-          name: chipUnitFieldName(index),
-          selector: { text: {} },
-          optional: true,
-        });
-
-        chipsSchema.push({
-          name: chipDivisorFieldName(index),
-          selector: { text: {} },
-          optional: true,
-        });
-      }
-
-      chipsSchema.push({
-        name: chipIconFieldName(index),
-        selector: { icon: {} },
-        optional: true,
-      });
-
-      chipsSchema.push({
-        name: chipActionFieldName(index),
-        selector: { ui_action: {} },
-        optional: true,
-      });
-    });
 
     return {
       general: generalSchema,
       header: headerSchema,
       nowcast: nowcastSchema,
-      chips: chipsSchema,
       hourly: hourlySchema,
       daily: dailySchema,
     };
@@ -1562,9 +1349,9 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     return value !== false;
   }
 
-  private _normalizeHeaderChips(config: Partial<DetailedWeatherForecastConfig>): HeaderChip[] {
-    const limit = HEADER_CHIP_INDEXES.length;
-    const normalized: HeaderChip[] = [];
+  private _normalizeHeaderChips(config: Partial<DetailedWeatherForecastConfig>): HeaderAttribute[] {
+    const limit = 3;
+    const normalized: HeaderAttribute[] = [];
 
     if (Array.isArray(config.header_chips)) {
       for (const chip of config.header_chips) {
@@ -1578,7 +1365,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           const icon = typeof chip.icon === 'string' ? chip.icon.trim() : undefined;
           const unit = typeof chip.unit === 'string' ? chip.unit.trim() : undefined;
           const divisor = chip.divisor;
-          normalized.push({ type: 'attribute', attribute, tap_action, icon, unit, divisor });
+          normalized.push({ type: 'attribute', attribute, name: chip.name ?? '', tap_action, icon, unit, divisor });
           continue;
         }
 
@@ -1586,7 +1373,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           const entity = typeof chip.entity === 'string' ? chip.entity.trim() : '';
           const tap_action = chip.tap_action;
           const icon = typeof chip.icon === 'string' ? chip.icon.trim() : undefined;
-          normalized.push({ type: 'entity', entity, tap_action, icon });
+          normalized.push({ type: 'entity', entity, name: chip.name ?? '', tap_action, icon });
         }
       }
     }
@@ -1602,23 +1389,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           .filter((attr) => attr.length > 0)
       : [];
 
-    return attributeEntries.map((attribute) => ({ type: 'attribute', attribute }));
-  }
-
-  private _buildChipTypeState(chips: HeaderChip[]): Record<number, 'attribute' | 'entity'> {
-    const types: Record<number, 'attribute' | 'entity'> = {
-      0: 'attribute',
-      1: 'attribute',
-      2: 'attribute',
-    };
-
-    chips.slice(0, HEADER_CHIP_INDEXES.length).forEach((chip, index) => {
-      if (chip.type === 'entity') {
-        types[index] = 'entity';
-      }
-    });
-
-    return types;
+    return attributeEntries.map((attribute) => ({ type: 'attribute', attribute, name: attribute }));
   }
 
   private _updateConfig(changes: Partial<DetailedWeatherForecastConfig>) {

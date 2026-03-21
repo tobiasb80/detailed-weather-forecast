@@ -60,6 +60,7 @@ const computeSchema = (
 
   schema.push({ name: 'name', selector: { text: {} } });
   schema.push({ name: 'icon', selector: { icon: {} } });
+  schema.push({ name: 'tap_action', selector: { ui_action: {} }, optional: true });
 
   if (type === 'attribute') {
     schema.push({ name: 'unit', selector: { text: {} } });

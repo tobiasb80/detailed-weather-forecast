@@ -22,8 +22,7 @@ export interface DetailedWeatherForecastConfig extends LovelaceCardConfig {
   header_temperature_entity?: string;
   nowcast_entity?: string;
   nowcast_always_show?: boolean;
-  header_chips?: HeaderChip[];
-  header_attributes?: string[];
+  header_chips?: HeaderAttribute[];
   icon_map?: WeatherIconMap;
   show_header?: boolean;
   hourly_forecast?: boolean;
@@ -85,29 +84,12 @@ export type SunEventType = 'sunrise' | 'sunset';
 
 export type SunTimesByDay = Record<string, Partial<Record<SunEventType, number>>>;
 
-export type HeaderChip = AttributeHeaderChip | EntityHeaderChip;
-
-export interface AttributeHeaderChip {
-  type: 'attribute';
-  attribute: string;
-  icon?: string;
-  tap_action?: ActionConfig;
-  unit?: string;
-  divisor?: number;
-}
-
-export interface EntityHeaderChip {
-  type: 'entity';
-  entity: string;
-  icon?: string;
-  tap_action?: ActionConfig;
-}
-
 export type HeaderAttribute = HeaderWeatherAttribute | HeaderEntity;
 
 export interface HeaderWeatherAttribute {
   type: 'attribute';
   attribute: string;
+  tap_action?: ActionConfig;
   name: string;
   icon?: string;
   unit?: string;
@@ -117,6 +99,7 @@ export interface HeaderWeatherAttribute {
 export interface HeaderEntity {
   type: 'entity';
   entity: string;
+  tap_action?: ActionConfig;
   name: string;
   icon?: string;
 }

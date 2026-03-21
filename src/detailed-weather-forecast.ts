@@ -12,8 +12,13 @@ import './components/dwf-daily-list';
 import './components/dwf-forecast-attributes';
 import './components/dwf-hourly-list';
 import './components/dwf-nowcast';
-import type { AttributeHeaderChip, HeaderChip } from './types';
-import { SunCoordinates, DetailedWeatherForecastConfig, WeatherIconMap } from './types';
+import {
+  SunCoordinates,
+  DetailedWeatherForecastConfig,
+  WeatherIconMap,
+  HeaderAttribute,
+  HeaderWeatherAttribute,
+} from './types';
 import { enableMomentumScroll } from './utils/momentum-scroll';
 import type { ExtendedHomeAssistant, ForecastAttribute, ForecastEvent, WeatherEntity } from './weather';
 import { getSupportedForecastTypes, subscribeForecast, WEATHER_ATTRIBUTE_ICON_MAP } from './weather';
@@ -31,7 +36,7 @@ type HeaderChipDisplay = {
   display: string;
   missing: boolean;
   tooltip: string;
-  type: HeaderChip['type'];
+  type: HeaderAttribute['type'];
   action?: ActionConfig;
   icon?: string;
   entity?: string;
@@ -69,7 +74,7 @@ type NowcastServiceResponse = {
 const SOLAR_FORECAST_ATTRIBUTE = 'solar_forecast';
 const NOWCAST_SERVICE_NAME = 'get_minute_forecast';
 
-const isAttributeHeaderChip = (chip: HeaderChip): chip is AttributeHeaderChip => chip.type === 'attribute';
+const isAttributeHeaderChip = (chip: HeaderAttribute): chip is HeaderWeatherAttribute => chip.type === 'attribute';
 
 export class DetailedWeatherForecast extends LitElement {
   // internal reactive states
@@ -194,9 +199,9 @@ export class DetailedWeatherForecast extends LitElement {
     this._setupNowcastRefreshTimer();
   }
 
-  private _normalizeHeaderChips(config: DetailedWeatherForecastConfig): HeaderChip[] {
+  private _normalizeHeaderChips(config: DetailedWeatherForecastConfig): HeaderAttribute[] {
     const limit = 3;
-    const normalized: HeaderChip[] = [];
+    const normalized: HeaderAttribute[] = [];
 
     if (Array.isArray(config.header_chips)) {
       for (const chip of config.header_chips) {
@@ -206,19 +211,27 @@ export class DetailedWeatherForecast extends LitElement {
 
         if (chip.type === 'attribute') {
           const attr = typeof chip.attribute === 'string' ? chip.attribute.trim() : '';
-          const tap_action = chip.tap_action;
+          const tap_action = typeof chip.tap_action === 'object' && chip.tap_action ? chip.tap_action : undefined;
           const icon = typeof chip.icon === 'string' ? chip.icon.trim() : undefined;
           const unit = typeof chip.unit === 'string' ? chip.unit.trim() : undefined;
-          const divisor = chip.divisor;
-          normalized.push({ type: 'attribute', attribute: attr, tap_action, icon, unit, divisor });
+          const divisor = typeof chip.divisor === 'number' ? chip.divisor : undefined;
+          const name =
+            typeof (chip as any).name === 'string' && (chip as any).name.trim().length > 0
+              ? (chip as any).name.trim()
+              : attr;
+          normalized.push({ type: 'attribute', attribute: attr, tap_action, name, icon, unit, divisor });
           continue;
         }
 
         if (chip.type === 'entity') {
           const entity = typeof chip.entity === 'string' ? chip.entity.trim() : '';
-          const tap_action = chip.tap_action;
+          const tap_action = typeof chip.tap_action === 'object' && chip.tap_action ? chip.tap_action : undefined;
           const icon = typeof chip.icon === 'string' ? chip.icon.trim() : undefined;
-          normalized.push({ type: 'entity', entity, tap_action, icon });
+          const name =
+            typeof (chip as any).name === 'string' && (chip as any).name.trim().length > 0
+              ? (chip as any).name.trim()
+              : entity;
+          normalized.push({ type: 'entity', entity, tap_action, name, icon });
         }
       }
     }
@@ -226,15 +239,6 @@ export class DetailedWeatherForecast extends LitElement {
     if (normalized.length) {
       return normalized.slice(0, limit);
     }
-
-    const attributeEntries = Array.isArray(config.header_attributes)
-      ? config.header_attributes
-          .filter((attr, index) => index < limit && typeof attr === 'string')
-          .map((attr) => attr.trim())
-          .filter((attr) => attr.length > 0)
-      : [];
-
-    return attributeEntries.map((attribute) => ({ type: 'attribute', attribute }));
   }
 
   private _normalizeMinGapValue(value?: number | string): number | undefined {
@@ -314,7 +318,7 @@ export class DetailedWeatherForecast extends LitElement {
     );
   }
 
-  private _getHeaderChips(): HeaderChip[] {
+  private _getHeaderChips(): HeaderAttribute[] {
     if (!this._config) {
       return [];
     }
@@ -324,7 +328,7 @@ export class DetailedWeatherForecast extends LitElement {
     }
 
     const attributeEntries = this._config.header_attributes ?? [];
-    return attributeEntries.slice(0, 3).map((attribute) => ({ type: 'attribute', attribute }));
+    return attributeEntries.slice(0, 3).map((attribute) => ({ type: 'attribute', attribute, name: attribute }));
   }
 
   // Load styles using LitElement
@@ -496,7 +500,6 @@ export class DetailedWeatherForecast extends LitElement {
     const hourlyForecast = this._applySolarForecastToForecast(hourlyForecastRaw, 'hourly');
     const sunCoordinates = this._getLocationCoordinates();
     const showSunTimes = Boolean(this._config.show_sun_times && sunCoordinates && hourlyEnabled);
-    const orientation = this._config.orientation ?? 'vertical';
     const temperatureTapAction = this._config.header_tap_action_temperature;
     const temperatureActionEntity = this._config.header_temperature_entity || this._entity;
     const hasTemperatureTapAction = hasAction(temperatureTapAction);
@@ -842,11 +845,7 @@ export class DetailedWeatherForecast extends LitElement {
         return;
       }
 
-      const formatted = this._formatHeaderAttribute(
-        attribute,
-        (chip as AttributeHeaderChip).unit,
-        (chip as AttributeHeaderChip).divisor,
-      );
+      const formatted = this._formatHeaderAttribute(attribute, chip.unit, chip.divisor);
       const label = attribute;
       const tooltip = `${attribute}: ${formatted.display}`;
       const attrIcon = icon || WEATHER_ATTRIBUTE_ICON_MAP[attribute];
