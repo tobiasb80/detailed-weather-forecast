@@ -5273,7 +5273,6 @@ class $4823e4ad7ec1951b$export$adb56434d0008518 extends (0, $eGUNk.LitElement) {
     setConfig(config) {
         const previousNowcastEntity = this._config?.nowcast_entity;
         const normalizedHeaderChips = this._normalizeHeaderChips(config);
-        const normalizedHeaderAttributes = normalizedHeaderChips.filter($4823e4ad7ec1951b$var$isAttributeHeaderChip).map((chip)=>chip.attribute).filter((attribute)=>typeof attribute === 'string' && attribute.trim().length > 0);
         const normalizedDailyMinGap = this._normalizeMinGapValue(config.daily_min_gap);
         const normalizedHourlyMinGap = this._normalizeMinGapValue(config.hourly_min_gap);
         const normalizedHourlyDimBelow = this._normalizeOptionalNumber(config.hourly_extra_attribute_dim_below);
@@ -5290,12 +5289,10 @@ class $4823e4ad7ec1951b$export$adb56434d0008518 extends (0, $eGUNk.LitElement) {
             show_header: config.show_header ?? true,
             hourly_forecast: config.hourly_forecast ?? true,
             daily_forecast: config.daily_forecast ?? true,
-            orientation: config.orientation ?? 'vertical',
             show_sun_times: config.show_sun_times ?? false,
             sun_use_home_coordinates: config.sun_use_home_coordinates ?? true,
             use_night_header_backgrounds: config.use_night_header_backgrounds ?? true,
             header_chips: normalizedHeaderChips,
-            header_attributes: normalizedHeaderAttributes,
             icon_map: normalizedIconMap,
             daily_min_gap: normalizedDailyMinGap,
             hourly_min_gap: normalizedHourlyMinGap,
@@ -5420,12 +5417,6 @@ class $4823e4ad7ec1951b$export$adb56434d0008518 extends (0, $eGUNk.LitElement) {
     _getHeaderChips() {
         if (!this._config) return [];
         if (Array.isArray(this._config.header_chips) && this._config.header_chips.length) return this._config.header_chips.slice(0, 3);
-        const attributeEntries = this._config.header_attributes ?? [];
-        return attributeEntries.slice(0, 3).map((attribute)=>({
-                type: 'attribute',
-                attribute: attribute,
-                name: attribute
-            }));
     }
     static{
         // Load styles using LitElement

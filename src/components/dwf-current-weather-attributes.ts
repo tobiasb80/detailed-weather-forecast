@@ -130,7 +130,7 @@ export class DwfCurrentWeatherAttributes extends LitElement {
       this,
       this.hass,
       {
-        entity: entityOverride || this.weatherEntity.entity_id, // weatherEntity is a state object
+        entity: entityOverride || this.weatherEntity.entity_id,
         tap_action: actionConfig,
       },
       'tap',
