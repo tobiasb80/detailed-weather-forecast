@@ -378,6 +378,54 @@ export const getWeatherStateIcon = (
   return undefined;
 };
 
+export const getCurrentWeatherStateIcon = (
+  entity: WeatherEntity,
+  element: HTMLElement,
+  nightTime?: boolean,
+  iconMap?: WeatherIconMap,
+): TemplateResult | undefined => {
+  const state = entity.state;
+  const isPartlyCloudyNight = state === 'partlycloudy' && nightTime;
+  const mapKey = isPartlyCloudyNight ? 'partlycloudy-night' : state;
+  const mappedIcon = iconMap?.[mapKey as keyof WeatherIconMap];
+  const normalizedIcon = typeof mappedIcon === 'string' ? mappedIcon.trim() : '';
+  const pictocode = entity.attributes['pictocode'];
+
+  if (pictocode) {
+    let pictoCodeIcon;
+
+    if (nightTime) {
+      pictoCodeIcon = 'local:' + pictocode.toString().padStart(2, '0') + '_night';
+    } else {
+      pictoCodeIcon = 'local:' + pictocode.toString().padStart(2, '0') + '_day';
+    }
+
+    return html`<ha-icon icon=${pictoCodeIcon}></ha-icon>`;
+  }
+
+  if (normalizedIcon) {
+    return html`<ha-icon icon=${normalizedIcon}></ha-icon>`;
+  }
+
+  const userDefinedIcon = getComputedStyle(element).getPropertyValue(`--weather-icon-${state}`);
+
+  if (userDefinedIcon) {
+    return html`
+      <div
+        style="background-size: cover;${styleMap({
+          'background-image': userDefinedIcon,
+        })}"
+      ></div>
+    `;
+  }
+
+  if (weatherSVGs.has(state)) {
+    return html`${getWeatherStateSVG(state, nightTime)}`;
+  }
+
+  return undefined;
+};
+
 export const subscribeForecast = (
   hass: HomeAssistant,
   entity_id: string,

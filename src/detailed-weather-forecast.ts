@@ -12,6 +12,8 @@ import './components/dwf-daily-list';
 import './components/dwf-forecast-attributes';
 import './components/dwf-hourly-list';
 import './components/dwf-nowcast';
+import './components/dwf-header';
+import './components/dwf-compact-header';
 import {
   SunCoordinates,
   DetailedWeatherForecastConfig,
@@ -157,6 +159,7 @@ export class DetailedWeatherForecast extends LitElement {
       header_info: config.header_info ?? [],
       daily_info: config.daily_info ?? [],
       hourly_info: config.hourly_info ?? [],
+      compact_header: config.compact_header ?? false,
     };
 
     this._config = defaults;
@@ -209,10 +212,7 @@ export class DetailedWeatherForecast extends LitElement {
           const icon = typeof chip.icon === 'string' ? chip.icon.trim() : undefined;
           const unit = typeof chip.unit === 'string' ? chip.unit.trim() : undefined;
           const divisor = typeof chip.divisor === 'number' ? chip.divisor : undefined;
-          const name =
-            typeof (chip as any).name === 'string' && (chip as any).name.trim().length > 0
-              ? (chip as any).name.trim()
-              : attr;
+          const name = typeof chip.name === 'string' ? chip.name.trim() : undefined;
           normalized.push({ type: 'attribute', attribute: attr, tap_action, name, icon, unit, divisor });
           continue;
         }
@@ -221,10 +221,7 @@ export class DetailedWeatherForecast extends LitElement {
           const entity = typeof chip.entity === 'string' ? chip.entity.trim() : '';
           const tap_action = typeof chip.tap_action === 'object' && chip.tap_action ? chip.tap_action : undefined;
           const icon = typeof chip.icon === 'string' ? chip.icon.trim() : undefined;
-          const name =
-            typeof (chip as any).name === 'string' && (chip as any).name.trim().length > 0
-              ? (chip as any).name.trim()
-              : entity;
+          const name = typeof chip.name === 'string' ? chip.name.trim() : undefined;
           normalized.push({ type: 'entity', entity, tap_action, name, icon });
         }
       }
@@ -649,13 +646,27 @@ export class DetailedWeatherForecast extends LitElement {
     return html`
       <ha-card style=${cardStyle}>
         ${showHeader
-          ? html`
-              <div class=${classMap(headerClassMap)} style=${styleMap(headerStyles)}>
-                <div class="header-content">
-                  ${html` ${headerLayoutTemplate} ${showInlineNowcast ? nowcastPanelTemplate : nothing} `}
-                </div>
-              </div>
-            `
+          ? this._config.compact_header
+            ? html`
+                <dwf-compact-header
+                  .hass=${this._hass}
+                  .weatherEntity=${this._state}
+                  .config=${this._config}
+                  .nowcastPanelTemplate=${showInlineNowcast ? nowcastPanelTemplate : undefined}
+                  .headerTemperature=${headerTemperature}
+                  @dwf-temperature-click=${this._handleCompactHeaderTemperatureClick}
+                  @dwf-condition-click=${this._handleConditionTap}
+                ></dwf-compact-header>
+              `
+            : html`
+                <dwf-header
+                  .headerClassMap=${headerClassMap}
+                  .headerStyles=${headerStyles}
+                  .headerLayoutTemplate=${headerLayoutTemplate}
+                  .showInlineNowcast=${showInlineNowcast}
+                  .nowcastPanelTemplate=${nowcastPanelTemplate}
+                ></dwf-header>
+              `
           : nothing}
         ${showHeader && showForecasts ? html`<div class="divider card-divider"></div>` : nothing}
         ${this._config.header_info.length > 0 && this._showAttributes
@@ -1517,6 +1528,12 @@ export class DetailedWeatherForecast extends LitElement {
 
   private _handleDailyShowAttributes(e: CustomEvent<ForecastAttribute | null>) {
     this._selectedDailyForecast = e.detail ?? undefined;
+  }
+
+  private _handleCompactHeaderTemperatureClick() {
+    const temperatureTapAction = this._config.header_tap_action_temperature;
+    const temperatureActionEntity = this._config.header_temperature_entity || this._entity;
+    this._handleHeaderTap(temperatureTapAction, temperatureActionEntity);
   }
 
   private _handleHeaderTap(actionConfig?: ActionConfig, entity?: string) {

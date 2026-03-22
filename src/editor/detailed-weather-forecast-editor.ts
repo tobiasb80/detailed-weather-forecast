@@ -340,6 +340,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       hourly_forecast: config.hourly_forecast ?? true,
       daily_forecast: config.daily_forecast ?? true,
       orientation: config.orientation ?? 'vertical',
+      compact_header: config.compact_header ?? false,
       header_chips: normalizedChips,
       header_attributes: normalizedChips.filter((chip) => chip.type === 'attribute').map((chip) => chip.attribute),
     };
@@ -1270,10 +1271,17 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
         optional: true,
       },
       {
-        name: 'use_night_header_backgrounds',
+        name: 'compact_header',
         selector: { boolean: {} },
       },
     ];
+
+    if (!this._config?.compact_header) {
+      headerSchema.push({
+        name: 'use_night_header_backgrounds',
+        selector: { boolean: {} },
+      });
+    }
 
     const nowcastSchema: HaFormSchema[] = [
       {

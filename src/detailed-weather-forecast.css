@@ -80,7 +80,7 @@ ha-card {
   font-size: var(--ha-font-size-m);
   line-height: calc(6px + var(--ha-font-size-m));
   background-color: rgba(0, 0, 0, 0.35);
-  padding: 4px 12px;
+  padding: var(--ha-space-1, 4px) var(--ha-space-3, 12px);
   border-radius: 25px;
   color: inherit;
   max-width: 100%;
@@ -115,7 +115,7 @@ ha-card {
   font-size: var(--ha-font-size-xl);
   line-height: calc(10px + var(--ha-font-size-xl));
   background-color: rgba(0, 0, 0, 0.3);
-  padding: 4px 15px;
+  padding: var(--ha-space-1, 4px) var(--ha-space-4, 16px);
   border-radius: 25px;
   max-width: 70%;
   min-width: 0;
@@ -139,9 +139,9 @@ ha-card {
 .weather .temp {
   font-size: var(--ha-font-size-5xl);
   line-height: calc(10px + var(--ha-font-size-xl));
-  font-weight: bolder;
+  font-weight: var(--ha-font-weight-bold, bold);
   background-color: rgba(0, 0, 0, 0.3);
-  padding: 2px 17px;
+  padding: 2px var(--ha-space-4, 16px);
   border-radius: 25px;
   max-width: 100%;
   min-width: 0;
@@ -160,7 +160,7 @@ ha-card {
 .weather .nowcast-panel {
   background: rgba(0, 0, 0, 0.3);
   border-radius: 16px;
-  padding: 12px 12px 6px 12px;
+  padding: var(--ha-space-3, 12px) var(--ha-space-3, 12px) 6px var(--ha-space-3, 12px);
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
@@ -231,8 +231,8 @@ ha-card {
   width: 100%;
   display: flex;
   flex: 0 1 auto;
-  padding-top: 4px;
-  padding-bottom: 20px;
+  padding-top: var(--ha-space-1, 4px);
+  padding-bottom: var(--ha-space-5, 20px);
   flex-direction: column;
   gap: 4px;
 }
@@ -310,12 +310,12 @@ ha-card {
   align-items: stretch; /* stretch items so they can use additional height */
   justify-content: space-around;
   gap: var(--dynamic-gap, 20px); /* fallback */
-  padding: 8px var(--forecast-inline-padding) 0px;
+  padding: var(--ha-space-2, 8px) var(--forecast-inline-padding) 0px;
 }
 
 @supports (-webkit-touch-callout: none) {
   .forecast {
-    padding-bottom: 12px; /* a touch more space on Safari */
+    padding-bottom: var(--ha-space-3, 12px); /* a touch more space on Safari */
   }
 }
 
@@ -404,7 +404,7 @@ ha-card {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  font-weight: 600;
+  font-weight: var(--ha-font-weight-bold, bold);
   color: white;
   background-color: var(--state-climate-cool-color);
   pointer-events: none;
@@ -425,12 +425,12 @@ ha-card {
 
 .forecast .date.sunrise {
   color: var(--orange-color, #ff9800);
-  font-weight: 500;
+  font-weight: var(--ha-font-weight-medium, 500);
 }
 
 .forecast .date.sunset {
   color: var(--purple-color, #926bc7);
-  font-weight: 500;
+  font-weight: var(--ha-font-weight-medium, 500);
 }
 
 .forecast.daily .date.selected {
@@ -462,12 +462,12 @@ ha-card {
 
 .forecast .temp {
   font-size: var(--ha-font-size-xl);
-  font-weight: bolder;
+  font-weight: var(--ha-font-weight-bold, bold);
 }
 
 .forecast .templow {
   opacity: 0.5;
-  font-weight: bolder;
+  font-weight: var(--ha-font-weight-bold, bold);
   font-size: var(--ha-font-size-l);
 }
 
@@ -482,7 +482,7 @@ ha-card {
   opacity: 0.6;
   color: var(--primary-text-color);
   min-height: 20px;
-  font-weight: 500;
+  font-weight: var(--ha-font-weight-medium, 500);
   white-space: nowrap;
 }
 
@@ -539,7 +539,7 @@ ha-card {
   opacity: 0.6;
   color: var(--primary-text-color);
   min-height: 20px;
-  font-weight: 500;
+  font-weight: var(--ha-font-weight-medium, 500);
   white-space: nowrap;
 }
 
@@ -646,7 +646,7 @@ dwf-current-weather-attributes {
   flex-direction: column;
   gap: var(--ha-space-1, 4px);
   min-width: 0;
-  padding: 8px 16px;
+  padding: var(--ha-space-2, 8px) var(--ha-space-4, 16px);
 }
 
 .dwf-current-attribute {
@@ -684,8 +684,93 @@ dwf-current-weather-attributes {
 
 .forecast-condition {
   text-align: center;
-  font-weight: bold;
-  padding: 8px 16px;
+  font-weight: var(--ha-font-weight-bold, bold);
+  padding: var(--ha-space-2, 8px) var(--ha-space-4, 16px);
   font-size: var(--ha-font-size-m, 14px);
   color: var(--primary-text-color, #212121);
+}
+
+.compact-header {
+  --icon-size: 60px;
+  --icon-container-width: 60px;
+  display: flex;
+  flex-direction: column;
+  color: var(--primary-text-color);
+}
+.compact-header .current-conditions {
+  padding: var(--ha-space-4, 16px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.compact-header .has-action {
+  cursor: pointer;
+}
+.compact-header .condition {
+  font-size: var(--ha-font-size-xl, 20px);
+  font-weight: var(--ha-font-weight-normal, 400);
+  text-align: center;
+}
+.compact-header .weather-icon {
+  display: flex;
+  justify-content: center;
+  width: var(--icon-container-width);
+}
+.compact-header .weather-icon ha-icon {
+  --mdc-icon-size: var(--icon-size);
+}
+.compact-header .temperature {
+  font-size: var(--ha-font-size-2xl, 24px);
+  font-weight: var(--ha-font-weight-normal, 400);
+}
+.compact-header .nowcast-panel {
+  padding: 0 var(--ha-space-4, 16px);
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.compact-header dwf-nowcast {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+.compact-header .nowcast-bars {
+  display: flex;
+  align-items: stretch;
+  gap: var(--dwf-nowcast-gap, 5px);
+  flex: 1 1 auto;
+  min-height: 24px;
+}
+.compact-header .nowcast-bar {
+  flex: 1 1 0;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 999px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  min-height: 6px;
+  height: auto;
+  align-self: stretch;
+}
+.compact-header .nowcast-bar-fill {
+  width: 100%;
+  height: 0%;
+  background: var(--dwf-nowcast-fill-color, #4aafff);
+  border-radius: inherit;
+  transition: height 0.35s ease;
+}
+.compact-header .nowcast-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--ha-font-size-s);
+  color: var(--primary-text-color);
+  transition: transform 0.35s ease;
+  will-change: transform;
 }

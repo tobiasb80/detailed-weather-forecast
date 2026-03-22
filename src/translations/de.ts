@@ -8,6 +8,7 @@ export default {
       entity: 'Wetter-Entität',
       header_temperature_entity: 'Lokaler Temperatursensor (Überschreibt den aktuellen Temperaturwert der Vorhersage)',
       header_tap_action_temperature: 'Temperatur-Tipp-Aktion',
+      compact_header: 'Kompakte Ansicht ohne Hintergrundbilder',
       use_night_header_backgrounds: 'Separate Header-Hintergründe für nächtliche Bedingungen verwenden',
       nowcast_entity:
         'Nowcast-Entität (Für den Niederschlag der nächsten Stunde. Die Entitätsintegration muss eine `get_minute_forecast`-Aktion bereitstellen, um die Daten abzurufen.)',

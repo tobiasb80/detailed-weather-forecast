@@ -50,6 +50,7 @@ export interface DetailedWeatherForecastConfig extends LovelaceCardConfig {
   header_info?: HeaderAttribute[];
   daily_info?: ForecastAttributeConfig[];
   hourly_info?: ForecastAttributeConfig[];
+  compact_header?: boolean;
 }
 
 export const WEATHER_CONDITIONS = [

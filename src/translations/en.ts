@@ -9,6 +9,7 @@ export default {
       header_temperature_entity:
         'Local Temperature Sensor Entity (Overrides the current temperature value of the forecast)',
       header_tap_action_temperature: 'Temperature tap action',
+      compact_header: 'Compact view without background images',
       use_night_header_backgrounds: 'Use separate header backgrounds for nightly conditions',
       nowcast_entity:
         'Nowcast Entity (For next-hour precipitation. The entity integration must provide a get_minute_forecast action to fetch the data.)',
