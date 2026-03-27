@@ -1,6 +1,5 @@
 {
-  "name": "Deatailed Weather Forecast Card",
+  "name": "Detailed Weather Forecast Card",
   "render_readme": true,
-  "filename": "detailedweatherforecast.js",
-  "content_in_root": false
+  "content_in_root": true
 }

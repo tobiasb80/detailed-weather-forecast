@@ -68,12 +68,15 @@ jobs:
       - name: Build the file
         run: yarn build
 
-      # Upload build artifact to the release as an asset.
+      - name: Prepare release archive
+        run: |
+          cd dist
+          zip -r ../detailed-weather-forecast.zip .
       - name: Upload release asset
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/boilerplate-card.js
-          asset_name: boilerplate-card.js
+          file: detailed-weather-forecast.zip
+          asset_name: detailed-weather-forecast.zip
           tag: ${{ github.ref }}
           overwrite: true
