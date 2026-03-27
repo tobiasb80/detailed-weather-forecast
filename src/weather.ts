@@ -3,7 +3,7 @@ import { type HomeAssistant } from 'custom-card-helpers';
 import type { HassConfig, HassEntity, HassEntityAttributeBase, HassEntityBase } from 'home-assistant-js-websocket';
 import type { SVGTemplateResult, TemplateResult } from 'lit';
 import { html, svg } from 'lit';
-import { styleMap } from 'lit/directives/style-map';
+import { styleMap } from 'lit/directives/style-map.js';
 import type { WeatherIconMap } from './types';
 import memoizeOne from 'memoize-one';
 

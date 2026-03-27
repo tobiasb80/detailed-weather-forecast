@@ -1,86 +1,100 @@
 # GitHub Copilot Instructions
 
-This file provides instructions for GitHub Copilot to help you with this project.
+You are assisting with development of this Home Assistant Lovelace custom card project.
+The codebase is TypeScript + Lit and builds with Rollup.
 
-## Core Commands
+Use these instructions as project-specific guardrails when generating, editing, or reviewing code.
 
-- This project uses `npm`. Always use `npm install` to install dependencies.
-- Run `npm run lint` to check for linting errors.
-- Run `npm run watch` to serve the card for development.
-- Run `npm run build` to build the card for production.
+## Quick reference
 
-## Primary Files
+### Core commands
 
-- `src/detailed-weather-forecast.ts`: The main entrypoint for the custom card. It defines the `DetailedWeatherForecast` class, which extends `LitElement`. This is where the main logic for the card resides.
-- `src/editor/detailed-weather-forecast-editor.ts`: The entrypoint for the visual editor. It defines the `DetailedWeatherForecastEditor` class.
-- `src/types.ts`: Contains the TypeScript types for the card's configuration.
-- `src/detailed-weather-forecast.css`: The CSS for the card.
+```bash
+yarn install
+yarn start
+yarn build
+yarn lint
+```
 
-## Architecture Patterns
+### Primary files
 
-- The main element is `detailed-weather-forecast`. It is a LitElement custom element.
-- The editor element is `detailed-weather-forecast-editor`. It is also a LitElement custom element.
-- The card configuration is stored in the `config` property of the main element.
-- The `setConfig` method is called by Home Assistant when the configuration changes.
-- The `render` method is called by Lit to render the card's HTML.
+- `src/detailed-weather-forecast.ts` — main card implementation
+- `src/editor/detailed-weather-forecast-editor.ts` — visual editor (`LovelaceCardEditor`)
+- `src/types.ts` — card config and type definitions
+- `src/localize/localize.ts` — localization helper
+- `src/localize/languages/en.json` and `src/localize/languages/nb.json` — translation files
+- `rollup.config.js` and `rollup.config.dev.js` — production and dev build config
 
-## TypeScript Standards
+## Architecture and patterns
 
-- This project uses TypeScript. All new code should be written in TypeScript.
-- Use the types defined in `src/types.ts` for the card's configuration.
-- Use the `HomeAssistant` type from `custom-card-helpers` for the `hass` object.
+- The custom element is `custom:detailed-weather-forecast-card`.
+- Prefer Lit 3 patterns and idiomatic web component structure.
+- Keep configuration shape centralized in `src/types.ts`.
+- Keep editor schema and defaults aligned with runtime card behavior.
+- Keep feature logic in small, readable helpers instead of long monolithic methods.
 
-## Lit and Component Guidance
+## TypeScript standards
 
-- This project uses Lit. All new components should be LitElements.
-- Use the `@customElement` decorator to define custom elements.
-- Use the `@property` decorator to define properties that can be set from the card's configuration.
-- Use the `@state` decorator to define internal state that should trigger a re-render when it changes.
+- Use strict, explicit typing; avoid `any` unless there is no practical alternative.
+- Use `import type` for type-only imports where appropriate.
+- Validate and narrow optional config fields before use.
+- Keep public API names stable unless explicitly requested to change them.
 
-## Home Assistant Integration
+## Lit and component guidance
 
-- The `hass` object is passed to the card as a property. It contains the Home Assistant state.
-- Use the `hass.states` object to get the state of entities.
-- Use the `hass.callService` method to call services.
+- Use `@property` for public reactive inputs and `@state` for internal state.
+- Avoid direct DOM mutation when Lit reactivity can handle updates.
+- Preserve existing card/editor lifecycle behavior.
+- For card config, validate early in `setConfig` and throw actionable errors.
+- Keep `getCardSize` deterministic and aligned with rendered density.
 
-## Localization
+## Home Assistant integration
 
-- This project uses a custom localization solution.
-- The localization files are in the `src/translations` directory.
-- The `localize` function in `src/localize.ts` is used to translate strings.
+- Use Home Assistant helpers and conventions from `custom-card-helpers`.
+- Ensure tap, hold, and double-tap actions are wired through existing action patterns.
+- Support unavailable/loading/error states gracefully.
+- Keep Lovelace config compatibility in mind when changing schema or defaults.
 
-## Styling
+## Localization and copy
 
-- The card's CSS is in `src/detailed-weather-forecast.css`.
-- The styles are applied to the card's shadow DOM.
-- Use CSS variables to allow users to customize the card's appearance.
+- Do not hardcode user-facing strings when a localize key should be used.
+- Add new translation keys to both language files currently in the repo (`en.json`, `de.json`).
+- Keep copy concise, sentence case, and user-facing.
+- Favor consistent terminology across card UI and editor labels.
+
+## Styling and UX
+
 - Respect Home Assistant theme variables and CSS custom properties.
 - Avoid hardcoded colors when theme tokens can be used.
 - Keep spacing and typography consistent with existing card styles.
 - Ensure layouts work in both compact and wider dashboard widths.
 
-## Build and Quality Expectations
+## Build and quality expectations
 
-- The card is built using Parcel.
-- The build process is defined in `package.json`.
-- All code should be formatted with Prettier.
-- All code should pass the ESLint checks.
+- Keep `yarn lint` clean for changed code.
+- Ensure `yarn build` succeeds after non-trivial changes.
+- Do not introduce unrelated refactors in focused changes.
+- If updating build tooling, keep dev and prod Rollup configs consistent.
 
-## Safe Change Workflow
+## Safe change workflow
 
-- Before making any changes, run `npm install` to ensure you have the latest dependencies.
-- After making changes, run `npm run lint` and `npm run build` to ensure that the changes are safe.
+1. Read adjacent code before editing.
+2. Implement the smallest viable change.
+3. Run relevant checks (`yarn lint`, `yarn build`, or targeted command).
+4. Update docs/README when behavior or config changes.
+5. Summarize what changed and why.
 
-## Pull Request Guidance
+## Pull request guidance
 
-- Before submitting a pull request, run `npm run lint` and `npm run build` to ensure that the changes are safe.
-- Your PR should include a description of the changes you have made.
-- If your PR fixes a bug, it should include a link to the issue.
-- If your PR adds a new feature, it should include a description of the feature and how to use it.
+- Keep PRs focused to one logical change.
+- Include screenshots or short clips for visible UI/editor changes.
+- Document config changes and migration notes when applicable.
+- Call out any follow-up work explicitly instead of bundling extra scope.
 
-## Common Issues to Avoid
+## Avoid these common issues
 
-- Do not use `yarn` to install dependencies. Use `npm install` instead.
-- Do not commit the `dist` directory.
-- Do not commit the `node_modules` directory.
-- Do not commit the `.parcel-cache` directory.
+- Breaking editor/card config parity
+- Adding untyped dynamic config access
+- Hardcoding text instead of localization keys
+- Overriding theme behavior with fixed styles
+- Changing output filenames or card tag without explicit request
