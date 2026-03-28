@@ -26,7 +26,7 @@ import type { ExtendedHomeAssistant, ForecastAttribute, ForecastEvent, WeatherEn
 import { getSupportedForecastTypes, subscribeForecast, WEATHER_ATTRIBUTE_ICON_MAP } from './weather';
 import { styles } from './detailed-weather-forecast.styles';
 import { DEFAULT_WEATHER_IMAGE, WeatherImages } from './weather-images';
-import { localize, setHass } from './localize';
+import { localize, setHass } from './localize/localize';
 
 const MISSING_ATTRIBUTE_TEXT = 'missing';
 

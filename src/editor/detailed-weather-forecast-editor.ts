@@ -1,7 +1,7 @@
 import { css, html, LitElement, nothing, TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { HomeAssistant, LovelaceCardEditor } from 'custom-card-helpers';
-import { localize } from '../localize';
+import { localize } from '../localize/localize';
 import {
   WEATHER_CONDITIONS,
   type HeaderAttribute,

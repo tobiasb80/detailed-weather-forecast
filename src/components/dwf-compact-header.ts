@@ -8,7 +8,7 @@ import type { DetailedWeatherForecastConfig } from '../types';
 import type { ExtendedHomeAssistant, WeatherEntity } from '../weather';
 import { getCurrentWeatherStateIcon } from '../weather';
 import * as customStyles from '../detailed-weather-forecast.css';
-import { localize } from '../localize';
+import { localize } from '../localize/localize';
 
 export class DwfCompactHeader extends LitElement {
   static styles = css`

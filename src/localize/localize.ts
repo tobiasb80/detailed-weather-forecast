@@ -1,15 +1,13 @@
 import { HomeAssistant } from 'custom-card-helpers';
-import de from './translations/de';
-import en from './translations/en';
+import de from './languages/de.json';
+import en from './languages/en.json';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let hass: HomeAssistant | any;
 
 export function setHass(newHass: HomeAssistant) {
   hass = newHass;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getTranslated(key: string, lang: any, translations: any) {
   const keys = key.split('.');
   let result = translations[lang];

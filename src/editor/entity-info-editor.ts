@@ -2,7 +2,7 @@ import { html, LitElement, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { HomeAssistant } from 'custom-card-helpers';
 import type { HeaderAttribute } from '../types';
-import { localize } from '../localize';
+import { localize } from '../localize/localize';
 import { formatWeatherAttributeName, type WeatherEntity } from '../weather';
 
 const fireEvent = (node: HTMLElement, type: string, detail?: unknown) => {
