@@ -3,7 +3,7 @@ import { type HomeAssistant } from 'custom-card-helpers';
 import type { HassConfig, HassEntity, HassEntityAttributeBase, HassEntityBase } from 'home-assistant-js-websocket';
 import type { SVGTemplateResult, TemplateResult } from 'lit';
 import { html, svg } from 'lit';
-import { styleMap } from 'lit/directives/style-map';
+import { styleMap } from 'lit/directives/style-map.js';
 import type { WeatherIconMap } from './types';
 import memoizeOne from 'memoize-one';
 
@@ -147,7 +147,6 @@ const cardinalDirections = [
 const getWindBearingText = (degree: number | string): string => {
   const degreenum = typeof degree === 'number' ? degree : parseInt(degree, 10);
   if (isFinite(degreenum)) {
-    // eslint-disable-next-line no-bitwise
     return cardinalDirections[(((degreenum + 11.25) / 22.5) | 0) % 16];
   }
   return typeof degree === 'number' ? degree.toString() : degree;
@@ -212,13 +211,13 @@ const getWeatherStateSVG = (state: string, nightTime?: boolean): SVGTemplateResu
           />
         `
       : state === 'partlycloudy'
-      ? svg`
+        ? svg`
           <path
             class="sun"
             d="m14.981 4.2112c0 1.9244-1.56 3.4844-3.484 3.4844-1.9244 0-3.4844-1.56-3.4844-3.4844s1.56-3.484 3.4844-3.484c1.924 0 3.484 1.5596 3.484 3.484"
           />
         `
-      : ''
+        : ''
   }
   ${
     cloudyStates.has(state)
@@ -458,7 +457,6 @@ const supportsFeature = (stateObj: HassEntity, feature: number): boolean =>
 
 // Copied from frontend/src/common/entity/supports-feature.ts
 const supportsFeatureFromAttributes = (attributes: Record<string, any>, feature: number): boolean =>
-  // eslint-disable-next-line no-bitwise
   (attributes.supported_features! & feature) !== 0;
 
 export interface DisplayAttribute {

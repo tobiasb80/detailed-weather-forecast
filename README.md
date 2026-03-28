@@ -12,7 +12,9 @@
 
 ## Overview
 
-Detailed Weather Forecast is a Lovelace custom card for Home Assistant that combines a large weather header with interactive daily and hourly forecasts. The card displays the forecast from the selected `weather` entity, adapts to the dashboard grid, and adds visual context such as sunrise and sunset markers, precipitation values, and day or night specific artwork.
+Detailed Weather Forecast is a Lovelace custom card for Home Assistant that combines a large weather header with interactive daily and hourly forecasts. The card displays the forecast from the selected `weather` entity, and adds visual context such as sunrise and sunset markers, precipitation values, and day or night specific artwork.
+
+This card is a further development of the [Weather Forecast Extended Card](https://github.com/Thyraz/weather-forecast-extended) and was also inspired by the [Weather Forecast Card](https://github.com/troinine/ha-weather-forecast-card). The card was primarily developed for my own dashboard, but can of course also be used by other users. The main requirement for this card was a compact view, which nevertheless gives you the opportunity to see all available information about the current weather and the weather forecast via interaction.
 
 ## Features
 
@@ -21,7 +23,7 @@ Detailed Weather Forecast is a Lovelace custom card for Home Assistant that comb
 - Optional sunrise and sunset times embedded in the hourly forecast, using either the Home Assistant location or custom coordinates for sun calculations.
 - Support to display daily / hourly solar forecast.
 - Optional minute-level nowcast precipitation chart via `get_minute_forecast` actions (OpenWeatherMap, DWD nowcast).
-- Configurable header chips that can display entity attributes or value-templates in the header.
+- Configurable header chips that can display weather entity attributes or other entities in the header.
 - Optional tap actions and icons on the header pills / chips.
 - Support for 12 or 24 hour time formats and localized date labels using the Home Assistant user settings.
 - UI card editor
@@ -53,6 +55,7 @@ hourly_forecast: true
 daily_forecast: true
 use_night_header_backgrounds: true
 nowcast_always_show: false
+compact_header: false
 header_chips:
   - type: attribute
     attribute: humidity
@@ -150,7 +153,8 @@ hourly_info:
 | `sun_use_home_coordinates`         | boolean          | `true`                                  | Uses Home Assistant's home location for sun calculations when `show_sun_times` is enabled. Set to `false` to provide manual coordinates.                                               |
 | `sun_latitude`                     | number \| string | Home Assistant latitude                 | Latitude used when `sun_use_home_coordinates` is `false`. Accepts decimal degrees as string or number.                                                                                 |
 | `sun_longitude`                    | number \| string | Home Assistant longitude                | Longitude used when `sun_use_home_coordinates` is `false`. Accepts decimal degrees as string or number.                                                                                |
-| `use_night_header_backgrounds`     | boolean          | `true`                                  | Switches the header artwork to night variants when the sun is down. Set to `false` to always use the day theme.                                                                        |
+| `compact_header`                   | boolean          | `false`                                 | If this is true, a compact header view without a background image is displayed.                                                                                                |
+| `use_night_header_backgrounds`     | boolean          | `true`                                  | Switches the header artwork to night variants when the sun is down. Set to `false` to always use the day theme. This is only enabled if `compact_header` is `false`. |
 | `icon_map`                         | object           | none                                    | Optional overrides for forecast condition icons. Keys are weather conditions, values are Home Assistant icon names (including custom icon sets).                                       |
 | `header_tap_action_temperature`    | action           | none                                    | Lovelace action that fires when the header temperature pill is tapped. Only tap actions are supported.                                                                                 |
 | `hourly_extra_attribute`           | string           | none                                    | Optional third text line under the hourly precipitation rows.                                                                                                                          |

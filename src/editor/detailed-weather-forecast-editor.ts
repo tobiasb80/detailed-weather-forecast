@@ -1,7 +1,7 @@
 import { css, html, LitElement, nothing, TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { HomeAssistant, LovelaceCardEditor } from 'custom-card-helpers';
-import { localize } from '../localize';
+import { localize } from '../localize/localize';
 import {
   WEATHER_CONDITIONS,
   type HeaderAttribute,
@@ -488,11 +488,12 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
                       <header-entity-editor
                         .hass=${this.hass}
                         .weatherEntity=${this._config?.entity}
-                        .config=${this._config?.header_chips?.[index] || {
+                        .config=${(this._config?.header_chips?.[index] as HeaderAttribute) ||
+                        ({
                           type: 'attribute',
                           attribute: '',
                           name: '',
-                        }}
+                        } as HeaderAttribute)}
                         @header-info-config-changed=${(e: CustomEvent) => this._headerChipChanged(e, index)}
                       ></header-entity-editor>
                     </div>
@@ -769,19 +770,16 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     while (newChips.length <= index) {
       newChips.push({ type: 'attribute', attribute: '', name: '' });
     }
-    newChips[index] = e.detail;
+    const newChip = { ...e.detail };
 
-    while (newChips.length > 0) {
-      const lastChip = newChips[newChips.length - 1];
-      const isEmpty =
-        (lastChip.type === 'attribute' && !lastChip.attribute && !lastChip.name) ||
-        (lastChip.type === 'entity' && !lastChip.entity && !lastChip.name);
-      if (isEmpty) {
-        newChips.pop();
-      } else {
-        break;
-      }
+    if (newChip.type === 'entity') {
+      delete (newChip as any).attribute;
+      delete (newChip as any).unit;
+      delete (newChip as any).divisor;
+    } else {
+      delete (newChip as any).entity;
     }
+    newChips[index] = newChip;
 
     this._updateConfig({ header_chips: newChips });
   }

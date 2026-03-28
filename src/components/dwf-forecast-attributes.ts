@@ -2,7 +2,7 @@ import { html, LitElement, nothing, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import memoizeOne from 'memoize-one';
 import { formatDateWeekdayShort, formatTime } from '../date-time';
-import { localize } from '../localize';
+import { localize } from '../localize/localize';
 import { ForecastAttributeConfig } from '../types';
 import {
   ExtendedHomeAssistant,

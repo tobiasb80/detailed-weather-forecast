@@ -1,7 +1,7 @@
 import type { HomeAssistant } from 'custom-card-helpers';
 import { html, LitElement, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { localize } from '../localize';
+import { localize } from '../localize/localize';
 import type { ForecastAttributeConfig } from '../types';
 
 const fireEvent = (node: HTMLElement, type: string, detail?: unknown) => {

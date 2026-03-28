@@ -3,10 +3,10 @@ import { handleAction, hasAction } from 'custom-card-helpers';
 import type { HassEntity } from 'home-assistant-js-websocket';
 import type { PropertyValues } from 'lit';
 import { html, LitElement, nothing } from 'lit';
-import { state } from 'lit/decorators';
+import { state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { styleMap } from 'lit/directives/style-map.js';
-import SunCalc from 'suncalc';
+import * as SunCalc from 'suncalc';
 import './components/dwf-current-weather-attributes';
 import './components/dwf-daily-list';
 import './components/dwf-forecast-attributes';
@@ -26,7 +26,7 @@ import type { ExtendedHomeAssistant, ForecastAttribute, ForecastEvent, WeatherEn
 import { getSupportedForecastTypes, subscribeForecast, WEATHER_ATTRIBUTE_ICON_MAP } from './weather';
 import { styles } from './detailed-weather-forecast.styles';
 import { DEFAULT_WEATHER_IMAGE, WeatherImages } from './weather-images';
-import { localize, setHass } from './localize';
+import { localize, setHass } from './localize/localize';
 
 const MISSING_ATTRIBUTE_TEXT = 'missing';
 
@@ -317,6 +317,8 @@ export class DetailedWeatherForecast extends LitElement {
     if (Array.isArray(this._config.header_chips) && this._config.header_chips.length) {
       return this._config.header_chips.slice(0, 3);
     }
+
+    return [];
   }
 
   // Load styles using LitElement

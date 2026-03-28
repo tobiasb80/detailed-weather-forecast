@@ -7,8 +7,8 @@ import { classMap } from 'lit/directives/class-map.js';
 import type { DetailedWeatherForecastConfig } from '../types';
 import type { ExtendedHomeAssistant, WeatherEntity } from '../weather';
 import { getCurrentWeatherStateIcon } from '../weather';
-import * as customStyles from 'bundle-text:../detailed-weather-forecast.css';
-import { localize } from '../localize';
+import * as customStyles from '../detailed-weather-forecast.css';
+import { localize } from '../localize/localize';
 
 export class DwfCompactHeader extends LitElement {
   static styles = css`

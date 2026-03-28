@@ -1,7 +1,7 @@
 import { LitElement, html, nothing, TemplateResult, PropertyValues } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import { customElement, property, state } from 'lit/decorators.js';
-import SunCalc from 'suncalc';
+import { getTimes } from 'suncalc';
 import type { SunCoordinates, SunEventType, SunTimesByDay, WeatherIconMap } from '../types';
 import type { ForecastAttribute, WeatherEntity } from '../weather';
 import { formatDayPeriod, formatDateWeekdayShort, formatHour, formatHourMinute, useAmPm } from '../date-time';
@@ -39,22 +39,12 @@ export class DWFHourlyList extends LitElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    this._setupResizeObserver();
     this.closest('.forecast.hourly')?.addEventListener('scroll', this._boundHandleScroll, { passive: true });
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    if (this._resizeObserver) {
-      this._resizeObserver.disconnect();
-      this._resizeObserver = undefined;
-    }
     this.closest('.forecast.hourly')?.removeEventListener('scroll', this._boundHandleScroll);
-  }
-
-  protected updated(): void {
-    // Recalculate after DOM updates (including when forecast changes)
-    this.updateComplete.then(() => this._recalculateTranslationHeights());
   }
 
   protected willUpdate(changedProps: PropertyValues<this>): void {
@@ -162,30 +152,6 @@ export class DWFHourlyList extends LitElement {
     return html`<div class="day-marker">${label}</div>`;
   }
 
-  private _setupResizeObserver() {
-    if (this._resizeObserver) return;
-    const forecastEl = this.closest('.forecast.hourly') as HTMLElement | null;
-    if (!forecastEl) return;
-    this._resizeObserver = new ResizeObserver(() => {
-      this._recalculateTranslationHeights();
-    });
-    this._resizeObserver.observe(forecastEl);
-  }
-
-  private _recalculateTranslationHeights() {
-    const forecastEl = (this.closest('.forecast.hourly') as HTMLElement | null) ?? (this as unknown as HTMLElement);
-    // Query first item as reference for heights
-    const translateContainer = this.querySelector('.translate-container') as HTMLElement | null;
-    const iconContainer = this.querySelector('.icon-container') as HTMLElement | null;
-    if (!translateContainer || !iconContainer || !forecastEl) return;
-
-    const containerHeight = translateContainer.offsetHeight;
-    const contentHeight = iconContainer.offsetHeight;
-
-    //forecastEl.style.setProperty('--translate-container-height', `${containerHeight}px`);
-    //forecastEl.style.setProperty('--translate-content-height', `${contentHeight}px`);
-  }
-
   private _hasValidValue(item?: any): boolean {
     return typeof item !== 'undefined' && item !== null;
   }
@@ -278,7 +244,7 @@ export class DWFHourlyList extends LitElement {
     }
 
     let overflow = false;
-    let precipitationStyle: string | typeof nothing = nothing;
+    let precipitationStyle: string | undefined;
 
     if (
       precipitationScale !== undefined &&
@@ -350,7 +316,7 @@ export class DWFHourlyList extends LitElement {
           color,
           opacity: isDimmed ? '0.3' : '1',
         })
-      : nothing;
+      : undefined;
 
     return html`<div class=${classes.join(' ')} style=${style}>${formatted.value}</div>`;
   }
@@ -412,7 +378,7 @@ export class DWFHourlyList extends LitElement {
       }
 
       const baseDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      let times = SunCalc.getTimes(baseDate, latitude, longitude);
+      let times = getTimes(baseDate, latitude, longitude);
       let sunrise = this._toTimestamp(times.sunrise);
       let sunset = this._toTimestamp(times.sunset);
       // Keep rendered day aligned with the calendar day of the forecast even if
@@ -421,7 +387,7 @@ export class DWFHourlyList extends LitElement {
       if (dayShift !== 0) {
         const shiftedDate = new Date(baseDate);
         shiftedDate.setDate(shiftedDate.getDate() + dayShift);
-        times = SunCalc.getTimes(shiftedDate, latitude, longitude);
+        times = getTimes(shiftedDate, latitude, longitude);
         sunrise = this._toTimestamp(times.sunrise);
         sunset = this._toTimestamp(times.sunset);
       }

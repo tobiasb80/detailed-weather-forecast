@@ -1,9 +1,9 @@
 import type { TemplateResult } from 'lit';
 import { css, html, LitElement, nothing, unsafeCSS } from 'lit';
-import { property } from 'lit/decorators';
+import { property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { styleMap } from 'lit/directives/style-map.js';
-import * as customStyles from 'bundle-text:../detailed-weather-forecast.css';
+import * as customStyles from '../detailed-weather-forecast.css';
 
 export class DwfHeader extends LitElement {
   static styles = css`
