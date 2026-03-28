@@ -69,6 +69,7 @@
       "chips_description": "Wählen Sie Attribut oder Entität für bis zu drei Header-Chips.",
       "nowcast": "Nowcast",
       "nowcast_description": "Steuert das minutengenaue Niederschlagsdiagramm, das in der Kopfzeile angezeigt wird.",
+      "nowcast.now": "Jetzt",
       "header_info": "Wetterbedingung-Info",
       "header_info_description": "Attribute und Entitäten konfigurieren, die bei Klick auf die Wetterbedingung unterhalb der Kopfzeile angezeigt werden sollen.",
       "add_attribute": "Attribut hinzufügen",

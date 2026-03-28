@@ -69,6 +69,7 @@
       "chips_description": "Choose Attribute or entity for up to three header chips.",
       "nowcast": "Nowcast",
       "nowcast_description": "Controls the minute-by-minute precipitation chart shown inside the header.",
+      "nowcast.now": "Now",
       "header_info": "Weather condition info",
       "header_info_description": "Configure attributes and entities to be displayed below the header when the weather condition is clicked.",
       "add_attribute": "Add Attribute",
