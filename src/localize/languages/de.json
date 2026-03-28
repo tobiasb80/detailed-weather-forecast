@@ -1,4 +1,7 @@
 {
+   "common": {
+    "version": "Version"
+   },
   "editor": {
     "card": {
       "type": "Typ",

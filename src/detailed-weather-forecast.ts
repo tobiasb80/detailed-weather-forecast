@@ -27,6 +27,15 @@ import { getSupportedForecastTypes, subscribeForecast, WEATHER_ATTRIBUTE_ICON_MA
 import { styles } from './detailed-weather-forecast.styles';
 import { DEFAULT_WEATHER_IMAGE, WeatherImages } from './weather-images';
 import { localize, setHass } from './localize/localize';
+import { CARD_VERSION } from './const';
+
+// Styled console banner so your card is easy to spot in the browser console.
+// Stays visible in production — useful for version-mismatch debugging in HA.
+console.info(
+  `%c  DETAILED WEATHER FORECAST\n%c  ${localize('common.version')} ${CARD_VERSION}    `,
+  'color: orange; font-weight: bold; background: black',
+  'color: white; font-weight: bold; background: dimgray',
+);
 
 const MISSING_ATTRIBUTE_TEXT = 'missing';
 
