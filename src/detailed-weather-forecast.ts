@@ -317,6 +317,8 @@ export class DetailedWeatherForecast extends LitElement {
     if (Array.isArray(this._config.header_chips) && this._config.header_chips.length) {
       return this._config.header_chips.slice(0, 3);
     }
+
+    return [];
   }
 
   // Load styles using LitElement
