@@ -592,8 +592,8 @@ export class DetailedWeatherForecast extends LitElement {
             <div
               class=${classMap(chipClassMap)}
               title=${chipTitle}
-              role=${hasChipAction ? 'button' : nothing}
-              tabindex=${hasChipAction ? 0 : nothing}
+              role=${hasChipAction ? 'button' : undefined}
+              tabindex=${hasChipAction ? 0 : undefined}
               @click=${hasChipAction
                 ? () => this._handleHeaderChipTap(chip.action, chip.type === 'entity' ? chip.entity : undefined)
                 : undefined}
@@ -620,8 +620,8 @@ export class DetailedWeatherForecast extends LitElement {
             temp: true,
             'has-action': hasTemperatureTapAction,
           })}
-          role=${hasTemperatureTapAction ? 'button' : nothing}
-          tabindex=${hasTemperatureTapAction ? 0 : nothing}
+          role=${hasTemperatureTapAction ? 'button' : undefined}
+          tabindex=${hasTemperatureTapAction ? 0 : undefined}
           @click=${hasTemperatureTapAction
             ? () => this._handleHeaderTap(temperatureTapAction, temperatureActionEntity)
             : undefined}
@@ -636,8 +636,8 @@ export class DetailedWeatherForecast extends LitElement {
             condition: true,
             'has-action': hasConditionTapAction,
           })}
-          role=${hasConditionTapAction ? 'button' : nothing}
-          tabindex=${hasConditionTapAction ? 0 : nothing}
+          role=${hasConditionTapAction ? 'button' : undefined}
+          tabindex=${hasConditionTapAction ? 0 : undefined}
           @click=${hasConditionTapAction ? () => this._handleConditionTap() : undefined}
           @keydown=${hasConditionTapAction ? (ev: KeyboardEvent) => this._handleConditionKeydown(ev) : undefined}
         >
