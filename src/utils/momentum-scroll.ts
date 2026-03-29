@@ -257,7 +257,7 @@ export const enableMomentumScroll = (
       try {
         container.setPointerCapture(ev.pointerId);
         state.drag.captured = true;
-      } catch (err) {
+      } catch {
         state.drag.captured = false;
       }
     }
@@ -289,7 +289,7 @@ export const enableMomentumScroll = (
       if (captured && pointerId !== null && container.hasPointerCapture?.(pointerId)) {
         container.releasePointerCapture(pointerId);
       }
-    } catch (err) {
+    } catch {
       /* Ignore release errors */
     }
 

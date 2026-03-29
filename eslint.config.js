@@ -21,7 +21,6 @@ export default [
     },
     rules: {
       ...eslitPlugin.configs['recommended'].rules,
-      '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },

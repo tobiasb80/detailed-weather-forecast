@@ -1,14 +1,13 @@
-import type { ActionConfig } from 'custom-card-helpers';
 import { hasAction } from 'custom-card-helpers';
 import type { TemplateResult } from 'lit';
 import { css, html, LitElement, nothing, unsafeCSS } from 'lit';
 import { property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
+import * as customStyles from '../detailed-weather-forecast.css';
+import { localize } from '../localize/localize';
 import type { DetailedWeatherForecastConfig } from '../types';
 import type { ExtendedHomeAssistant, WeatherEntity } from '../weather';
 import { getCurrentWeatherStateIcon } from '../weather';
-import * as customStyles from '../detailed-weather-forecast.css';
-import { localize } from '../localize/localize';
 
 export class DwfCompactHeader extends LitElement {
   static styles = css`

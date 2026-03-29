@@ -1,16 +1,9 @@
 import { html, LitElement, nothing, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import memoizeOne from 'memoize-one';
 import { formatDateWeekdayShort, formatTime } from '../date-time';
 import { localize } from '../localize/localize';
 import { ForecastAttributeConfig } from '../types';
-import {
-  ExtendedHomeAssistant,
-  ForecastAttribute,
-  formatForecastAttribute,
-  WEATHER_ATTRIBUTE_ICON_MAP,
-  WeatherEntity,
-} from '../weather';
+import { ExtendedHomeAssistant, ForecastAttribute, formatForecastAttribute, WeatherEntity } from '../weather';
 
 @customElement('dwf-forecast-attributes')
 export class DwfForecastAttributes extends LitElement {

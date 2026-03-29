@@ -7,32 +7,21 @@ import { state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import * as SunCalc from 'suncalc';
+import './components/dwf-compact-header';
 import './components/dwf-current-weather-attributes';
 import './components/dwf-daily-list';
 import './components/dwf-forecast-attributes';
+import './components/dwf-header';
 import './components/dwf-hourly-list';
 import './components/dwf-nowcast';
-import './components/dwf-header';
-import './components/dwf-compact-header';
-import {
-  SunCoordinates,
-  DetailedWeatherForecastConfig,
-  WeatherIconMap,
-  HeaderAttribute,
-  HeaderWeatherAttribute,
-} from './types';
+import { CARD_VERSION } from './const';
+import { styles } from './detailed-weather-forecast.styles';
+import { localize, setHass } from './localize/localize';
+import { DetailedWeatherForecastConfig, HeaderAttribute, SunCoordinates, WeatherIconMap } from './types';
 import { enableMomentumScroll } from './utils/momentum-scroll';
 import type { ExtendedHomeAssistant, ForecastAttribute, ForecastEvent, WeatherEntity } from './weather';
-import {
-  formatWeatherAttribute,
-  getSupportedForecastTypes,
-  subscribeForecast,
-  WEATHER_ATTRIBUTE_ICON_MAP,
-} from './weather';
-import { styles } from './detailed-weather-forecast.styles';
+import { formatWeatherAttribute, getSupportedForecastTypes, subscribeForecast } from './weather';
 import { DEFAULT_WEATHER_IMAGE, WeatherImages } from './weather-images';
-import { localize, setHass } from './localize/localize';
-import { CARD_VERSION } from './const';
 
 // Styled console banner so your card is easy to spot in the browser console.
 // Stays visible in production — useful for version-mismatch debugging in HA.
@@ -89,8 +78,6 @@ type NowcastServiceResponse = {
 
 const SOLAR_FORECAST_ATTRIBUTE = 'solar_forecast';
 const NOWCAST_SERVICE_NAME = 'get_minute_forecast';
-
-const isAttributeHeaderChip = (chip: HeaderAttribute): chip is HeaderWeatherAttribute => chip.type === 'attribute';
 
 export class DetailedWeatherForecast extends LitElement {
   // internal reactive states
@@ -830,7 +817,7 @@ export class DetailedWeatherForecast extends LitElement {
 
     const displays: HeaderChipDisplay[] = [];
 
-    chips.forEach((chip, index) => {
+    chips.forEach((chip) => {
       const action = hasAction(chip.tap_action) ? chip.tap_action : undefined;
       const icon = typeof (chip as any).icon === 'string' ? (chip as any).icon.trim() : undefined;
 
@@ -985,7 +972,7 @@ export class DetailedWeatherForecast extends LitElement {
       const { hourly, daily } = this._buildSolarForecastMaps(forecasts, selectedEntries);
       this._solarForecastByHour = hourly;
       this._solarForecastByDay = daily;
-    } catch (_err) {
+    } catch {
       this._solarForecastByHour = {};
       this._solarForecastByDay = {};
     }
@@ -1140,7 +1127,7 @@ export class DetailedWeatherForecast extends LitElement {
 
       const forecast = this._extractNowcastForecast(response, entityId);
       this._setNowcastForecast(forecast);
-    } catch (_err) {
+    } catch {
       this._clearNowcastForecast();
     }
   }
@@ -1162,7 +1149,7 @@ export class DetailedWeatherForecast extends LitElement {
       this._nowcastEntityId = entityId;
       this._nowcastServiceDomain = typeof platform === 'string' && platform.trim().length ? platform : undefined;
       return this._nowcastServiceDomain;
-    } catch (_err) {
+    } catch {
       this._nowcastEntityId = entityId;
       this._nowcastServiceDomain = undefined;
       return undefined;
@@ -1200,7 +1187,6 @@ export class DetailedWeatherForecast extends LitElement {
 
   private _setNowcastForecast(forecast: NowcastForecastItem[]) {
     const hasRain = forecast.some((item) => item.precipitation > 0);
-    const hadRain = this._nowcastHasRain;
 
     this._nowcastForecast = forecast;
     this._nowcastHasRain = hasRain;

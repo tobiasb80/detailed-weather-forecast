@@ -1,11 +1,11 @@
 // Code adapted from frontend/src/data/weather.ts to make it useable in custom cards
 import { type HomeAssistant } from 'custom-card-helpers';
-import type { HassConfig, HassEntity, HassEntityAttributeBase, HassEntityBase } from 'home-assistant-js-websocket';
+import type { HassEntity, HassEntityAttributeBase, HassEntityBase } from 'home-assistant-js-websocket';
 import type { SVGTemplateResult, TemplateResult } from 'lit';
 import { html, svg } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
-import type { WeatherIconMap } from './types';
 import memoizeOne from 'memoize-one';
+import type { WeatherIconMap } from './types';
 
 export const enum WeatherEntityFeature {
   FORECAST_DAILY = 1,
@@ -519,7 +519,7 @@ export const formatWeatherAttribute = (
   } else {
     try {
       display = JSON.stringify(rawValue);
-    } catch (_err) {
+    } catch {
       return undefined;
     }
   }
@@ -593,7 +593,7 @@ export const formatForecastAttribute = (
   } else {
     try {
       display = JSON.stringify(rawValue);
-    } catch (_err) {
+    } catch {
       return undefined;
     }
   }

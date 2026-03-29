@@ -1149,7 +1149,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
       this._solarForecastOptions = options;
       this._solarForecastEntryIds = entryIds;
-    } catch (_err) {
+    } catch {
       this._solarForecastOptions = [];
       this._solarForecastEntryIds = [];
     }
@@ -1478,7 +1478,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
             if (!hasOptions) {
               this._forecastOptionsLoading = { ...this._forecastOptionsLoading, [type]: true };
             }
-          } catch (_err) {
+          } catch {
             // ignore subscription errors to avoid breaking the editor
           }
         } else {
@@ -1486,13 +1486,13 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           this._forecastOptionsLoading = { ...this._forecastOptionsLoading, [type]: !hasOptions };
         }
       });
-    } catch (_err) {
+    } catch {
       // Fall back to attribute-based detection to keep the editor alive
       try {
         if (this.hass && this._config?.entity) {
           this._applyForecastOptionsFromAttributes(this.hass.states[this._config.entity] as any);
         }
-      } catch (_e) {
+      } catch {
         // ignore
       }
     }
