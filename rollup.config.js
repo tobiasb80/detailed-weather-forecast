@@ -1,4 +1,3 @@
-
 import typescript from '@rollup/plugin-typescript';
 import commonjs from '@rollup/plugin-commonjs';
 import nodeResolve from '@rollup/plugin-node-resolve';
@@ -29,12 +28,10 @@ const plugins = [
     include: '**/*.css',
   }),
   copy({
-    targets: [
-      { src: 'src/img', dest: 'dist' }
-    ]
+    targets: [{ src: 'src/img', dest: 'dist' }],
   }),
   dev && serve(serveopts),
-  !dev && terser()
+  !dev && terser(),
 ];
 
 const onwarn = (warning, warn) => {

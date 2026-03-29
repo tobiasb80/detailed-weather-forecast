@@ -9,7 +9,7 @@
 
   // Set working directory
   "workspaceFolder": "/workspaces/test",
-  
+
   // Mount project to workspace, dist to Lovelace plugins, and config directory for Home Assistant
   "mounts": [
     "source=${localWorkspaceFolder},target=/workspaces/test,type=bind",
@@ -46,7 +46,7 @@
         "github.vscode-github-actions",
         "github.vscode-pull-request-github",
         "bierner.lit-html",
-        "redhat.vscode-yaml", 
+        "redhat.vscode-yaml",
         "esbenp.prettier-vscode"
       ],
       "settings": {
@@ -59,9 +59,7 @@
           }
         },
         "typescript.tsdk": "node_modules/typescript/lib",
-        "typescript.tsserver.pluginPaths": [
-          "node_modules/typescript/lib"
-        ],
+        "typescript.tsserver.pluginPaths": ["node_modules/typescript/lib"],
         "files.eol": "\n",
         "task.allowAutomaticTasks": "on"
       }

@@ -1,4 +1,3 @@
-
 import resolve from '@rollup/plugin-node-resolve';
 import esbuild from 'rollup-plugin-esbuild';
 import serve from 'rollup-plugin-serve';
@@ -30,17 +29,17 @@ export default {
       include: '**/*.css',
     }),
     copy({
-      targets: [
-        { src: 'src/img', dest: 'dist' }
-      ]
+      targets: [{ src: 'src/img', dest: 'dist' }],
     }),
     {
       name: 'generate-index-html',
       buildEnd: () => {
-        if (!fs.existsSync('./dist')){
-            fs.mkdirSync('./dist', { recursive: true });
+        if (!fs.existsSync('./dist')) {
+          fs.mkdirSync('./dist', { recursive: true });
         }
-        fs.writeFileSync('./dist/index.html', `
+        fs.writeFileSync(
+          './dist/index.html',
+          `
 <!DOCTYPE html>
 <html>
   <head>
@@ -56,8 +55,9 @@ export default {
     </script>
   </body>
 </html>
-        `);
-      }
+        `,
+        );
+      },
     },
     serve({
       contentBase: './dist',
@@ -67,8 +67,8 @@ export default {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        Pragma: 'no-cache',
+        Expires: '0',
       },
     }),
   ],
@@ -77,7 +77,7 @@ export default {
     exclude: 'node_modules/**',
     buildDelay: 500,
     chokidar: {
-      usePolling: true,  // Required for reliable file detection on Docker volume mounts
+      usePolling: true, // Required for reliable file detection on Docker volume mounts
       interval: 1000,
     },
   },

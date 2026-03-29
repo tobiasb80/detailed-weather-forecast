@@ -14,6 +14,7 @@ This directory contains the development container configuration for building and
    - Wait for the container to build (first time takes ~2-3 minutes)
 
 3. **Build the Card**
+
    ```bash
    yarn build      # Lint and build
    yarn start      # Start dev server with hot reload (port 5000)
@@ -76,12 +77,14 @@ yarn rollup           # Create optimized dist files
 ## Troubleshooting
 
 ### Container Won't Start
+
 ```bash
 # Rebuild the container
 ctrl+shift+p → "Remote: Rebuild Container"
 ```
 
 ### Port Already in Use
+
 ```bash
 # Find what's using port 5000 or 8123
 lsof -i :5000
@@ -89,6 +92,7 @@ lsof -i :8123
 ```
 
 ### Node Modules Issues
+
 ```bash
 # Clear and reinstall dependencies
 rm -rf node_modules

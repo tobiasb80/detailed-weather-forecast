@@ -518,7 +518,9 @@ ha-card {
   border-radius: inherit;
   pointer-events: none;
   z-index: -1;
-  transition: top 150ms ease-in-out, background-color 150ms ease-in-out;
+  transition:
+    top 150ms ease-in-out,
+    background-color 150ms ease-in-out;
 }
 
 .forecast .precipitation.overflow {
