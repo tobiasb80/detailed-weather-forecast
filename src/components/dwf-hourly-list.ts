@@ -1,7 +1,7 @@
 import { LitElement, html, nothing, TemplateResult, PropertyValues } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import { customElement, property, state } from 'lit/decorators.js';
-import { getTimes } from 'suncalc';
+import SunCalc from 'suncalc';
 import type { SunCoordinates, SunEventType, SunTimesByDay, WeatherIconMap } from '../types';
 import type { ForecastAttribute, WeatherEntity } from '../weather';
 import { formatDayPeriod, formatDateWeekdayShort, formatHour, formatHourMinute, useAmPm } from '../date-time';
@@ -378,7 +378,7 @@ export class DWFHourlyList extends LitElement {
       }
 
       const baseDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      let times = getTimes(baseDate, latitude, longitude);
+      let times = SunCalc.getTimes(baseDate, latitude, longitude);
       let sunrise = this._toTimestamp(times.sunrise);
       let sunset = this._toTimestamp(times.sunset);
       // Keep rendered day aligned with the calendar day of the forecast even if
@@ -387,7 +387,7 @@ export class DWFHourlyList extends LitElement {
       if (dayShift !== 0) {
         const shiftedDate = new Date(baseDate);
         shiftedDate.setDate(shiftedDate.getDate() + dayShift);
-        times = getTimes(shiftedDate, latitude, longitude);
+        times = SunCalc.getTimes(shiftedDate, latitude, longitude);
         sunrise = this._toTimestamp(times.sunrise);
         sunset = this._toTimestamp(times.sunset);
       }
