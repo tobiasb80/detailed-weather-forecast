@@ -1,7 +1,6 @@
 node_modules/
 .parcel-cache/
 /.rpt2_cache/
-/dist
 homeassistant/
 .devcontainer/config/.storage/
 .devcontainer/config/tts/
