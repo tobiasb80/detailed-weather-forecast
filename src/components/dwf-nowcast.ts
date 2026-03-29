@@ -49,8 +49,8 @@ export class DWFNowcast extends LitElement {
     const labelOffset = this._computeLabelOffset(this._containerWidth || this.clientWidth);
     const labels =
       this._barStride > 1
-        ? [localize('nowcast.now'), '20m', '40m', '60m']
-        : [localize('nowcast.now'), '10m', '20m', '30m', '40m', '50m', '60m'];
+        ? [localize('card.nowcast.now'), '20m', '40m', '60m']
+        : [localize('card.nowcast.now'), '10m', '20m', '30m', '40m', '50m', '60m'];
 
     return html`
       <div class=${classMap({ 'nowcast-bars': true })} style=${styleMap({ '--dwf-nowcast-gap': `${this._barGap}px` })}>
