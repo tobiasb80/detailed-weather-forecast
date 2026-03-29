@@ -23,7 +23,12 @@ import {
 } from './types';
 import { enableMomentumScroll } from './utils/momentum-scroll';
 import type { ExtendedHomeAssistant, ForecastAttribute, ForecastEvent, WeatherEntity } from './weather';
-import { getSupportedForecastTypes, subscribeForecast, WEATHER_ATTRIBUTE_ICON_MAP } from './weather';
+import {
+  formatWeatherAttribute,
+  getSupportedForecastTypes,
+  subscribeForecast,
+  WEATHER_ATTRIBUTE_ICON_MAP,
+} from './weather';
 import { styles } from './detailed-weather-forecast.styles';
 import { DEFAULT_WEATHER_IMAGE, WeatherImages } from './weather-images';
 import { localize, setHass } from './localize/localize';
@@ -858,20 +863,39 @@ export class DetailedWeatherForecast extends LitElement {
         return;
       }
 
-      const formatted = this._formatHeaderAttribute(attribute, chip.unit, chip.divisor);
-      const label = attribute;
-      const tooltip = `${attribute}: ${formatted.display}`;
-      const attrIcon = icon || WEATHER_ATTRIBUTE_ICON_MAP[attribute];
+      const formatted = formatWeatherAttribute(
+        this._hass,
+        this._state,
+        attribute,
+        chip.name,
+        chip.unit,
+        icon,
+        chip.divisor,
+      );
 
-      displays.push({
-        label,
-        display: formatted.display,
-        missing: formatted.missing,
-        tooltip,
-        type: chip.type,
-        action,
-        icon: attrIcon,
-      });
+      if (!formatted) {
+        displays.push({
+          label: attribute,
+          display: MISSING_ATTRIBUTE_TEXT,
+          missing: true,
+          tooltip: attribute,
+          type: chip.type,
+          action,
+          icon,
+        });
+      } else {
+        const tooltip = `${formatted.name}: ${formatted.value}`;
+
+        displays.push({
+          label: formatted.name,
+          display: formatted.value,
+          missing: false,
+          tooltip,
+          type: chip.type,
+          action,
+          icon: formatted.icon,
+        });
+      }
     });
 
     return displays;
@@ -904,66 +928,6 @@ export class DetailedWeatherForecast extends LitElement {
       missing: false,
       icon: stateObj.attributes.icon,
     };
-  }
-
-  // Format a single header attribute
-  private _formatHeaderAttribute(
-    attribute: string,
-    unit?: string,
-    divisor?: number,
-  ): { attribute: string; display: string; missing: boolean } {
-    if (!this._state || !this._hass) {
-      return { attribute, display: MISSING_ATTRIBUTE_TEXT, missing: true };
-    }
-
-    // Check if attribute exists on the entity
-    const hasAttribute = Object.prototype.hasOwnProperty.call(this._state.attributes, attribute);
-    if (!hasAttribute) {
-      return { attribute, display: MISSING_ATTRIBUTE_TEXT, missing: true };
-    }
-
-    const rawValue = (this._state.attributes as unknown as Record<string, unknown>)[attribute];
-
-    if (rawValue === undefined || rawValue === null) {
-      return { attribute, display: MISSING_ATTRIBUTE_TEXT, missing: true };
-    }
-
-    let display: string;
-    if (typeof rawValue === 'number') {
-      if (divisor && typeof divisor === 'number') {
-        const hour_value = rawValue / divisor;
-        display = hour_value.toLocaleString(this.hass?.locale?.language, {
-          maximumFractionDigits: 0,
-        });
-      } else {
-        display = rawValue.toLocaleString(this.hass?.locale?.language, {
-          maximumFractionDigits: 1,
-        });
-      }
-    } else if (typeof rawValue === 'string') {
-      const trimmed = rawValue.trim();
-      if (!trimmed.length) {
-        return { attribute, display: MISSING_ATTRIBUTE_TEXT, missing: true };
-      }
-      display = trimmed;
-    } else {
-      try {
-        display = JSON.stringify(rawValue);
-      } catch (_err) {
-        return { attribute, display: MISSING_ATTRIBUTE_TEXT, missing: true };
-      }
-    }
-
-    // Try to format the attribute value using Home Assistant's built-in formatter
-    const formattedValue = this._hass?.formatEntityAttributeValue?.(this._state, attribute, display);
-    const resolvedValue =
-      formattedValue !== undefined && formattedValue !== null && formattedValue !== '' ? formattedValue : display;
-
-    if (resolvedValue === undefined || resolvedValue === null) {
-      return { attribute, display: MISSING_ATTRIBUTE_TEXT, missing: true };
-    }
-
-    return { attribute, display: resolvedValue + (unit ? ` ${unit}` : ''), missing: false };
   }
 
   private _needsSolarForecast(): boolean {
