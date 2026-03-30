@@ -78,5 +78,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: detailed-weather-forecast.zip
           asset_name: detailed-weather-forecast.zip
-          tag: ${{ github.ref }}
+          tag: ${{ github.ref_name }}
+          prerelease: false
+          make_latest: true
           overwrite: true
