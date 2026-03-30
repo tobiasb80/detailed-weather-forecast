@@ -31,6 +31,21 @@ console.info(
   'color: white; font-weight: bold; background: dimgray',
 );
 
+// Registering with window.customCards makes your card appear in the Lovelace
+// "Add Card" UI picker with a name and description. This array is shared by all
+// custom cards on the page, so we guard with `|| []` before pushing.
+interface WindowWithCustomCards extends Window {
+  customCards: Array<{ type: string; name: string; description: string }>;
+}
+
+(window as unknown as WindowWithCustomCards).customCards =
+  (window as unknown as WindowWithCustomCards).customCards || [];
+(window as unknown as WindowWithCustomCards).customCards.push({
+  type: 'detailed-weather-forecast-card',
+  name: 'Detailed Weather Forecast',
+  description: 'Weather forecast similar to the default HA card, but with some additional information',
+});
+
 const MISSING_ATTRIBUTE_TEXT = 'missing';
 
 // Private types
@@ -1563,3 +1578,5 @@ export class DetailedWeatherForecast extends LitElement {
     );
   }
 }
+
+customElements.define('detailed-weather-forecast-card', DetailedWeatherForecast);

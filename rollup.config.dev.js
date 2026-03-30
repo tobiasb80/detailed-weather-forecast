@@ -15,7 +15,7 @@ const onwarn = (warning, warn) => {
 };
 
 export default {
-  input: 'src/index.ts',
+  input: 'src/detailed-weather-forecast.ts',
   output: {
     file: './dist/detailedweatherforecast.js',
     format: 'es',

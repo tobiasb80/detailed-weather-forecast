@@ -1,5 +1,4 @@
 node_modules/
-.parcel-cache/
 /.rpt2_cache/
 homeassistant/
 .devcontainer/config/.storage/
@@ -12,3 +11,5 @@ homeassistant/
 .devcontainer/config/known_devices.yaml
 .devcontainer/config/.ha_run.lock
 .yarn/
+dist/
+
