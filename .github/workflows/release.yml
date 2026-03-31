@@ -9,6 +9,9 @@ on:
 jobs:
   release:
     name: Prepare release
+    permissions:
+      contents: read
+      actions: write
     runs-on: ubuntu-latest
     env:
       COREPACK_ENABLE_DOWNLOAD_PROMPT: 0
