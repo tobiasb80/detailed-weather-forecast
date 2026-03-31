@@ -14,7 +14,7 @@ import './components/dwf-forecast-attributes';
 import './components/dwf-header';
 import './components/dwf-hourly-list';
 import './components/dwf-nowcast';
-import { CARD_VERSION } from './const';
+import { version } from '../package.json';
 import { styles } from './detailed-weather-forecast.styles';
 import { localize, setHass } from './localize/localize';
 import { DetailedWeatherForecastConfig, HeaderAttribute, SunCoordinates, WeatherIconMap } from './types';
@@ -26,7 +26,7 @@ import { DEFAULT_WEATHER_IMAGE, WeatherImages } from './weather-images';
 // Styled console banner so your card is easy to spot in the browser console.
 // Stays visible in production — useful for version-mismatch debugging in HA.
 console.info(
-  `%c  DETAILED WEATHER FORECAST\n%c  ${localize('common.version')} ${CARD_VERSION}    `,
+  `%c  DETAILED WEATHER FORECAST\n%c  ${localize('common.version')} ${version}    `,
   'color: orange; font-weight: bold; background: black',
   'color: white; font-weight: bold; background: dimgray',
 );
