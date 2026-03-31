@@ -32,6 +32,9 @@ jobs:
           cd dist
           zip -r ../detailed-weather-forecast.zip .
 
+      - name: Verify archive
+        run: ls -l
+
       - name: Upload build archive
         uses: actions/upload-artifact@v4
         with:
