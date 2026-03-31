@@ -38,22 +38,14 @@ jobs:
 
           node -e "const fs=require('fs');const version=process.env.VERSION;const pkgPath='package.json';const pkg=JSON.parse(fs.readFileSync(pkgPath,'utf8'));pkg.version=version;fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');" --version="$VERSION"
 
-          sed -i "s/^export const CARD_VERSION = '.*';$/export const CARD_VERSION = '$VERSION';/" src/const.ts
-
       - name: Validate bumped versions
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
 
           PKG_VERSION=$(node -p "require('./package.json').version")
-          CONST_VERSION=$(sed -n "s/^export const CARD_VERSION = '\(.*\)';$/\1/p" src/const.ts)
 
           [ "$PKG_VERSION" = "$VERSION" ] || {
             echo "package.json version mismatch: expected '$VERSION', got '$PKG_VERSION'"
-            exit 1
-          }
-
-          [ "$CONST_VERSION" = "$VERSION" ] || {
-            echo "src/const.ts CARD_VERSION mismatch: expected '$VERSION', got '$CONST_VERSION'"
             exit 1
           }
 

@@ -1,18 +1,23 @@
 name: Validate
 
 on:
-  push:
-  pull_request:
-  schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+  workflow_run:
+    workflows: ['Build', 'Release']
+    types: [completed]
 
 permissions: {}
 
 jobs:
   validate-hacs:
     runs-on: 'ubuntu-latest'
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: detailed-weather-forecast.zip
+          path: .
+
       - name: HACS validation
         uses: 'hacs/action@main'
         with:
