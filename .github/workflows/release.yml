@@ -28,13 +28,16 @@ jobs:
         id: version_check
         run: |
           TAG="${GITHUB_REF_NAME}"
-          # Entfernt 'v' oder 'v.' am Anfang, um die reine Version zu erhalten (z.B. 1.0.0.0 oder 1.0.0-beta3)
+          # Removes 'v' or 'v.' at the beginning to get the pure version (e.g. 1.0.0.0 or 1.0.0-beta3)
           VERSION=$(echo "$TAG" | sed -E 's/^v\.?//')
+
+          # Remove everything from '-' onwards for comparison with package.json
+          BASE_VERSION="${VERSION%%-*}"
 
           PKG_VERSION=$(node -p "require('./package.json').version")
 
-          if [ "$PKG_VERSION" != "$VERSION" ]; then
-            echo "Fehler: Die Tag-Version ($VERSION) stimmt nicht mit der package.json Version ($PKG_VERSION) überein!"
+          if [ "$PKG_VERSION" != "$BASE_VERSION" ]; then
+            echo "Error: The tag base version ($BASE_VERSION) does not match the package.json version ($PKG_VERSION)!"
             exit 1
           fi
 
@@ -42,10 +45,10 @@ jobs:
 
           if [[ "$VERSION" == *-* ]]; then
             echo "IS_PRERELEASE=true" >> $GITHUB_OUTPUT
-            echo "Prerelease erkannt: $VERSION"
+            echo "Prerelease detected: $VERSION"
           else
             echo "IS_PRERELEASE=false" >> $GITHUB_OUTPUT
-            echo "Stabiles Release erkannt: $VERSION"
+            echo "Stable release detected: $VERSION"
           fi
 
       # Build
