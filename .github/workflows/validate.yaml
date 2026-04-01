@@ -2,7 +2,7 @@ name: Validate
 
 on:
   workflow_run:
-    workflows: ['Build', 'Release']
+    workflows: ['Release']
     types: [completed]
 
 permissions: {}
