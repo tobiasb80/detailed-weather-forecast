@@ -32,7 +32,7 @@
     "DEVCONTAINER": "1",
     "HASS_USERNAME": "dev",
     "HASS_PASSWORD": "dev",
-    "LOVELACE_REMOTE_FILES": "http://localhost:5000/detailedweatherforecast.js"
+    "LOVELACE_REMOTE_FILES": "http://localhost:5000/detailed-weather-forecast.js"
   },
 
   // Setup Home Assistant and install dependencies

@@ -7,9 +7,6 @@ on:
 jobs:
   build:
     name: Test build
-    permissions:
-      contents: read
-      actions: write
     runs-on: ubuntu-latest
     env:
       COREPACK_ENABLE_DOWNLOAD_PROMPT: 0
@@ -29,17 +26,3 @@ jobs:
 
       - name: Build
         run: yarn build
-
-      - name: Prepare build archive
-        run: |
-          cd dist
-          zip -r ../detailed-weather-forecast.zip .
-
-      - name: Verify archive
-        run: ls -l
-
-      - name: Upload build archive
-        uses: actions/upload-artifact@v4
-        with:
-          name: detailed-weather-forecast.zip
-          path: detailed-weather-forecast.zip

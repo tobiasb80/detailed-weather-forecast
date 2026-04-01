@@ -17,9 +17,10 @@ const onwarn = (warning, warn) => {
 export default {
   input: 'src/detailed-weather-forecast.ts',
   output: {
-    file: './dist/detailedweatherforecast.js',
+    file: './dist/detailed-weather-forecast.js',
     format: 'es',
     inlineDynamicImports: true,
+    assetFileNames: '[name][extname]',
   },
   plugins: [
     resolve(),
@@ -29,36 +30,8 @@ export default {
       include: '**/*.css',
     }),
     copy({
-      targets: [{ src: 'src/img', dest: 'dist' }],
+      targets: [{ src: 'src/img/*', dest: 'dist' }],
     }),
-    {
-      name: 'generate-index-html',
-      buildEnd: () => {
-        if (!fs.existsSync('./dist')) {
-          fs.mkdirSync('./dist', { recursive: true });
-        }
-        fs.writeFileSync(
-          './dist/index.html',
-          `
-<!DOCTYPE html>
-<html>
-  <head>
-    <script type="module" src="/detailedweatherforecast.js"></script>
-  </head>
-  <body>
-    <detailed-weather-forecast></detailed-weather-forecast>
-    <script>
-      // Example of setting hass object
-      document.querySelector('detailed-weather-forecast').hass = {
-        // Your mock hass object here
-      };
-    </script>
-  </body>
-</html>
-        `,
-        );
-      },
-    },
     serve({
       contentBase: './dist',
       host: '0.0.0.0',

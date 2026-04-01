@@ -28,7 +28,7 @@ const plugins = [
     include: '**/*.css',
   }),
   copy({
-    targets: [{ src: 'src/img', dest: 'dist' }],
+    targets: [{ src: 'src/img/*', dest: 'dist' }],
   }),
   dev && serve(serveopts),
   !dev && terser(),
@@ -39,16 +39,17 @@ const onwarn = (warning, warn) => {
     return;
   }
 
-  warn(warning);  
+  warn(warning);
 };
 
 export default [
   {
     input: 'src/detailed-weather-forecast.ts',
     output: {
-      file: 'dist/detailedweatherforecast.js',
+      file: 'dist/detailed-weather-forecast.js',
       format: 'es',
       inlineDynamicImports: true,
+      assetFileNames: '[name][extname]',
     },
     plugins: [...plugins.filter(Boolean)],
     onwarn,

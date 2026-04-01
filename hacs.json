@@ -1,6 +1,6 @@
 {
   "name": "Deatailed Weather Forecast Card",
   "render_readme": true,
-  "filename": "detailed-weather-forecast.zip",
-  "zip_release": true
+  "filename": "detailed-weather-forecast.js",
+  "content_in_root": false
 }
