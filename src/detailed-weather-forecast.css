@@ -1,14 +1,147 @@
+:host {
+  display: block;
+  --card-width: 100%;
+  --day-gradient-start: #1a85d6;
+  --day-gradient-end: #7ec5f0;
+  --night-gradient-start: #09102b;
+  --night-gradient-end: #192060;
+  --sunset-gradient-start: #ff6b6b;
+  --sunset-gradient-end: #ffa07a;
+  --sunrise-gradient-start: #ffa07a;
+  --sunrise-gradient-end: #ffd700;
+  --partlycloudy-start: #5aaaf5;
+  --partlycloudy-end: #b7d8f8;
+  --partlycloudy-night-start: #0a1835;
+  --partlycloudy-night-end: #203a60;
+  --cloudy-night-start: #23282e;
+  --cloudy-night-end: #373e47;
+  --cloudy-start: #788591;
+  --cloudy-end: #b3bcc4;
+  --fog-start: #959fa8;
+  --fog-end: #c4cace;
+  --fog-night-start: #2a2e33;
+  --fog-night-end: #40464f;
+  --rainy-start: #4b5560;
+  --rainy-end: #6e7c8a;
+  --rainy-night-start: #1b2026;
+  --rainy-night-end: #2d353d;
+  --exceptional-start: #121226;
+  --exceptional-end: #34346e;
+  --exceptional-night-start: #080812;
+  --exceptional-night-end: #1a1a40;
+  --snowy-start: #9aa7b3;
+  --snowy-end: #c8d3db;
+  --snowy-night-start: #2b343d;
+  --snowy-night-end: #45505c;
+  --windy-start: #617382;
+  --windy-end: #94a5b3;
+  --windy-night-start: #212c36;
+  --windy-night-end: #394857;
+  --overlay-opacity: 0.1;
+}
+
 ha-card {
   /* Auto-size by default, but also respect explicit heights from the parent */
   height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: transparent;
+  box-shadow: none;
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+}
+
+.weather-card {
+  position: relative;
+  width: var(--card-width);
+  min-height: var(--card-height, 200px);
+  border-radius: 16px;
+  overflow: visible;
+}
+
+.animation-container {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, var(--day-gradient-start), var(--day-gradient-end));
+  transition:
+    background 2s ease-in-out,
+    min-height 0.3s ease;
+}
+
+.animation-container.night {
+  background: linear-gradient(135deg, var(--night-gradient-start), var(--night-gradient-end));
+}
+
+.animation-container.sunset {
+  background: linear-gradient(135deg, var(--sunset-gradient-start), var(--sunset-gradient-end));
+}
+
+.animation-container.sunrise {
+  background: linear-gradient(135deg, var(--sunrise-gradient-start), var(--sunrise-gradient-end));
+}
+
+.animation-container.partlycloudy {
+  background: linear-gradient(135deg, var(--partlycloudy-start), var(--partlycloudy-end));
+}
+
+.animation-container.partlycloudy-night {
+  background: linear-gradient(135deg, var(--partlycloudy-night-start), var(--partlycloudy-night-end));
+}
+
+.animation-container.cloudy-night {
+  background: linear-gradient(135deg, var(--cloudy-night-start), var(--cloudy-night-end));
+}
+
+.animation-container.cloudy {
+  background: linear-gradient(135deg, var(--cloudy-start), var(--cloudy-end));
+}
+
+.animation-container.fog {
+  background: linear-gradient(135deg, var(--fog-start), var(--fog-end));
+}
+
+.animation-container.fog-night {
+  background: linear-gradient(135deg, var(--fog-night-start), var(--fog-night-end));
+}
+
+.animation-container.rainy {
+  background: linear-gradient(135deg, var(--rainy-start), var(--rainy-end));
+}
+
+.animation-container.rainy-night {
+  background: linear-gradient(135deg, var(--rainy-night-start), var(--rainy-night-end));
+}
+
+.animation-container.exceptional {
+  background: linear-gradient(135deg, var(--exceptional-start), var(--exceptional-end));
+}
+
+.animation-container.exceptional-night {
+  background: linear-gradient(135deg, var(--exceptional-night-start), var(--exceptional-night-end));
+}
+
+.animation-container.snowy {
+  background: linear-gradient(135deg, var(--snowy-start), var(--snowy-end));
+}
+
+.animation-container.snowy-night {
+  background: linear-gradient(135deg, var(--snowy-night-start), var(--snowy-night-end));
+}
+
+.animation-container.windy {
+  background: linear-gradient(135deg, var(--windy-start), var(--windy-end));
+}
+
+.animation-container.windy-night {
+  background: linear-gradient(135deg, var(--windy-night-start), var(--windy-night-end));
 }
 
 .weather {
+  position: relative;
+  overflow: hidden;
   width: 100%;
-  min-height: var(--dwf-header-height, calc(2.3 * var(--row-height, 56px)));
+  /* min-height: var(--dwf-header-height, calc(2.3 * var(--row-height, 56px))); */
   /* Background image will be set via JS */
   background-size: cover;
   background-position: center;
@@ -40,46 +173,34 @@ ha-card {
   min-width: 0;
 }
 
-.weather .header-layout {
+.weather .header-main {
   display: flex;
   flex-direction: row;
-  align-items: stretch;
-  justify-content: flex-start;
-  gap: 0;
-  width: 100%;
-  min-width: 0;
-  flex: 0 0 auto;
-}
-
-.weather .header-main {
-  margin-left: auto;
-  padding-left: var(--dwf-header-columns-gap, 16px);
-  display: flex;
-  flex-direction: column;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
+  width: 100%;
   gap: var(--dwf-header-main-gap, 10px);
-  align-self: stretch;
   min-height: 0;
   flex: 0 1 auto;
   min-width: 0;
 }
 
-.weather .header-attributes {
+.weather .header-attributes,
+.header-attributes {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
   gap: var(--dwf-header-attribute-gap, 8px);
   align-self: stretch;
   min-height: 0;
-  flex: 1 1 0;
-  min-width: 30%;
 }
 
-.weather .attribute-chip {
+.weather .attribute-chip,
+.attribute-chip {
   font-size: var(--ha-font-size-m);
   line-height: calc(6px + var(--ha-font-size-m));
-  background-color: rgba(0, 0, 0, 0.35);
+  /* background-color: rgba(0, 0, 0, 0.3); */
   padding: var(--ha-space-1, 4px) var(--ha-space-3, 12px);
   border-radius: 25px;
   color: inherit;
@@ -91,22 +212,26 @@ ha-card {
   overflow: hidden;
 }
 
-.weather .attribute-chip .chip-icon {
+.weather .attribute-chip .chip-icon,
+.attribute-chip .chip-icon {
   margin-right: 6px;
   --mdc-icon-size: 20px;
   color: inherit;
 }
 
-.weather .attribute-chip.has-action {
+.weather .attribute-chip.has-action,
+.attribute-chip.has-action {
   cursor: pointer;
 }
 
-.weather .attribute-chip.has-action:focus-visible {
+.weather .attribute-chip.has-action:focus-visible,
+.attribute-chip.has-action:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.9);
   outline-offset: 2px;
 }
 
-.weather .attribute-chip.missing {
+.weather .attribute-chip.missing,
+.attribute-chip.missing {
   opacity: 0.8;
   font-style: italic;
 }
@@ -114,7 +239,7 @@ ha-card {
 .weather .condition {
   font-size: var(--ha-font-size-xl);
   line-height: calc(10px + var(--ha-font-size-xl));
-  background-color: rgba(0, 0, 0, 0.3);
+  /* background-color: rgba(0, 0, 0, 0.3); */
   padding: var(--ha-space-1, 4px) var(--ha-space-4, 16px);
   border-radius: 25px;
   max-width: 70%;
@@ -140,7 +265,7 @@ ha-card {
   font-size: var(--ha-font-size-5xl);
   line-height: calc(10px + var(--ha-font-size-xl));
   font-weight: var(--ha-font-weight-bold, bold);
-  background-color: rgba(0, 0, 0, 0.3);
+  /* background-color: rgba(0, 0, 0, 0.3); */
   padding: 2px var(--ha-space-4, 16px);
   border-radius: 25px;
   max-width: 100%;
@@ -151,14 +276,15 @@ ha-card {
   overflow: hidden;
 }
 
-.weather .header-pill-text {
+.weather .header-pill-text,
+.header-pill-text {
   flex: 0 1 auto;
   min-width: 0;
   white-space: normal;
 }
 
 .weather .nowcast-panel {
-  background: rgba(0, 0, 0, 0.3);
+  /* background: rgba(0, 0, 0, 0.3); */
   border-radius: 16px;
   padding: var(--ha-space-3, 12px) var(--ha-space-3, 12px) 6px var(--ha-space-3, 12px);
   display: flex;
@@ -264,36 +390,6 @@ ha-card {
   flex: 0 1 auto;
   touch-action: pan-x;
   overscroll-behavior-x: contain;
-}
-
-.fade-left,
-.fade-right {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 16px;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.fade-left {
-  left: 0;
-  background: linear-gradient(
-    to right,
-    var(--card-background-color) 0%,
-    var(--card-background-color) 2px,
-    transparent 100%
-  );
-}
-
-.fade-right {
-  right: 0;
-  background: linear-gradient(
-    to left,
-    var(--card-background-color) 0%,
-    var(--card-background-color) 2px,
-    transparent 100%
-  );
 }
 
 .forecast {
@@ -466,7 +562,6 @@ ha-card {
 }
 
 .forecast .templow {
-  opacity: 0.5;
   font-weight: var(--ha-font-weight-bold, bold);
   font-size: var(--ha-font-size-l);
 }
@@ -709,9 +804,11 @@ dwf-current-weather-attributes {
   cursor: pointer;
 }
 .compact-header .condition {
-  font-size: var(--ha-font-size-xl, 20px);
+  flex: 1;
+  font-size: var(--ha-font-size-2xl, 24px);
   font-weight: var(--ha-font-weight-normal, 400);
-  text-align: center;
+  text-align: left;
+  padding: 0 var(--ha-space-4, 16px);
 }
 .compact-header .weather-icon {
   display: flex;
@@ -722,7 +819,7 @@ dwf-current-weather-attributes {
   --mdc-icon-size: var(--icon-size);
 }
 .compact-header .temperature {
-  font-size: var(--ha-font-size-2xl, 24px);
+  font-size: var(--ha-font-size-3xl, 28px);
   font-weight: var(--ha-font-weight-normal, 400);
 }
 .compact-header .nowcast-panel {

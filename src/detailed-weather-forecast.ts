@@ -12,12 +12,22 @@ import './components/dwf-current-weather-attributes';
 import './components/dwf-daily-list';
 import './components/dwf-forecast-attributes';
 import './components/dwf-header';
+import './components/dwf-header-chips';
 import './components/dwf-hourly-list';
 import './components/dwf-nowcast';
 import { version } from '../package.json';
 import { styles } from './detailed-weather-forecast.styles';
 import { localize, setHass } from './localize/localize';
-import { DetailedWeatherForecastConfig, HeaderAttribute, SunCoordinates, WeatherIconMap } from './types';
+import {
+  DetailedWeatherForecastConfig,
+  HeaderAttribute,
+  SunCoordinates,
+  WeatherIconMap,
+  TimeOfDay,
+  HeaderChipDisplay,
+} from './types';
+import { AnimationManager } from './components/animation-manager';
+import { getTimeOfDay } from './utils';
 import { enableMomentumScroll } from './utils/momentum-scroll';
 import type { ExtendedHomeAssistant, ForecastAttribute, ForecastEvent, WeatherEntity } from './weather';
 import { formatWeatherAttribute, getSupportedForecastTypes, subscribeForecast } from './weather';
@@ -51,16 +61,6 @@ const MISSING_ATTRIBUTE_TEXT = 'missing';
 // Private types
 type ForecastType = 'hourly' | 'daily';
 type SubscriptionMap = Record<ForecastType, Promise<() => void> | undefined>;
-type HeaderChipDisplay = {
-  label: string;
-  display: string;
-  missing: boolean;
-  tooltip: string;
-  type: HeaderAttribute['type'];
-  action?: ActionConfig;
-  icon?: string;
-  entity?: string;
-};
 
 type EnergyPreferences = {
   energy_sources?: Array<{
@@ -101,6 +101,7 @@ export class DetailedWeatherForecast extends LitElement {
   @state() private _name: string;
   @state() private _state: WeatherEntity;
   @state() private _status: string;
+  @state() private _moonPhaseState?: HassEntity;
   @state() private _headerTemperatureState?: HassEntity;
   @state() private _forecastDailyEvent?: ForecastEvent;
   @state() private _forecastHourlyEvent?: ForecastEvent;
@@ -113,6 +114,7 @@ export class DetailedWeatherForecast extends LitElement {
   @state() private _showAttributes = false;
   @state() private _selectedHourlyForecast?: ForecastAttribute;
   @state() private _selectedDailyForecast?: ForecastAttribute;
+  @state() private _animationManagerMounted: Element | null = null;
 
   // private property
   private _subscriptions: SubscriptionMap = { hourly: undefined, daily: undefined };
@@ -131,6 +133,12 @@ export class DetailedWeatherForecast extends LitElement {
   private _nowcastRefreshTimeout?: number;
   private _nowcastRefreshInterval?: number;
   private _isProgrammaticScroll = false;
+  private _animationManager: AnimationManager;
+
+  constructor() {
+    super();
+    this._animationManager = new AnimationManager(() => this._getDrawParams());
+  }
 
   // Called by HA
   setConfig(config: DetailedWeatherForecastConfig) {
@@ -156,6 +164,7 @@ export class DetailedWeatherForecast extends LitElement {
       show_sun_times: config.show_sun_times ?? false,
       sun_use_home_coordinates: config.sun_use_home_coordinates ?? true,
       use_night_header_backgrounds: config.use_night_header_backgrounds ?? true,
+      moon_phase_entity: config.moon_phase_entity,
       header_chips: normalizedHeaderChips,
       icon_map: normalizedIconMap,
       daily_min_gap: normalizedDailyMinGap,
@@ -176,6 +185,7 @@ export class DetailedWeatherForecast extends LitElement {
       daily_info: config.daily_info ?? [],
       hourly_info: config.hourly_info ?? [],
       compact_header: config.compact_header ?? false,
+      show_animation: config.show_animation ?? true,
     };
 
     this._config = defaults;
@@ -207,6 +217,9 @@ export class DetailedWeatherForecast extends LitElement {
     this._headerTemperatureState = headerTemperatureEntity
       ? (hass.states[headerTemperatureEntity] as HassEntity | undefined)
       : undefined;
+
+    const moonPhaseEntity = this._config?.moon_phase_entity;
+    this._moonPhaseState = moonPhaseEntity ? (hass.states[moonPhaseEntity] as HassEntity | undefined) : undefined;
 
     this._handleNowcastHassUpdate();
     this._setupNowcastRefreshTimer();
@@ -424,6 +437,9 @@ export class DetailedWeatherForecast extends LitElement {
     Object.values(this._momentumCleanup).forEach((cleanup) => cleanup?.());
     this._momentumCleanup = {};
     this._momentumElement = {};
+
+    this._animationManager.destroy();
+    this._animationManagerMounted = null;
   }
 
   updated(changedProps: PropertyValues) {
@@ -476,6 +492,23 @@ export class DetailedWeatherForecast extends LitElement {
       this._updateGap();
 
       // Hourly translation heights are handled inside dwf-hourly-list
+    }
+
+    if (this._config?.show_animation !== false) {
+      const animationContainer = this.shadowRoot?.querySelector('.animation-container');
+
+      if (animationContainer && this._animationManagerMounted !== animationContainer) {
+        if (this._animationManagerMounted) {
+          this._animationManager.destroy();
+          this._animationManagerMounted.innerHTML = '';
+        }
+        this._animationManager.setup(animationContainer);
+        this._animationManagerMounted = animationContainer;
+      }
+    } else if (this._animationManagerMounted) {
+      this._animationManager.destroy();
+      this._animationManagerMounted.innerHTML = '';
+      this._animationManagerMounted = null;
     }
   }
 
@@ -556,14 +589,14 @@ export class DetailedWeatherForecast extends LitElement {
     })();
 
     const cardStyle = (() => {
-      if (!this._shouldApplyMasonryHeight()) {
-        return nothing;
+      const styles: Record<string, string> = { position: 'relative' };
+      if (this._shouldApplyMasonryHeight()) {
+        const rowCount = this._config?.masonry_rows ?? 0;
+        if (Number.isFinite(rowCount) && rowCount > 0) {
+          styles['min-height'] = `${rowCount * 50}px`;
+        }
       }
-      const rowCount = this._config?.masonry_rows ?? 0;
-      if (!Number.isFinite(rowCount) || rowCount <= 0) {
-        return nothing;
-      }
-      return styleMap({ 'min-height': `${rowCount * 50}px` });
+      return styleMap(styles);
     })();
 
     if (!hasContent) {
@@ -573,50 +606,38 @@ export class DetailedWeatherForecast extends LitElement {
 
     const headerChips = this._computeHeaderChipDisplays();
     const useSnowNowcastFill = this._shouldUseSnowNowcastFill();
-    const headerStyles: Record<string, string> = {
-      'background-image': `url(${this._getWeatherBgImage(this._state.state)})`,
-    };
+
+    const useAnimation = this._config.show_animation !== false;
+    const headerStyles: Record<string, string> = {};
+    if (!useAnimation) {
+      headerStyles['background-image'] = `url(${this._getWeatherBgImage(this._state.state)})`;
+    }
 
     if (showInlineNowcast && !headerOnly) {
       headerStyles['--dwf-header-height'] = 'calc(4 * var(--row-height, 56px))';
     }
 
-    const headerChipsTemplate = headerChips.length
-      ? headerChips.map((chip) => {
-          const hasChipAction = hasAction(chip.action);
-          const chipClassMap = {
-            'attribute-chip': true,
-            missing: chip.missing,
-            'has-action': hasChipAction,
-          };
-          const chipTitle = chip.tooltip || `${chip.label}: ${chip.display}`;
-          return html`
-            <div
-              class=${classMap(chipClassMap)}
-              title=${chipTitle}
-              role=${hasChipAction ? 'button' : undefined}
-              tabindex=${hasChipAction ? 0 : undefined}
-              @click=${hasChipAction
-                ? () => this._handleHeaderChipTap(chip.action, chip.type === 'entity' ? chip.entity : undefined)
-                : undefined}
-              @keydown=${hasChipAction
-                ? (ev: KeyboardEvent) =>
-                    this._handleHeaderChipKeydown(ev, chip.action, chip.type === 'entity' ? chip.entity : undefined)
-                : undefined}
-            >
-              ${chip.icon ? html`<ha-icon class="chip-icon" .icon=${chip.icon}></ha-icon>` : nothing}
-              <span class="header-pill-text">${chip.display}</span>
-            </div>
-          `;
-        })
-      : nothing;
-
     const headerAttributesTemplate = headerChips.length
-      ? html` <div class="header-attributes">${headerChipsTemplate}</div> `
+      ? html`<dwf-header-chips
+          .headerChips=${headerChips}
+          @dwf-chip-click=${(e: CustomEvent) => this._handleHeaderChipTap(e.detail.actionConfig, e.detail.entity)}
+        ></dwf-header-chips>`
       : nothing;
 
     const headerMainTemplate = html`
       <div class="header-main">
+        <div
+          class=${classMap({
+            condition: true,
+            'has-action': hasConditionTapAction,
+          })}
+          role=${hasConditionTapAction ? 'button' : undefined}
+          tabindex=${hasConditionTapAction ? 0 : undefined}
+          @click=${hasConditionTapAction ? () => this._handleConditionTap() : undefined}
+          @keydown=${hasConditionTapAction ? (ev: KeyboardEvent) => this._handleConditionKeydown(ev) : undefined}
+        >
+          <span class="header-pill-text"> ${headerCondition} </span>
+        </div>
         <div
           class=${classMap({
             temp: true,
@@ -633,24 +654,10 @@ export class DetailedWeatherForecast extends LitElement {
         >
           <span class="header-pill-text">${headerTemperature}</span>
         </div>
-        <div
-          class=${classMap({
-            condition: true,
-            'has-action': hasConditionTapAction,
-          })}
-          role=${hasConditionTapAction ? 'button' : undefined}
-          tabindex=${hasConditionTapAction ? 0 : undefined}
-          @click=${hasConditionTapAction ? () => this._handleConditionTap() : undefined}
-          @keydown=${hasConditionTapAction ? (ev: KeyboardEvent) => this._handleConditionKeydown(ev) : undefined}
-        >
-          <span class="header-pill-text"> ${headerCondition} </span>
-        </div>
       </div>
     `;
 
-    const headerLayoutTemplate = html`
-      <div class="header-layout">${headerAttributesTemplate} ${headerMainTemplate}</div>
-    `;
+    const headerLayoutTemplate = html` ${headerMainTemplate} ${headerAttributesTemplate} `;
 
     const nowcastPanelTemplate = html`
       <div
@@ -661,8 +668,24 @@ export class DetailedWeatherForecast extends LitElement {
       </div>
     `;
 
+    const timeOfDay = this._getTimeOfDay();
+    const currentCondition = this._config.fixed_condition || this._state.state;
+    const animationClass = this._getAnimationContainerClass(timeOfDay.type, currentCondition);
+
+    const getAnimationTemplate = (slotName?: string) =>
+      useAnimation
+        ? html`
+            <div
+              class="animation-container ${animationClass}"
+              slot=${slotName || nothing}
+              style="position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; border-radius: inherit;"
+            ></div>
+          `
+        : nothing;
+
     return html`
-      <ha-card style=${cardStyle}>
+      <ha-card class="weather-card" style=${cardStyle}>
+        ${!showHeader ? getAnimationTemplate() : nothing}
         ${showHeader
           ? this._config.compact_header
             ? html`
@@ -674,7 +697,8 @@ export class DetailedWeatherForecast extends LitElement {
                   .headerTemperature=${headerTemperature}
                   @dwf-temperature-click=${this._handleCompactHeaderTemperatureClick}
                   @dwf-condition-click=${this._handleConditionTap}
-                ></dwf-compact-header>
+                >
+                </dwf-compact-header>
               `
             : html`
                 <dwf-header
@@ -683,7 +707,9 @@ export class DetailedWeatherForecast extends LitElement {
                   .headerLayoutTemplate=${headerLayoutTemplate}
                   .showInlineNowcast=${showInlineNowcast}
                   .nowcastPanelTemplate=${nowcastPanelTemplate}
-                ></dwf-header>
+                >
+                  ${getAnimationTemplate('background')}
+                </dwf-header>
               `
           : nothing}
         ${showHeader && showForecasts ? html`<div class="divider card-divider"></div>` : nothing}
@@ -701,8 +727,6 @@ export class DetailedWeatherForecast extends LitElement {
                 ${dailyEnabled
                   ? html`
                       <div class="forecast-daily-container">
-                        <div class="fade-left"></div>
-                        <div class="fade-right"></div>
                         <div class="forecast daily" style=${dailyStyle}>
                           <dwf-daily-list
                             .hass=${this._hass}
@@ -736,8 +760,6 @@ export class DetailedWeatherForecast extends LitElement {
                 ${hourlyEnabled
                   ? html`
                       <div class="forecast-hourly-container">
-                        <div class="fade-left"></div>
-                        <div class="fade-right"></div>
                         <div class="forecast hourly" style=${hourlyStyle}>
                           <dwf-hourly-list
                             .hass=${this._hass}
@@ -786,6 +808,74 @@ export class DetailedWeatherForecast extends LitElement {
     if (dailyList) {
       dailyList.selectDate(date);
     }
+  }
+
+  private _getAnimationContainerClass(timeOfDayType: string, condition: string): string {
+    const isNight = timeOfDayType === 'night';
+    let baseTimeOfDay = timeOfDayType;
+
+    const baseCondition = condition.replace(/-/g, '');
+
+    if (['sunset', 'sunrise'].includes(timeOfDayType)) {
+      if (!['sunny', 'clear', 'clearnight', 'partlycloudy'].includes(baseCondition)) {
+        baseTimeOfDay = 'day';
+      }
+    }
+
+    if (['rainy', 'pouring', 'lightning', 'lightningrainy', 'hail'].includes(baseCondition)) {
+      return isNight ? 'rainy-night' : 'rainy';
+    }
+
+    if (['snowy', 'snowyrainy'].includes(baseCondition)) {
+      return isNight ? 'snowy-night' : 'snowy';
+    }
+
+    if (['windy', 'windyvariant'].includes(baseCondition)) {
+      return isNight ? 'windy-night' : 'windy';
+    }
+
+    if (['fog'].includes(baseCondition)) {
+      return isNight ? 'fog-night' : 'fog';
+    }
+
+    if (['cloudy'].includes(baseCondition)) {
+      return isNight ? 'cloudy-night' : 'cloudy';
+    }
+
+    if (['partlycloudy'].includes(baseCondition)) {
+      return isNight ? 'partlycloudy-night' : baseTimeOfDay === 'day' ? 'partlycloudy' : baseTimeOfDay;
+    }
+
+    if (['exceptional'].includes(baseCondition)) {
+      return isNight ? 'exceptional-night' : 'exceptional';
+    }
+
+    return baseTimeOfDay === 'day' ? '' : baseTimeOfDay;
+  }
+
+  private _getCloudCover(): number | undefined {
+    if (!this._state || this._state.state === 'unavailable') {
+      return undefined;
+    }
+    const cloudCover = (this._state.attributes as Record<string, any>).cloud_coverage;
+    return typeof cloudCover === 'number' ? cloudCover / 100 : undefined;
+  }
+
+  private _getTimeOfDay(): TimeOfDay {
+    if (this._config.fixed_time_of_day) return { type: this._config.fixed_time_of_day, progress: 0 };
+
+    const coordinates = this._getLocationCoordinates();
+    return getTimeOfDay(coordinates?.latitude, coordinates?.longitude);
+  }
+
+  private _getDrawParams() {
+    if (!this._state) return null;
+    return {
+      condition: this._config.fixed_condition || this._state.state,
+      timeOfDay: this._getTimeOfDay(),
+      cloudCover: this._getCloudCover(),
+      moonPhase: this._moonPhaseState?.state,
+    };
   }
 
   // Header temperature from configured sensor or weather entity attribute
