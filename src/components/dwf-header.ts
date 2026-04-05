@@ -28,7 +28,8 @@ export class DwfHeader extends LitElement {
   render() {
     return html`
       <div class=${classMap(this.headerClassMap)} style=${styleMap(this.headerStyles)}>
-        <div class="header-content">
+        <slot name="background"></slot>
+        <div class="header-content" style="position: relative; z-index: 1;">
           ${html` ${this.headerLayoutTemplate} ${this.showInlineNowcast ? this.nowcastPanelTemplate : nothing} `}
         </div>
       </div>
