@@ -68,8 +68,9 @@ export class DwfCompactHeader extends LitElement {
     }
 
     return html`
-      <div class="compact-header">
-        <div class="current-conditions">
+      <div class="compact-header" style="position: relative; overflow: hidden; border-radius: inherit;">
+        <slot name="background"></slot>
+        <div class="current-conditions" style="position: relative; z-index: 1;">
           <div
             class=${classMap({ 'weather-icon': true, 'has-action': hasConditionTapAction })}
             @click=${this._handleConditionClick}
@@ -98,8 +99,10 @@ export class DwfCompactHeader extends LitElement {
             ${this.headerTemperature}
           </div>
         </div>
-        ${this.nowcastPanelTemplate ? html`<div class="nowcast">${this.nowcastPanelTemplate}</div>` : nothing}
-        <div class="attributes">
+        ${this.nowcastPanelTemplate
+          ? html`<div class="nowcast" style="position: relative; z-index: 1;">${this.nowcastPanelTemplate}</div>`
+          : nothing}
+        <div class="attributes" style="position: relative; z-index: 1;">
           <dwf-current-weather-attributes
             .hass=${this.hass}
             .weatherEntity=${this.weatherEntity}

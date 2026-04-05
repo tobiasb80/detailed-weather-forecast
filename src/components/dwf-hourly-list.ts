@@ -1,7 +1,7 @@
 import { LitElement, html, nothing, TemplateResult, PropertyValues } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import { customElement, property, state } from 'lit/decorators.js';
-import SunCalc from 'suncalc';
+import * as SunCalc from 'suncalc';
 import type { SunCoordinates, SunEventType, SunTimesByDay, WeatherIconMap } from '../types';
 import type { ForecastAttribute, WeatherEntity } from '../weather';
 import { formatDayPeriod, formatDateWeekdayShort, formatHour, formatHourMinute, useAmPm } from '../date-time';

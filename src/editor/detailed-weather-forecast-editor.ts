@@ -335,12 +335,14 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       daily_info: config.daily_info ?? [],
       hourly_info: config.hourly_info ?? [],
       nowcast_entity: config.nowcast_entity,
+      moon_phase_entity: config.moon_phase_entity,
       nowcast_always_show: config.nowcast_always_show ?? false,
       show_header: config.show_header ?? true,
       hourly_forecast: config.hourly_forecast ?? true,
       daily_forecast: config.daily_forecast ?? true,
       orientation: config.orientation ?? 'vertical',
       compact_header: config.compact_header ?? false,
+      show_animation: config.show_animation ?? true,
       header_chips: normalizedChips,
       header_attributes: normalizedChips.filter((chip) => chip.type === 'attribute').map((chip) => chip.attribute),
     };
@@ -1269,12 +1271,21 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
         optional: true,
       },
       {
+        name: 'moon_phase_entity',
+        selector: { entity: { domain: 'sensor' } },
+        optional: true,
+      },
+      {
         name: 'compact_header',
         selector: { boolean: {} },
       },
     ];
 
     if (!this._config?.compact_header) {
+      headerSchema.push({
+        name: 'show_animation',
+        selector: { boolean: {} },
+      });
       headerSchema.push({
         name: 'use_night_header_backgrounds',
         selector: { boolean: {} },
