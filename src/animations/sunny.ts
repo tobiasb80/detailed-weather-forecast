@@ -40,7 +40,8 @@ export class SunnyAnimation extends BaseAnimation {
 
     // Clouds
     if (cloudy) {
-      this.drawClouds(currentTime, width, height, cloudCover ?? 0.3, '190, 195, 200');
+      const cloudColor = timeOfDay.type === 'night' ? '40, 45, 55' : '190, 195, 200';
+      this.drawClouds(currentTime, width, height, cloudCover ?? 0.3, cloudColor);
     }
   }
 

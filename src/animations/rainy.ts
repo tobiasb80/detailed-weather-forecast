@@ -22,13 +22,11 @@ export class RainyAnimation extends BaseAnimation {
     cloudCover?: number,
   ): void {
     const currentTime = Date.now() * 0.001;
-    this.drawClouds(
-      currentTime,
-      width,
-      height,
-      cloudCover ?? (heavy ? 1.0 : 0.8),
-      heavy ? '130, 135, 145' : '150, 155, 165',
-    );
+
+    const isNight = timeOfDay.type === 'night';
+    const cloudColor = isNight ? (heavy ? '25, 30, 40' : '35, 40, 50') : heavy ? '130, 135, 145' : '150, 155, 165';
+
+    this.drawClouds(currentTime, width, height, cloudCover ?? (heavy ? 1.0 : 0.8), cloudColor);
     this.drawRain(width, height, heavy);
   }
 }

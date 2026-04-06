@@ -26,7 +26,7 @@ import {
   TimeOfDay,
   HeaderChipDisplay,
 } from './types';
-import { AnimationManager } from './components/animation-manager';
+import { AnimationManager } from './animations/animation-manager';
 import { getTimeOfDay } from './utils';
 import { enableMomentumScroll } from './utils/momentum-scroll';
 import type { ExtendedHomeAssistant, ForecastAttribute, ForecastEvent, WeatherEntity } from './weather';

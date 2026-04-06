@@ -37,6 +37,8 @@ export class BaseAnimation {
   protected leaves: Leaf[] = [];
   protected rainDrops: RainDrop[] = [];
   protected rainLastTime: number = 0;
+  protected isFlashing: boolean = false;
+  protected flashX: number = 0;
 
   constructor(ctx: CanvasRenderingContext2D) {
     this.ctx = ctx;
@@ -50,10 +52,9 @@ export class BaseAnimation {
     const savedShadowColor = this.ctx.shadowColor;
     const savedGlobalAlpha = this.ctx.globalAlpha;
 
-    this.ctx.shadowBlur = size * 0.25;
-    this.ctx.shadowColor = `rgba(${color}, ${opacity * 0.4})`;
-    this.ctx.globalAlpha = opacity * 0.85;
-    this.ctx.fillStyle = `rgba(${color}, 1)`;
+    this.ctx.shadowBlur = size * 0.4;
+    this.ctx.shadowColor = `rgba(${color}, ${opacity * 0.5})`;
+    this.ctx.globalAlpha = opacity * 0.9;
 
     const parts = [
       // Bottom row
@@ -72,6 +73,13 @@ export class BaseAnimation {
     ];
 
     parts.forEach((part) => {
+      const gradient = this.ctx.createRadialGradient(part.x, part.y, 0, part.x, part.y, part.r);
+      gradient.addColorStop(0, `rgba(${color}, 1)`);
+      gradient.addColorStop(0.5, `rgba(${color}, 0.9)`);
+      gradient.addColorStop(0.8, `rgba(${color}, 0.4)`);
+      gradient.addColorStop(1, `rgba(${color}, 0)`);
+      this.ctx.fillStyle = gradient;
+
       this.ctx.beginPath();
       this.ctx.arc(part.x, part.y, part.r, 0, Math.PI * 2);
       this.ctx.fill();
@@ -199,12 +207,26 @@ export class BaseAnimation {
     const flashIntensity = Math.max(0, flashPattern);
 
     if (flashIntensity > 0.4) {
-      const normalizedIntensity = (flashIntensity - 0.4) / 0.6;
-      const alpha = normalizedIntensity * 0.6;
-      const fadeAlpha = Math.min(alpha, Math.sin(normalizedIntensity * Math.PI) * 0.6);
+      if (!this.isFlashing) {
+        this.isFlashing = true;
+        // Zufällige horizontale Position für das Zentrum des Blitzes (zwischen 10% und 90% der Breite)
+        this.flashX = (Math.random() * 0.8 + 0.1) * width;
+      }
 
-      this.ctx.fillStyle = `rgba(255, 255, 255, ${fadeAlpha})`;
+      const normalizedIntensity = (flashIntensity - 0.4) / 0.6;
+      const alpha = normalizedIntensity * 0.85; // Leicht erhöht für besseren Kontrast des Verlaufs
+      const fadeAlpha = Math.min(alpha, Math.sin(normalizedIntensity * Math.PI) * 0.85);
+
+      // Asymmetrischer radialer Verlauf von oben herab
+      const radius = Math.max(width, height) * 0.9;
+      const gradient = this.ctx.createRadialGradient(this.flashX, -height * 0.1, 0, this.flashX, -height * 0.1, radius);
+      gradient.addColorStop(0, `rgba(255, 255, 255, ${fadeAlpha})`);
+      gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
+
+      this.ctx.fillStyle = gradient;
       this.ctx.fillRect(0, 0, width, height);
+    } else {
+      this.isFlashing = false;
     }
   }
 

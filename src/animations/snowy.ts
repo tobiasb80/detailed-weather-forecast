@@ -1,4 +1,5 @@
 import { BaseAnimation } from './base';
+import { TimeOfDay } from '../types';
 
 interface Snowflake {
   x: number;
@@ -25,10 +26,12 @@ export class SnowyAnimation extends BaseAnimation {
    * @param time - Animation time (unused, for interface compatibility)
    * @param width - Canvas width
    * @param height - Canvas height
+   * @param timeOfDay - Time of day info
    */
-  draw(time: number, width: number, height: number, cloudCover?: number): void {
+  draw(time: number, width: number, height: number, timeOfDay: TimeOfDay, cloudCover?: number): void {
     const currentTime = Date.now() * 0.001;
-    this.drawClouds(currentTime, width, height, cloudCover ?? 0.8, '170, 175, 185');
+    const cloudColor = timeOfDay.type === 'night' ? '35, 40, 50' : '170, 175, 185';
+    this.drawClouds(currentTime, width, height, cloudCover ?? 0.8, cloudColor);
     this.drawSnowflakes(width, height);
   }
 

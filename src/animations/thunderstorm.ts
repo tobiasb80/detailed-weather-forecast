@@ -23,8 +23,9 @@ export class ThunderstormAnimation extends BaseAnimation {
   ): void {
     const currentTime = Date.now() * 0.001;
 
-    // Dark clouds
-    this.drawClouds(currentTime, width, height, cloudCover ?? 1.0, '100, 105, 115');
+    // Dark clouds (even darker at night)
+    const cloudColor = timeOfDay.type === 'night' ? '20, 25, 35' : '100, 105, 115';
+    this.drawClouds(currentTime, width, height, cloudCover ?? 1.0, cloudColor);
 
     // Rain if specified
     if (withRain) {

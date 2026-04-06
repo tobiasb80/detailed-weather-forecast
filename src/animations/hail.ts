@@ -1,4 +1,5 @@
 import { BaseAnimation } from './base';
+import { TimeOfDay } from '../types';
 
 interface HailStone {
   startX: number;
@@ -21,10 +22,12 @@ export class HailAnimation extends BaseAnimation {
    * @param time - Animation time (unused, for interface compatibility)
    * @param width - Canvas width
    * @param height - Canvas height
+   * @param timeOfDay - Time of day info
    */
-  draw(time: number, width: number, height: number, cloudCover?: number): void {
+  draw(time: number, width: number, height: number, timeOfDay: TimeOfDay, cloudCover?: number): void {
     const currentTime = Date.now() * 0.001;
-    this.drawClouds(currentTime, width, height, cloudCover ?? 1.0, '140, 145, 155');
+    const cloudColor = timeOfDay.type === 'night' ? '25, 30, 40' : '140, 145, 155';
+    this.drawClouds(currentTime, width, height, cloudCover ?? 1.0, cloudColor);
     this.drawHailStones(width, height);
   }
 

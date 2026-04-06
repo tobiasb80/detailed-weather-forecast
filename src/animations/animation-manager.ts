@@ -1,12 +1,12 @@
-import { SunnyAnimation } from '../animations/sunny.js';
-import { RainyAnimation } from '../animations/rainy.js';
-import { SnowyAnimation } from '../animations/snowy.js';
-import { CloudyAnimation } from '../animations/cloudy.js';
-import { FoggyAnimation } from '../animations/foggy.js';
-import { HailAnimation } from '../animations/hail.js';
-import { ThunderstormAnimation } from '../animations/thunderstorm.js';
-import { WindyAnimation } from '../animations/windy.js';
-import { ExceptionalAnimation } from '../animations/exceptional.js';
+import { SunnyAnimation } from './sunny.js';
+import { RainyAnimation } from './rainy.js';
+import { SnowyAnimation } from './snowy.js';
+import { CloudyAnimation } from './cloudy.js';
+import { FoggyAnimation } from './foggy.js';
+import { HailAnimation } from './hail.js';
+import { ThunderstormAnimation } from './thunderstorm.js';
+import { WindyAnimation } from './windy.js';
+import { ExceptionalAnimation } from './exceptional.js';
 import type { TimeOfDay } from '../types.js';
 
 interface Animations {
@@ -225,18 +225,17 @@ export class AnimationManager {
         this.animations.rainy?.draw(Date.now(), width, height, timeOfDay, true, cloudCover);
         break;
       case 'snowy':
-      case 'snow':
-        this.animations.snowy?.draw(Date.now(), width, height, cloudCover);
+        this.animations.snowy?.draw(Date.now(), width, height, timeOfDay, cloudCover);
         break;
       case 'snowy-rainy':
         this.animations.rainy?.draw(Date.now(), width, height, timeOfDay, false, cloudCover);
-        this.animations.snowy?.draw(Date.now(), width, height, cloudCover);
+        this.animations.snowy?.draw(Date.now(), width, height, timeOfDay, cloudCover);
         break;
       case 'hail':
-        this.animations.hail?.draw(Date.now(), width, height, cloudCover);
+        this.animations.hail?.draw(Date.now(), width, height, timeOfDay, cloudCover);
         break;
       case 'fog':
-        this.animations.foggy?.draw(Date.now(), width, height);
+        this.animations.foggy?.draw(Date.now(), width, height, timeOfDay);
         break;
       case 'lightning':
         this.animations.thunderstorm?.draw(Date.now(), width, height, timeOfDay, false, cloudCover);
@@ -245,17 +244,17 @@ export class AnimationManager {
         this.animations.thunderstorm?.draw(Date.now(), width, height, timeOfDay, true, cloudCover);
         break;
       case 'windy':
-        this.animations.windy?.draw(Date.now(), width, height, false, cloudCover);
+        this.animations.windy?.draw(Date.now(), width, height, timeOfDay, false, cloudCover);
         break;
       case 'windy-variant':
-        this.animations.windy?.draw(Date.now(), width, height, true, cloudCover);
+        this.animations.windy?.draw(Date.now(), width, height, timeOfDay, true, cloudCover);
         break;
       case 'exceptional':
-        this.animations.exceptional?.draw(Date.now(), width, height, cloudCover);
+        this.animations.exceptional?.draw(Date.now(), width, height, timeOfDay, cloudCover);
         break;
       case 'cloudy':
       default:
-        this.animations.cloudy?.draw(Date.now(), width, height, cloudCover);
+        this.animations.cloudy?.draw(Date.now(), width, height, timeOfDay, cloudCover);
         break;
     }
   }
