@@ -165,7 +165,7 @@ ha-card {
   display: flex;
   flex-direction: column;
   padding-block: var(--dwf-header-padding-block, 16px);
-  padding-inline: var(--dwf-header-padding-inline, 16px);
+  /* padding-inline: var(--dwf-header-padding-inline, 16px); */
   gap: var(--dwf-header-content-gap, 12px);
   width: 100%;
   box-sizing: border-box;
@@ -202,7 +202,7 @@ ha-card {
   line-height: calc(6px + var(--ha-font-size-m));
   /* background-color: rgba(0, 0, 0, 0.3); */
   padding: var(--ha-space-1, 4px) var(--ha-space-3, 12px);
-  border-radius: 25px;
+  /* border-radius: 25px; */
   color: inherit;
   max-width: 100%;
   min-width: 0;
@@ -241,7 +241,7 @@ ha-card {
   line-height: calc(10px + var(--ha-font-size-xl));
   /* background-color: rgba(0, 0, 0, 0.3); */
   padding: var(--ha-space-1, 4px) var(--ha-space-4, 16px);
-  border-radius: 25px;
+  /* border-radius: 25px; */
   max-width: 70%;
   min-width: 0;
   display: inline-flex;
@@ -267,7 +267,7 @@ ha-card {
   font-weight: var(--ha-font-weight-bold, bold);
   /* background-color: rgba(0, 0, 0, 0.3); */
   padding: 2px var(--ha-space-4, 16px);
-  border-radius: 25px;
+  /* border-radius: 25px; */
   max-width: 100%;
   min-width: 0;
   display: inline-flex;
@@ -285,7 +285,7 @@ ha-card {
 
 .weather .nowcast-panel {
   /* background: rgba(0, 0, 0, 0.3); */
-  border-radius: 16px;
+  /* border-radius: 16px; */
   padding: var(--ha-space-3, 12px) var(--ha-space-3, 12px) 6px var(--ha-space-3, 12px);
   display: flex;
   flex-direction: column;
@@ -315,7 +315,7 @@ ha-card {
 
 .weather .nowcast-bar {
   flex: 1 1 0;
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 999px;
   display: flex;
   align-items: flex-end;
@@ -849,7 +849,8 @@ dwf-current-weather-attributes {
 }
 .compact-header .nowcast-bar {
   flex: 1 1 0;
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.05); /* Fallback for older browsers */
+  background: color-mix(in srgb, var(--primary-text-color) 5%, transparent);
   border-radius: 999px;
   display: flex;
   align-items: flex-end;
