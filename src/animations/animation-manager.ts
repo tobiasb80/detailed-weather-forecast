@@ -245,6 +245,7 @@ export class AnimationManager {
         break;
       case 'windy':
         this.animations.windy?.draw(Date.now(), width, height, timeOfDay, false, cloudCover);
+        this.animations.sunny?.draw(Date.now(), width, height, timeOfDay, false, cloudCover, moonPhase);
         break;
       case 'windy-variant':
         this.animations.windy?.draw(Date.now(), width, height, timeOfDay, true, cloudCover);

@@ -89,7 +89,7 @@ export function getSunPosition(timeOfDay: TimeOfDay, width: number, height: numb
   } else {
     // Night: moon position
     return {
-      x: width * 0.75,
+      x: width * 0.5,
       y: height * 0.3,
     };
   }

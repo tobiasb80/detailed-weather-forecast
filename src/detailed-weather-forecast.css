@@ -33,10 +33,6 @@
   --snowy-end: #c8d3db;
   --snowy-night-start: #2b343d;
   --snowy-night-end: #45505c;
-  --windy-start: #617382;
-  --windy-end: #94a5b3;
-  --windy-night-start: #212c36;
-  --windy-night-end: #394857;
   --overlay-opacity: 0.1;
 }
 
@@ -127,14 +123,6 @@ ha-card {
 
 .animation-container.snowy-night {
   background: linear-gradient(135deg, var(--snowy-night-start), var(--snowy-night-end));
-}
-
-.animation-container.windy {
-  background: linear-gradient(135deg, var(--windy-start), var(--windy-end));
-}
-
-.animation-container.windy-night {
-  background: linear-gradient(135deg, var(--windy-night-start), var(--windy-night-end));
 }
 
 .weather {

@@ -817,7 +817,7 @@ export class DetailedWeatherForecast extends LitElement {
     const baseCondition = condition.replace(/-/g, '');
 
     if (['sunset', 'sunrise'].includes(timeOfDayType)) {
-      if (!['sunny', 'clear', 'clearnight', 'partlycloudy'].includes(baseCondition)) {
+      if (!['sunny', 'clear', 'clearnight', 'partlycloudy', 'windy'].includes(baseCondition)) {
         baseTimeOfDay = 'day';
       }
     }
@@ -830,15 +830,11 @@ export class DetailedWeatherForecast extends LitElement {
       return isNight ? 'snowy-night' : 'snowy';
     }
 
-    if (['windy', 'windyvariant'].includes(baseCondition)) {
-      return isNight ? 'windy-night' : 'windy';
-    }
-
     if (['fog'].includes(baseCondition)) {
       return isNight ? 'fog-night' : 'fog';
     }
 
-    if (['cloudy'].includes(baseCondition)) {
+    if (['cloudy', 'windyvariant'].includes(baseCondition)) {
       return isNight ? 'cloudy-night' : 'cloudy';
     }
 
@@ -1582,7 +1578,11 @@ export class DetailedWeatherForecast extends LitElement {
     }
 
     this._isProgrammaticScroll = true;
-    hourlyContainer.scrollTo({ left: Math.max(0, offset), behavior: 'smooth' });
+    if ('scrollBehavior' in document.documentElement.style) {
+      hourlyContainer.scrollTo({ left: Math.max(0, offset), behavior: 'smooth' });
+    } else {
+      hourlyContainer.scrollLeft = Math.max(0, offset); // Fallback für alte iPads
+    }
     window.setTimeout(() => {
       this._isProgrammaticScroll = false;
     }, 1000);

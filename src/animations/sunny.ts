@@ -154,7 +154,7 @@ export class SunnyAnimation extends BaseAnimation {
     }
 
     // Moon
-    const moonX = width * 0.75;
+    const moonX = width * 0.5;
     const moonY = height * 0.3;
     const r = 25;
 
