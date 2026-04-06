@@ -7,10 +7,12 @@ import {
   type HeaderAttribute,
   type WeatherCondition,
   type DetailedWeatherForecastConfig,
+  ForecastEvent,
+  WeatherEntity,
 } from '../types';
 import './entity-info-editor';
 import './forecast-attribute-editor';
-import { formatWeatherAttributeName, type ForecastEvent, type WeatherEntity } from '../weather';
+import { formatWeatherAttributeName } from '../weather';
 
 const SOLAR_FORECAST_OPTION = 'solar_forecast';
 const FORECAST_OPTIONS_CACHE = new Map<string, { hourly: string[]; daily: string[] }>();

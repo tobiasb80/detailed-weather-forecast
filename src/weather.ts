@@ -8,11 +8,11 @@ import memoizeOne from 'memoize-one';
 import type {
   WeatherIconMap,
   ForecastAttribute,
-  WeatherEntity,
   ForecastEvent,
   DisplayAttribute,
   Position,
   TimeOfDay,
+  WeatherEntity,
 } from './types';
 import * as SunCalc from 'suncalc';
 

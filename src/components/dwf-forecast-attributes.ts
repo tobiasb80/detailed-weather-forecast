@@ -2,8 +2,8 @@ import { html, LitElement, nothing, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { formatDateWeekdayShort, formatTime } from '../date-time';
 import { localize } from '../localize/localize';
-import { ForecastAttributeConfig } from '../types';
-import { ExtendedHomeAssistant, ForecastAttribute, formatForecastAttribute, WeatherEntity } from '../weather';
+import { ForecastAttribute, ForecastAttributeConfig, WeatherEntity } from '../types';
+import { ExtendedHomeAssistant, formatForecastAttribute } from '../weather';
 
 @customElement('dwf-forecast-attributes')
 export class DwfForecastAttributes extends LitElement {

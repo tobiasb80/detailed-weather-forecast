@@ -3,8 +3,8 @@ import { HassEntity } from 'home-assistant-js-websocket';
 import { html, LitElement, nothing, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
-import { HeaderAttribute } from '../types';
-import { ExtendedHomeAssistant, formatWeatherAttribute, WeatherEntity } from '../weather';
+import { HeaderAttribute, WeatherEntity } from '../types';
+import { ExtendedHomeAssistant, formatWeatherAttribute } from '../weather';
 
 @customElement('dwf-current-weather-attributes')
 export class DwfCurrentWeatherAttributes extends LitElement {

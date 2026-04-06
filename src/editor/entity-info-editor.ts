@@ -1,9 +1,9 @@
 import { html, LitElement, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { HomeAssistant } from 'custom-card-helpers';
-import type { HeaderAttribute } from '../types';
+import type { HeaderAttribute, WeatherEntity } from '../types';
 import { localize } from '../localize/localize';
-import { formatWeatherAttributeName, type WeatherEntity } from '../weather';
+import { formatWeatherAttributeName } from '../weather';
 
 const fireEvent = (node: HTMLElement, type: string, detail?: unknown) => {
   node.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));

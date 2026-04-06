@@ -1,11 +1,10 @@
 import { LitElement, html, nothing, PropertyValues, TemplateResult } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { ForecastAttribute, WeatherEntity } from '../weather';
 import { formatDateDayTwoDigit, formatDateWeekdayShort, isNewDay } from '../date-time';
 import { formatForecastAttribute, getWeatherStateIcon } from '../weather';
 import type { HomeAssistant } from 'custom-card-helpers';
-import type { WeatherIconMap } from '../types';
+import type { ForecastAttribute, WeatherEntity, WeatherIconMap } from '../types';
 
 const PRECIPITATION_DISPLAY_THRESHOLD = 0.3;
 const DAILY_PRECIPITATION_MIN_SCALE = 4;
