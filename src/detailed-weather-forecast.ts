@@ -25,12 +25,14 @@ import {
   WeatherIconMap,
   TimeOfDay,
   HeaderChipDisplay,
+  ForecastAttribute,
+  ForecastEvent,
+  WeatherEntity,
 } from './types';
 import { AnimationManager } from './animations/animation-manager';
-import { getTimeOfDay } from './utils';
 import { enableMomentumScroll } from './utils/momentum-scroll';
-import type { ExtendedHomeAssistant, ForecastAttribute, ForecastEvent, WeatherEntity } from './weather';
-import { formatWeatherAttribute, getSupportedForecastTypes, subscribeForecast } from './weather';
+import type { ExtendedHomeAssistant } from './weather';
+import { formatWeatherAttribute, getSupportedForecastTypes, subscribeForecast, getTimeOfDay } from './weather';
 import { DEFAULT_WEATHER_IMAGE, WeatherImages } from './weather-images';
 
 // Styled console banner so your card is easy to spot in the browser console.

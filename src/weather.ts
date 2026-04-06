@@ -1,11 +1,20 @@
 // Code adapted from frontend/src/data/weather.ts to make it useable in custom cards
 import { type HomeAssistant } from 'custom-card-helpers';
-import type { HassEntity, HassEntityAttributeBase, HassEntityBase } from 'home-assistant-js-websocket';
+import type { HassEntity, HassEntityBase } from 'home-assistant-js-websocket';
 import type { SVGTemplateResult, TemplateResult } from 'lit';
 import { html, svg } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import memoizeOne from 'memoize-one';
-import type { WeatherIconMap } from './types';
+import type {
+  WeatherIconMap,
+  ForecastAttribute,
+  WeatherEntity,
+  ForecastEvent,
+  DisplayAttribute,
+  Position,
+  TimeOfDay,
+} from './types';
+import * as SunCalc from 'suncalc';
 
 export const enum WeatherEntityFeature {
   FORECAST_DAILY = 1,
@@ -24,42 +33,6 @@ export type ExtendedHomeAssistant = HomeAssistant & {
   formatEntityAttributeName?: (stateObj: HassEntity, attribute: string, value?: number | string) => string | undefined;
 };
 
-export interface ForecastAttribute {
-  temperature: number;
-  datetime: string;
-  templow?: number;
-  precipitation?: number;
-  precipitation_probability?: number;
-  humidity?: number;
-  condition?: string;
-  is_daytime?: boolean;
-  pressure?: number;
-  wind_speed?: string | number;
-  wind_gust_speed?: number;
-  wind_bearing?: number | string;
-  cloud_coverage?: number;
-  dew_point?: number;
-  uv_index?: number;
-  solar_forecast?: number;
-}
-
-interface WeatherEntityAttributes extends HassEntityAttributeBase {
-  attribution?: string;
-  humidity?: number;
-  forecast?: ForecastAttribute[];
-  is_daytime?: boolean;
-  pressure?: number;
-  temperature?: number;
-  visibility?: number;
-  wind_bearing?: number | string;
-  wind_speed?: number;
-  precipitation_unit: string;
-  pressure_unit: string;
-  temperature_unit: string;
-  visibility_unit: string;
-  wind_speed_unit: string;
-}
-
 export const WEATHER_ATTRIBUTE_ICON_MAP: {
   [key: string]: string;
 } = {
@@ -74,15 +47,6 @@ export const WEATHER_ATTRIBUTE_ICON_MAP: {
   apparent_temperature: 'mdi:thermometer',
   cloud_coverage: 'mdi:cloud-outline',
 };
-
-export interface ForecastEvent {
-  type: 'hourly' | 'daily' | 'twice_daily';
-  forecast: [ForecastAttribute] | null;
-}
-
-export interface WeatherEntity extends HassEntityBase {
-  attributes: WeatherEntityAttributes;
-}
 
 export const weatherSVGs = new Set<string>([
   'clear-night',
@@ -459,12 +423,6 @@ const supportsFeature = (stateObj: HassEntity, feature: number): boolean =>
 const supportsFeatureFromAttributes = (attributes: Record<string, any>, feature: number): boolean =>
   (attributes.supported_features! & feature) !== 0;
 
-export interface DisplayAttribute {
-  value: string;
-  name: string;
-  icon?: string;
-}
-
 export const formatWeatherAttribute = (
   hass: ExtendedHomeAssistant,
   weather: WeatherEntity,
@@ -634,3 +592,99 @@ const getLocalizationKey = memoizeOne((attribute: string): string => {
       return `ui.card.weather.attributes.${attribute}`;
   }
 });
+
+// Time of day thresholds (in minutes from midnight)
+const TIME_THRESHOLDS = {
+  SUNRISE_START: 360, // 6:00
+  SUNRISE_END: 480, // 8:00
+  DAY_END: 1080, // 18:00
+  SUNSET_END: 1200, // 20:00
+} as const;
+
+export const getTimeOfDay = (latitude?: number, longitude?: number): TimeOfDay => {
+  const now = new Date();
+
+  if (latitude !== undefined && longitude !== undefined) {
+    const times = SunCalc.getTimes(now, latitude, longitude);
+
+    if (times.sunrise && times.sunset) {
+      const currentTime = now.getTime();
+      const sunriseTime = times.sunrise.getTime();
+      const sunsetTime = times.sunset.getTime();
+
+      // Time ranges with 30-minute transitions for sunrise and sunset
+      const sunriseStart = sunriseTime - 30 * 60 * 1000;
+      const sunriseEnd = sunriseTime + 30 * 60 * 1000;
+      const sunsetStart = sunsetTime - 30 * 60 * 1000;
+      const sunsetEnd = sunsetTime + 30 * 60 * 1000;
+
+      if (currentTime >= sunriseStart && currentTime < sunriseEnd) {
+        return { type: 'sunrise', progress: (currentTime - sunriseStart) / (60 * 60 * 1000) };
+      }
+
+      if (currentTime >= sunriseEnd && currentTime < sunsetStart) {
+        return { type: 'day', progress: (currentTime - sunriseEnd) / (sunsetStart - sunriseEnd) };
+      }
+
+      if (currentTime >= sunsetStart && currentTime < sunsetEnd) {
+        return { type: 'sunset', progress: (currentTime - sunsetStart) / (60 * 60 * 1000) };
+      }
+
+      return { type: 'night', progress: 0 };
+    }
+  }
+
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+  const totalMinutes = hour * 60 + minute;
+
+  // Sunrise: 6:00 - 8:00 (120 minutes)
+  if (totalMinutes >= TIME_THRESHOLDS.SUNRISE_START && totalMinutes < TIME_THRESHOLDS.SUNRISE_END) {
+    const progress = (totalMinutes - TIME_THRESHOLDS.SUNRISE_START) / 120;
+    return { type: 'sunrise', progress };
+  }
+
+  // Day: 8:00 - 18:00
+  if (totalMinutes >= TIME_THRESHOLDS.SUNRISE_END && totalMinutes < TIME_THRESHOLDS.DAY_END) {
+    const progress = (totalMinutes - TIME_THRESHOLDS.SUNRISE_END) / 600;
+    return { type: 'day', progress };
+  }
+
+  // Sunset: 18:00 - 20:00 (120 minutes)
+  if (totalMinutes >= TIME_THRESHOLDS.DAY_END && totalMinutes < TIME_THRESHOLDS.SUNSET_END) {
+    const progress = (totalMinutes - TIME_THRESHOLDS.DAY_END) / 120;
+    return { type: 'sunset', progress };
+  }
+
+  // Night
+  return { type: 'night', progress: 0 };
+};
+
+export const getSunPosition = (timeOfDay: TimeOfDay, width: number, height: number): Position => {
+  if (timeOfDay.type === 'sunrise') {
+    const progress = timeOfDay.progress;
+    return {
+      x: width * (0.3 + progress * 0.4),
+      y: height * (0.85 - progress * 0.55),
+    };
+  } else if (timeOfDay.type === 'sunset') {
+    const progress = timeOfDay.progress;
+    return {
+      x: width * (0.5 + progress * 0.3),
+      y: height * (0.3 + progress * 0.55),
+    };
+  } else if (timeOfDay.type === 'day') {
+    const progress = timeOfDay.progress;
+    const angle = progress * Math.PI;
+    return {
+      x: width * (0.5 + Math.sin(angle) * 0.25),
+      y: height * (0.25 - Math.sin(angle) * 0.1),
+    };
+  } else {
+    // Night: moon position
+    return {
+      x: width * 0.5,
+      y: height * 0.3,
+    };
+  }
+};

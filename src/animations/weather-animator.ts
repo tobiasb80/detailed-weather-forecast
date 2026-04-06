@@ -1,4 +1,4 @@
-import { getSunPosition } from '../utils';
+import { getSunPosition } from '../weather';
 import { TimeOfDay, Position } from '../types';
 
 export interface WindStreak {

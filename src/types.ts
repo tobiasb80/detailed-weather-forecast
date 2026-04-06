@@ -1,6 +1,7 @@
 // Collection of types from HA frontend
 
 import type { ActionConfig, HomeAssistant, LovelaceCardConfig } from 'custom-card-helpers';
+import type { HassEntityAttributeBase, HassEntityBase } from 'home-assistant-js-websocket';
 
 export type HassConnection = HomeAssistant['connection'];
 export type HassUnsubscribeFunc = ReturnType<HassConnection['subscribeMessage']> extends Promise<infer T> ? T : never;
@@ -126,6 +127,57 @@ export interface ForecastAttributeConfig {
   icon?: string;
   unit?: string;
   divisor?: number;
+}
+
+export interface ForecastAttribute {
+  temperature: number;
+  datetime: string;
+  templow?: number;
+  precipitation?: number;
+  precipitation_probability?: number;
+  humidity?: number;
+  condition?: string;
+  is_daytime?: boolean;
+  pressure?: number;
+  wind_speed?: string | number;
+  wind_gust_speed?: number;
+  wind_bearing?: number | string;
+  cloud_coverage?: number;
+  dew_point?: number;
+  uv_index?: number;
+  solar_forecast?: number;
+}
+
+export interface WeatherEntityAttributes extends HassEntityAttributeBase {
+  attribution?: string;
+  humidity?: number;
+  forecast?: ForecastAttribute[];
+  is_daytime?: boolean;
+  pressure?: number;
+  temperature?: number;
+  visibility?: number;
+  wind_bearing?: number | string;
+  wind_speed?: number;
+  precipitation_unit: string;
+  pressure_unit: string;
+  temperature_unit: string;
+  visibility_unit: string;
+  wind_speed_unit: string;
+}
+
+export interface ForecastEvent {
+  type: 'hourly' | 'daily' | 'twice_daily';
+  forecast: [ForecastAttribute] | null;
+}
+
+export interface WeatherEntity extends HassEntityBase {
+  attributes: WeatherEntityAttributes;
+}
+
+export interface DisplayAttribute {
+  value: string;
+  name: string;
+  icon?: string;
 }
 
 // Time of Day
