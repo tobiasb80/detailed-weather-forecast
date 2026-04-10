@@ -1,4 +1,4 @@
-import { css, html, LitElement, nothing, TemplateResult } from 'lit';
+import { css, html, LitElement, nothing, TemplateResult, unsafeCSS } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { HomeAssistant, LovelaceCardEditor } from 'custom-card-helpers';
 import { localize } from '../localize/localize';
@@ -13,6 +13,7 @@ import {
 import './entity-info-editor';
 import './forecast-attribute-editor';
 import { formatWeatherAttributeName } from '../weather';
+import * as editorStyles from './detailed-weather-forecast-editor.css';
 
 const SOLAR_FORECAST_OPTION = 'solar_forecast';
 const FORECAST_OPTIONS_CACHE = new Map<string, { hourly: string[]; daily: string[] }>();
@@ -109,222 +110,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
   private _solarForecastOptionsPromise?: Promise<void>;
 
   static styles = css`
-    .editor-section {
-      margin-top: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .editor-section:first-of-type {
-      margin-top: 16px;
-    }
-
-    .section-subtitle {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    .editor-subsection {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .chips-hint {
-      margin: 0;
-      font-size: 14px;
-      color: var(--secondary-text-color);
-    }
-
-    .location-description {
-      font-size: 14px;
-      color: var(--secondary-text-color);
-    }
-
-    .sun-coordinates {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .color-input-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .color-input-row input[type='color'] {
-      padding: 0;
-      width: 40px;
-      height: 32px;
-      border: none;
-      background: none;
-    }
-
-    .color-input-row input[type='text'] {
-      flex: 1 1 120px;
-      min-width: 120px;
-    }
-
-    .icon-map-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .icon-map-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .icon-map-row ha-selector {
-      flex: 1 1 auto;
-    }
-
-    .clear-button {
-      padding: 4px 8px;
-      border-radius: 4px;
-      border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.12));
-
-      cursor: pointer;
-      font: inherit;
-      color: var(--primary-text-color);
-    }
-
-    .clear-button:hover {
-      background: var(--secondary-background-color, #f5f5f5);
-    }
-
-    .coordinate-field {
-      display: flex;
-      flex: 1 1 120px;
-      flex-direction: column;
-      gap: 4px;
-      font-size: 14px;
-    }
-
-    .coordinate-field input {
-      font: inherit;
-      padding: 6px 8px;
-      border-radius: 4px;
-      border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.12));
-      color: var(--primary-text-color);
-    }
-
-    .coordinate-field input:disabled {
-      opacity: 0.6;
-    }
-
-    .forecast-switch {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .forecast-switch span {
-      font-size: 14px;
-    }
-
-    .editor-expander {
-      border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.12));
-      border-radius: 12px;
-      overflow: hidden;
-      background: var(--card-background-color, #fff);
-    }
-
-    .editor-expander summary {
-      list-style: none;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 12px 16px;
-      cursor: pointer;
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    .editor-expander summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .editor-expander > summary ha-icon {
-      transition: transform 0.2s ease;
-    }
-
-    .editor-expander[open] > summary ha-icon {
-      transform: rotate(180deg);
-    }
-
-    .editor-expander[open] summary {
-      border-bottom: 1px solid var(--divider-color, rgba(0, 0, 0, 0.12));
-    }
-
-    .editor-expander .summary-actions {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .editor-expander.disabled summary {
-      color: var(--secondary-text-color);
-      cursor: default;
-    }
-
-    .editor-expander.disabled > summary ha-icon {
-      opacity: 0.4;
-    }
-
-    .editor-expander .expander-content {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .editor-expander.nested summary {
-      padding: 10px 12px;
-      font-size: 14px;
-    }
-
-    .editor-expander.nested .expander-content {
-      padding: 12px;
-    }
-
-    .header-info-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-    }
-
-    .header-info-item > *:first-child {
-      flex: 1;
-    }
-
-    .chip-editor {
-      border: 1px solid var(--divider-color);
-      padding: 12px;
-      border-radius: 12px;
-    }
-
-    .forecast-info-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-    }
-
-    .forecast-info-item > *:first-child {
-      flex: 1;
-    }
-
-    .editor-expander.nested .expander-content > ha-button {
-      align-self: flex-start;
-    }
+    ${unsafeCSS(editorStyles.default || editorStyles)}
   `;
 
   public setConfig(config: DetailedWeatherForecastConfig): void {
@@ -489,7 +275,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
                 ${[0, 1, 2].map(
                   (index) => html`
                     <div class="chip-editor">
-                      <header-entity-editor
+                      <header-info-editor
                         .hass=${this.hass}
                         .weatherEntity=${this._config?.entity}
                         .config=${(this._config?.header_chips?.[index] as HeaderAttribute) ||
@@ -499,7 +285,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
                           name: '',
                         } as HeaderAttribute)}
                         @header-info-config-changed=${(e: CustomEvent) => this._headerChipChanged(e, index)}
-                      ></header-entity-editor>
+                      ></header-info-editor>
                     </div>
                   `,
                 )}
@@ -529,12 +315,12 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
                 ${this._config.header_info?.map(
                   (info, index) => html`
                     <div class="header-info-item">
-                      <header-entity-editor
+                      <header-info-editor
                         .hass=${this.hass}
                         .weatherEntity=${this._config?.entity}
                         .config=${info}
                         @header-info-config-changed=${(e: CustomEvent) => this._headerInfoChanged(e, index)}
-                      ></header-entity-editor>
+                      ></header-info-editor>
                       <ha-icon-button @click=${() => this._deleteHeaderInfo(index)}>
                         <ha-icon icon="mdi:delete"></ha-icon>
                       </ha-icon-button>

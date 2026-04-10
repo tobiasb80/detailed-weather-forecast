@@ -70,8 +70,8 @@ const computeSchema = (
   return schema;
 };
 
-@customElement('header-entity-editor')
-export class HeaderEntityEditor extends LitElement {
+@customElement('header-info-editor')
+export class HeaderInfoEditor extends LitElement {
   @property({ attribute: false }) public hass?: HomeAssistant;
   @property({ attribute: false }) public weatherEntity?: string;
   @property({ attribute: false }) public config?: HeaderAttribute;
