@@ -2,8 +2,15 @@ import { LitElement, html, nothing, TemplateResult, PropertyValues } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import { customElement, property, state } from 'lit/decorators.js';
 import * as SunCalc from 'suncalc';
-import type { ForecastAttribute, SunCoordinates, SunEventType, SunTimesByDay, WeatherEntity, WeatherIconMap } from '../types';
-import { formatDayPeriod, formatDateWeekdayShort, formatHour, formatHourMinute, useAmPm } from '../date-time';
+import type {
+  ForecastAttribute,
+  SunCoordinates,
+  SunEventType,
+  SunTimesByDay,
+  WeatherEntity,
+  WeatherIconMap,
+} from '../types';
+import { formatDayPeriod, formatDateWeekdayShort, formatHourMinute, useAmPm } from '../date-time';
 import { formatForecastAttribute, getWeatherStateIcon } from '../weather';
 import type { HomeAssistant } from 'custom-card-helpers';
 
@@ -190,7 +197,7 @@ export class DWFHourlyList extends LitElement {
 
     const dateLabel = sunEvent
       ? formatHourMinute(eventDate!, this.hass.locale as any, this.hass.config as any)
-      : formatHour(date, this.hass.locale as any, this.hass.config as any);
+      : formatHourMinute(date, this.hass.locale as any, this.hass.config as any);
 
     const amPmDate = eventDate ?? date;
     const amPmLabel = showAmPm
