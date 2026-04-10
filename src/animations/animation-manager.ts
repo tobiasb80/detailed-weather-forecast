@@ -118,7 +118,6 @@ export class AnimationManager {
 
   private startAnimation(): void {
     if (this.animationFrame) return;
-    console.log('[AnimationManager] startAnimation called');
     const animate = () => {
       this.draw();
       this.animationFrame = requestAnimationFrame(animate);
@@ -128,7 +127,6 @@ export class AnimationManager {
 
   private stopAnimation(): void {
     if (this.animationFrame) {
-      console.log('[AnimationManager] stopAnimation called');
       cancelAnimationFrame(this.animationFrame);
       this.animationFrame = null;
     }
@@ -137,34 +135,26 @@ export class AnimationManager {
   private draw(): void {
     if (!this.ctx || !this.canvas) {
       // Uncomment below for verbose logging if needed
-      // console.log('[AnimationManager] draw skipped: missing ctx or canvas');
       return;
     }
     if (!this.width || !this.height) {
-      // console.log('[AnimationManager] draw resizing: missing width or height');
       this.resizeCanvas();
       if (!this.width || !this.height) return;
     }
 
     const params = this.getDrawParams();
     if (!params) {
-      console.log('[AnimationManager] draw skipped: getDrawParams returned null');
       return;
     }
 
     const { condition, timeOfDay, cloudCover, moonPhase } = params;
-    // Log once when condition changes
     if ((this as any)._lastLoggedCondition !== condition) {
-      console.log(
-        `[AnimationManager] drawing condition: ${condition}, timeOfDay: ${timeOfDay.type}, cloudCover: ${cloudCover}, moonPhase: ${moonPhase}`,
-      );
       (this as any)._lastLoggedCondition = condition;
     }
 
     const width = this.width;
     const height = this.height;
 
-    console.log('[AnimationManager] draw called with width:', width, 'height:', height);
     this.ctx.clearRect(0, 0, width, height);
 
     const conditionLower = condition.toLowerCase();
