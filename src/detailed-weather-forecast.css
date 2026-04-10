@@ -5,10 +5,10 @@
   --day-gradient-end: #7ec5f0;
   --night-gradient-start: #09102b;
   --night-gradient-end: #192060;
-  --sunset-gradient-start: #ff6b6b;
-  --sunset-gradient-end: #ffa07a;
-  --sunrise-gradient-start: #ffa07a;
-  --sunrise-gradient-end: #ffd700;
+  --sunset-gradient-start: #110293;
+  --sunset-gradient-end: #f82e2e;
+  --sunrise-gradient-start: #066bb7;
+  --sunrise-gradient-end: #ff6330;
   --partlycloudy-start: #5aaaf5;
   --partlycloudy-end: #b7d8f8;
   --partlycloudy-night-start: #0a1835;
@@ -59,70 +59,70 @@ ha-card {
 
 .animation-container {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  background: linear-gradient(135deg, var(--day-gradient-start), var(--day-gradient-end));
+  background: linear-gradient(var(--day-gradient-start), var(--day-gradient-end));
   transition:
     background 2s ease-in-out,
     min-height 0.3s ease;
 }
 
 .animation-container.night {
-  background: linear-gradient(135deg, var(--night-gradient-start), var(--night-gradient-end));
+  background: linear-gradient(var(--night-gradient-start), var(--night-gradient-end));
 }
 
 .animation-container.sunset {
-  background: linear-gradient(135deg, var(--sunset-gradient-start), var(--sunset-gradient-end));
+  background: linear-gradient(var(--sunset-gradient-start), var(--sunset-gradient-end));
 }
 
 .animation-container.sunrise {
-  background: linear-gradient(135deg, var(--sunrise-gradient-start), var(--sunrise-gradient-end));
+  background: linear-gradient(var(--sunrise-gradient-start), var(--sunrise-gradient-end));
 }
 
 .animation-container.partlycloudy {
-  background: linear-gradient(135deg, var(--partlycloudy-start), var(--partlycloudy-end));
+  background: linear-gradient(var(--partlycloudy-start), var(--partlycloudy-end));
 }
 
 .animation-container.partlycloudy-night {
-  background: linear-gradient(135deg, var(--partlycloudy-night-start), var(--partlycloudy-night-end));
+  background: linear-gradient(var(--partlycloudy-night-start), var(--partlycloudy-night-end));
 }
 
 .animation-container.cloudy-night {
-  background: linear-gradient(135deg, var(--cloudy-night-start), var(--cloudy-night-end));
+  background: linear-gradient(var(--cloudy-night-start), var(--cloudy-night-end));
 }
 
 .animation-container.cloudy {
-  background: linear-gradient(135deg, var(--cloudy-start), var(--cloudy-end));
+  background: linear-gradient(var(--cloudy-start), var(--cloudy-end));
 }
 
 .animation-container.fog {
-  background: linear-gradient(135deg, var(--fog-start), var(--fog-end));
+  background: linear-gradient(var(--fog-start), var(--fog-end));
 }
 
 .animation-container.fog-night {
-  background: linear-gradient(135deg, var(--fog-night-start), var(--fog-night-end));
+  background: linear-gradient(var(--fog-night-start), var(--fog-night-end));
 }
 
 .animation-container.rainy {
-  background: linear-gradient(135deg, var(--rainy-start), var(--rainy-end));
+  background: linear-gradient(var(--rainy-start), var(--rainy-end));
 }
 
 .animation-container.rainy-night {
-  background: linear-gradient(135deg, var(--rainy-night-start), var(--rainy-night-end));
+  background: linear-gradient(var(--rainy-night-start), var(--rainy-night-end));
 }
 
 .animation-container.exceptional {
-  background: linear-gradient(135deg, var(--exceptional-start), var(--exceptional-end));
+  background: linear-gradient(var(--exceptional-start), var(--exceptional-end));
 }
 
 .animation-container.exceptional-night {
-  background: linear-gradient(135deg, var(--exceptional-night-start), var(--exceptional-night-end));
+  background: linear-gradient(var(--exceptional-night-start), var(--exceptional-night-end));
 }
 
 .animation-container.snowy {
-  background: linear-gradient(135deg, var(--snowy-start), var(--snowy-end));
+  background: linear-gradient(var(--snowy-start), var(--snowy-end));
 }
 
 .animation-container.snowy-night {
-  background: linear-gradient(135deg, var(--snowy-night-start), var(--snowy-night-end));
+  background: linear-gradient(var(--snowy-night-start), var(--snowy-night-end));
 }
 
 .weather {
