@@ -1,9 +1,13 @@
+import { hasAction } from 'custom-card-helpers';
+import type { ActionHandlerDetail } from 'custom-card-helpers/dist/types';
 import { html, LitElement, nothing, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { classMap } from 'lit/directives/class-map.js';
+import { actionHandler } from '../action-handler-directive';
 import { formatDateWeekdayShort, formatTime } from '../date-time';
 import { localize } from '../localize/localize';
 import { ForecastAttribute, ForecastAttributeConfig, WeatherEntity } from '../types';
-import { ExtendedHomeAssistant, formatForecastAttribute } from '../weather';
+import { executeAction, ExtendedHomeAssistant, formatForecastAttribute } from '../weather';
 
 @customElement('dwf-forecast-attributes')
 export class DwfForecastAttributes extends LitElement {
@@ -84,8 +88,25 @@ export class DwfForecastAttributes extends LitElement {
     const attribute = attrConfig.attribute;
     const name = formatted.name;
 
+    const hasTapAction = hasAction(attrConfig.tap_action);
+    const hasHoldAction = hasAction(attrConfig.hold_action);
+    const hasDoubleTapAction = hasAction(attrConfig.double_tap_action);
+    const hasAnyAction = hasTapAction || hasHoldAction || hasDoubleTapAction;
+
     return html`
-      <div class="dwf-current-attribute">
+      <div
+        class=${classMap({ 'dwf-current-attribute': true, 'has-action': hasAnyAction })}
+        role=${hasAnyAction ? 'button' : nothing}
+        tabindex=${hasAnyAction ? 0 : nothing}
+        .actionHandler=${actionHandler({
+          hasHold: hasHoldAction,
+          hasDoubleClick: hasDoubleTapAction,
+        })}
+        @action=${hasAnyAction
+          ? (ev: CustomEvent<ActionHandlerDetail>) => this._handleAttributeAction(ev, attrConfig)
+          : undefined}
+      >
+        ${hasAnyAction ? html`<mwc-ripple></mwc-ripple>` : nothing}
         <ha-attribute-icon
           class="dwf-current-attribute-icon"
           .hass=${this.hass}
@@ -97,6 +118,20 @@ export class DwfForecastAttributes extends LitElement {
         <span class="dwf-current-attribute-value">${value}</span>
       </div>
     `;
+  }
+
+  private _handleAttributeAction(ev: CustomEvent<ActionHandlerDetail>, attrConfig: ForecastAttributeConfig) {
+    const action = ev.detail.action;
+    const actionConfig =
+      action === 'hold'
+        ? attrConfig.hold_action
+        : action === 'double_tap'
+          ? attrConfig.double_tap_action
+          : attrConfig.tap_action;
+
+    if (hasAction(actionConfig)) {
+      executeAction(this, this.hass, actionConfig, this.weatherEntity.entity_id, action);
+    }
   }
 }
 

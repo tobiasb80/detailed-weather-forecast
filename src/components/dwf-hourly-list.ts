@@ -13,6 +13,8 @@ import type {
 import { formatDayPeriod, formatDateWeekdayShort, formatHourMinute, useAmPm } from '../date-time';
 import { formatForecastAttribute, getWeatherStateIcon } from '../weather';
 import type { HomeAssistant } from 'custom-card-helpers';
+import type { ActionHandlerDetail } from 'custom-card-helpers/dist/types';
+import { actionHandler } from '../action-handler-directive';
 
 const PRECIPITATION_DISPLAY_THRESHOLD = 0.3;
 const HOURLY_PRECIPITATION_MIN_SCALE = 1;
@@ -206,7 +208,17 @@ export class DWFHourlyList extends LitElement {
     const tempColor = this._getTemperatureColor(item.temperature);
 
     return html`
-      <div class="${itemClasses.join(' ')}" data-datetime=${item.datetime} @click=${() => this._handleItemClick(item)}>
+      <div
+        class="${itemClasses.join(' ')}"
+        data-datetime=${item.datetime}
+        .actionHandler=${actionHandler({ hasHold: false, hasDoubleClick: false })}
+        @action=${(ev: CustomEvent<ActionHandlerDetail>) => {
+          if (ev.detail.action === 'tap') {
+            this._handleItemClick(item);
+          }
+        }}
+      >
+        <mwc-ripple></mwc-ripple>
         <div class="${dateClasses.join(' ')}">${dateLabel}</div>
         ${showAmPm ? html`<div class="ampm">${amPmLabel ?? ''}</div>` : ''}
         <div class="forecast-image-icon">

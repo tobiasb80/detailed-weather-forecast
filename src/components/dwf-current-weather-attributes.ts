@@ -1,10 +1,12 @@
-import { handleAction, hasAction, type ActionConfig } from 'custom-card-helpers';
+import { hasAction } from 'custom-card-helpers';
+import type { ActionHandlerDetail } from 'custom-card-helpers/dist/types';
 import { HassEntity } from 'home-assistant-js-websocket';
 import { html, LitElement, nothing, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
+import { actionHandler } from '../action-handler-directive';
 import { HeaderAttribute, WeatherEntity } from '../types';
-import { ExtendedHomeAssistant, formatWeatherAttribute } from '../weather';
+import { executeAction, ExtendedHomeAssistant, formatWeatherAttribute } from '../weather';
 
 @customElement('dwf-current-weather-attributes')
 export class DwfCurrentWeatherAttributes extends LitElement {
@@ -81,19 +83,28 @@ export class DwfCurrentWeatherAttributes extends LitElement {
     }
 
     const hasTapAction = hasAction(attrConfig.tap_action);
+    const hasHoldAction = hasAction(attrConfig.hold_action);
+    const hasDoubleTapAction = hasAction(attrConfig.double_tap_action);
+    const hasAnyAction = hasTapAction || hasHoldAction || hasDoubleTapAction;
     const attributeClassMap = {
       'dwf-current-attribute': true,
-      'has-action': hasTapAction,
+      'has-action': hasAnyAction,
     };
 
     return html`
       <div
         class=${classMap(attributeClassMap)}
-        role=${hasTapAction ? 'button' : nothing}
-        tabindex=${hasTapAction ? 0 : nothing}
-        @click=${() => this._handleAttributeTap(attrConfig)}
-        @keydown=${(ev: KeyboardEvent) => this._handleAttributeKeydown(ev, attrConfig)}
+        role=${hasAnyAction ? 'button' : nothing}
+        tabindex=${hasAnyAction ? 0 : nothing}
+        .actionHandler=${actionHandler({
+          hasHold: hasHoldAction,
+          hasDoubleClick: hasDoubleTapAction,
+        })}
+        @action=${hasAnyAction
+          ? (ev: CustomEvent<ActionHandlerDetail>) => this._handleAttributeAction(ev, attrConfig)
+          : undefined}
       >
+        ${hasAnyAction ? html`<mwc-ripple></mwc-ripple>` : nothing}
         <ha-attribute-icon
           class="dwf-current-attribute-icon"
           .hass=${this.hass}
@@ -107,50 +118,22 @@ export class DwfCurrentWeatherAttributes extends LitElement {
     `;
   }
 
-  private _executeTapAction(actionConfig?: ActionConfig, entityOverride?: string) {
-    if (!this.hass || !actionConfig || !hasAction(actionConfig)) {
+  private _handleAttributeAction(ev: CustomEvent<ActionHandlerDetail>, attrConfig: HeaderAttribute) {
+    const action = ev.detail.action;
+    const actionConfig =
+      action === 'hold'
+        ? attrConfig.hold_action
+        : action === 'double_tap'
+          ? attrConfig.double_tap_action
+          : attrConfig.tap_action;
+
+    if (!hasAction(actionConfig)) {
       return;
     }
 
-    // This part for 'perform-action' seems to be a custom implementation
-    // before falling back to handleAction.
-    const actionType = (actionConfig as any).action as string | undefined;
-    const performAction = (actionConfig as any).perform_action as string | undefined;
-    if (actionType === 'perform-action' && performAction) {
-      const [domain, service] = performAction.split('.', 2);
-      if (domain && service) {
-        const data = (actionConfig as any).data ?? (actionConfig as any).service_data;
-        const target = (actionConfig as any).target;
-        this.hass.callService(domain, service, data, target);
-        return;
-      }
-    }
-
-    handleAction(
-      this,
-      this.hass,
-      {
-        entity: entityOverride || this.weatherEntity.entity_id,
-        tap_action: actionConfig,
-      },
-      'tap',
-    );
-  }
-
-  private _handleAttributeTap(attrConfig: HeaderAttribute) {
-    if (!hasAction(attrConfig.tap_action)) {
-      return;
-    }
-    const entity = attrConfig.type === 'entity' ? attrConfig.entity : undefined;
-    this._executeTapAction(attrConfig.tap_action, entity);
-  }
-
-  private _handleAttributeKeydown(ev: KeyboardEvent, attrConfig: HeaderAttribute) {
-    if (ev.key !== 'Enter' && ev.key !== ' ') {
-      return;
-    }
-    ev.preventDefault();
-    this._handleAttributeTap(attrConfig);
+    const entityFallback =
+      attrConfig.type === 'entity' && attrConfig.entity ? attrConfig.entity : this.weatherEntity.entity_id;
+    executeAction(this, this.hass, actionConfig, entityFallback, action);
   }
 }
 

@@ -1,8 +1,10 @@
 import type { ActionConfig } from 'custom-card-helpers';
 import { hasAction } from 'custom-card-helpers';
+import type { ActionHandlerDetail } from 'custom-card-helpers/dist/types';
 import { css, html, LitElement, nothing, unsafeCSS } from 'lit';
 import { property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
+import { actionHandler } from '../action-handler-directive';
 import * as customStyles from '../detailed-weather-forecast.css';
 import type { HeaderChipDisplay } from '../types';
 
@@ -13,22 +15,14 @@ export class DwfHeaderChips extends LitElement {
 
   @property({ type: Array }) public headerChips: HeaderChipDisplay[] = [];
 
-  private _handleHeaderChipTap(actionConfig?: ActionConfig, entity?: string) {
+  private _handleAction(ev: CustomEvent<ActionHandlerDetail>, actionConfig?: ActionConfig, entity?: string) {
     this.dispatchEvent(
       new CustomEvent('dwf-chip-click', {
-        detail: { actionConfig, entity },
+        detail: { actionConfig, entity, action: ev.detail.action },
         bubbles: true,
         composed: true,
       }),
     );
-  }
-
-  private _handleHeaderChipKeydown(event: KeyboardEvent, actionConfig?: ActionConfig, entity?: string) {
-    if (event.key !== 'Enter' && event.key !== ' ') {
-      return;
-    }
-    event.preventDefault();
-    this._handleHeaderChipTap(actionConfig, entity);
   }
 
   render() {
@@ -37,7 +31,8 @@ export class DwfHeaderChips extends LitElement {
     }
 
     const headerChipsTemplate = this.headerChips.map((chip) => {
-      const hasChipAction = hasAction(chip.action);
+      const hasChipAction =
+        hasAction(chip.tap_action) || hasAction(chip.hold_action) || hasAction(chip.double_tap_action);
       const chipClassMap = {
         'attribute-chip': true,
         missing: chip.missing,
@@ -50,14 +45,25 @@ export class DwfHeaderChips extends LitElement {
           title=${chipTitle}
           role=${hasChipAction ? 'button' : undefined}
           tabindex=${hasChipAction ? 0 : undefined}
-          @click=${hasChipAction
-            ? () => this._handleHeaderChipTap(chip.action, chip.type === 'entity' ? chip.entity : undefined)
-            : undefined}
-          @keydown=${hasChipAction
-            ? (ev: KeyboardEvent) =>
-                this._handleHeaderChipKeydown(ev, chip.action, chip.type === 'entity' ? chip.entity : undefined)
+          .actionHandler=${actionHandler({
+            hasHold: hasAction(chip.hold_action),
+            hasDoubleClick: hasAction(chip.double_tap_action),
+          })}
+          @action=${hasChipAction
+            ? (ev: CustomEvent<ActionHandlerDetail>) => {
+                const actionType = ev.detail.action;
+                const actionConfig =
+                  actionType === 'hold'
+                    ? chip.hold_action
+                    : actionType === 'double_tap'
+                      ? chip.double_tap_action
+                      : chip.tap_action;
+
+                this._handleAction(ev, actionConfig, chip.type === 'entity' ? chip.entity : undefined);
+              }
             : undefined}
         >
+          ${hasChipAction ? html`<mwc-ripple></mwc-ripple>` : nothing}
           ${chip.icon ? html`<ha-icon class="chip-icon" .icon=${chip.icon}></ha-icon>` : nothing}
           <span class="header-pill-text">${chip.display}</span>
         </div>

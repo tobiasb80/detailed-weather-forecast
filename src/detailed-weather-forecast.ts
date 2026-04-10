@@ -1,5 +1,5 @@
-import type { ActionConfig, HomeAssistant } from 'custom-card-helpers';
-import { handleAction, hasAction } from 'custom-card-helpers';
+import { hasAction, type ActionConfig, type HomeAssistant } from 'custom-card-helpers';
+import type { ActionHandlerDetail } from 'custom-card-helpers/dist/types';
 import type { HassEntity } from 'home-assistant-js-websocket';
 import type { PropertyValues } from 'lit';
 import { html, LitElement, nothing } from 'lit';
@@ -7,6 +7,7 @@ import { state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import * as SunCalc from 'suncalc';
+import { actionHandler } from './action-handler-directive';
 import './components/dwf-compact-header';
 import './components/dwf-current-weather-attributes';
 import './components/dwf-daily-list';
@@ -32,7 +33,13 @@ import {
 import { AnimationManager } from './animations/animation-manager';
 import { enableMomentumScroll } from './utils/momentum-scroll';
 import type { ExtendedHomeAssistant } from './weather';
-import { formatWeatherAttribute, getSupportedForecastTypes, subscribeForecast, getTimeOfDay } from './weather';
+import {
+  executeAction,
+  formatWeatherAttribute,
+  getSupportedForecastTypes,
+  subscribeForecast,
+  getTimeOfDay,
+} from './weather';
 import { DEFAULT_WEATHER_IMAGE, WeatherImages } from './weather-images';
 
 // Styled console banner so your card is easy to spot in the browser console.
@@ -542,9 +549,19 @@ export class DetailedWeatherForecast extends LitElement {
     const sunCoordinates = this._getLocationCoordinates();
     const showSunTimes = Boolean(this._config.show_sun_times && sunCoordinates && hourlyEnabled);
     const temperatureTapAction = this._config.header_tap_action_temperature;
+    const temperatureHoldAction = this._config.header_hold_action_temperature;
+    const temperatureDoubleTapAction = this._config.header_double_tap_action_temperature;
     const temperatureActionEntity = this._config.header_temperature_entity || this._entity;
-    const hasTemperatureTapAction = hasAction(temperatureTapAction);
-    const hasConditionTapAction = this._config.header_info.length > 0;
+    const hasTemperatureAction =
+      hasAction(temperatureTapAction) || hasAction(temperatureHoldAction) || hasAction(temperatureDoubleTapAction);
+    const conditionTapAction = this._config.header_tap_action_condition;
+    const conditionHoldAction = this._config.header_hold_action_condition;
+    const conditionDoubleTapAction = this._config.header_double_tap_action_condition;
+    const hasConditionAction =
+      this._config.header_info.length > 0 ||
+      hasAction(conditionTapAction) ||
+      hasAction(conditionHoldAction) ||
+      hasAction(conditionDoubleTapAction);
     const headerTemperature = this._computeHeaderTemperature();
 
     let headerCondition: string | undefined = undefined;
@@ -622,7 +639,8 @@ export class DetailedWeatherForecast extends LitElement {
     const headerAttributesTemplate = headerChips.length
       ? html`<dwf-header-chips
           .headerChips=${headerChips}
-          @dwf-chip-click=${(e: CustomEvent) => this._handleHeaderChipTap(e.detail.actionConfig, e.detail.entity)}
+          @dwf-chip-click=${(e: CustomEvent) =>
+            this._handleHeaderChipAction(e.detail.actionConfig, e.detail.entity, e.detail.action)}
         ></dwf-header-chips>`
       : nothing;
 
@@ -631,29 +649,46 @@ export class DetailedWeatherForecast extends LitElement {
         <div
           class=${classMap({
             condition: true,
-            'has-action': hasConditionTapAction,
+            'has-action': hasConditionAction,
           })}
-          role=${hasConditionTapAction ? 'button' : undefined}
-          tabindex=${hasConditionTapAction ? 0 : undefined}
-          @click=${hasConditionTapAction ? () => this._handleConditionTap() : undefined}
-          @keydown=${hasConditionTapAction ? (ev: KeyboardEvent) => this._handleConditionKeydown(ev) : undefined}
+          role=${hasConditionAction ? 'button' : undefined}
+          tabindex=${hasConditionAction ? 0 : undefined}
+          .actionHandler=${actionHandler({
+            hasHold: hasAction(conditionHoldAction),
+            hasDoubleClick: hasAction(conditionDoubleTapAction),
+          })}
+          @action=${hasConditionAction
+            ? (ev: CustomEvent<ActionHandlerDetail>) => this._handleConditionAction(ev.detail.action)
+            : undefined}
         >
+          ${hasConditionAction ? html`<mwc-ripple></mwc-ripple>` : nothing}
           <span class="header-pill-text"> ${headerCondition} </span>
         </div>
         <div
           class=${classMap({
             temp: true,
-            'has-action': hasTemperatureTapAction,
+            'has-action': hasTemperatureAction,
           })}
-          role=${hasTemperatureTapAction ? 'button' : undefined}
-          tabindex=${hasTemperatureTapAction ? 0 : undefined}
-          @click=${hasTemperatureTapAction
-            ? () => this._handleHeaderTap(temperatureTapAction, temperatureActionEntity)
-            : undefined}
-          @keydown=${hasTemperatureTapAction
-            ? (ev: KeyboardEvent) => this._handleHeaderKeydown(ev, temperatureTapAction, temperatureActionEntity)
+          role=${hasTemperatureAction ? 'button' : undefined}
+          tabindex=${hasTemperatureAction ? 0 : undefined}
+          .actionHandler=${actionHandler({
+            hasHold: hasAction(temperatureHoldAction),
+            hasDoubleClick: hasAction(temperatureDoubleTapAction),
+          })}
+          @action=${hasTemperatureAction
+            ? (ev: CustomEvent<ActionHandlerDetail>) => {
+                const actionType = ev.detail.action;
+                const actionConfig =
+                  actionType === 'hold'
+                    ? temperatureHoldAction
+                    : actionType === 'double_tap'
+                      ? temperatureDoubleTapAction
+                      : temperatureTapAction;
+                executeAction(this, this._hass!, actionConfig, temperatureActionEntity, actionType);
+              }
             : undefined}
         >
+          ${hasTemperatureAction ? html`<mwc-ripple></mwc-ripple>` : nothing}
           <span class="header-pill-text">${headerTemperature}</span>
         </div>
       </div>
@@ -697,8 +732,8 @@ export class DetailedWeatherForecast extends LitElement {
                   .config=${this._config}
                   .nowcastPanelTemplate=${showInlineNowcast ? nowcastPanelTemplate : undefined}
                   .headerTemperature=${headerTemperature}
-                  @dwf-temperature-click=${this._handleCompactHeaderTemperatureClick}
-                  @dwf-condition-click=${this._handleConditionTap}
+                  @dwf-temperature-action=${this._handleCompactHeaderTemperatureAction}
+                  @dwf-condition-action=${this._handleCompactHeaderConditionAction}
                 >
                 </dwf-compact-header>
               `
@@ -921,7 +956,9 @@ export class DetailedWeatherForecast extends LitElement {
     const displays: HeaderChipDisplay[] = [];
 
     chips.forEach((chip) => {
-      const action = hasAction(chip.tap_action) ? chip.tap_action : undefined;
+      const tap_action = hasAction(chip.tap_action) ? chip.tap_action : undefined;
+      const hold_action = hasAction(chip.hold_action) ? chip.hold_action : undefined;
+      const double_tap_action = hasAction(chip.double_tap_action) ? chip.double_tap_action : undefined;
       const icon = typeof (chip as any).icon === 'string' ? (chip as any).icon.trim() : undefined;
 
       if (chip.type === 'entity') {
@@ -941,7 +978,9 @@ export class DetailedWeatherForecast extends LitElement {
           missing: formatted.missing,
           tooltip,
           type: chip.type,
-          action,
+          tap_action,
+          hold_action,
+          double_tap_action,
           icon: entityIcon,
           entity,
         });
@@ -970,7 +1009,9 @@ export class DetailedWeatherForecast extends LitElement {
           missing: true,
           tooltip: attribute,
           type: chip.type,
-          action,
+          tap_action,
+          hold_action,
+          double_tap_action,
           icon,
         });
       } else {
@@ -982,7 +1023,9 @@ export class DetailedWeatherForecast extends LitElement {
           missing: false,
           tooltip,
           type: chip.type,
-          action,
+          tap_action,
+          hold_action,
+          double_tap_action,
           icon: formatted.icon,
         });
       }
@@ -1598,76 +1641,40 @@ export class DetailedWeatherForecast extends LitElement {
     this._selectedDailyForecast = e.detail ?? undefined;
   }
 
-  private _handleCompactHeaderTemperatureClick() {
-    const temperatureTapAction = this._config.header_tap_action_temperature;
-    const temperatureActionEntity = this._config.header_temperature_entity || this._entity;
-    this._handleHeaderTap(temperatureTapAction, temperatureActionEntity);
+  private _handleCompactHeaderTemperatureAction(ev: CustomEvent<{ action: string }>) {
+    const temperatureActionEntity = this._config?.header_temperature_entity || this._entity;
+    const actionType = ev.detail.action;
+    const actionConfig =
+      actionType === 'hold'
+        ? this._config?.header_hold_action_temperature
+        : actionType === 'double_tap'
+          ? this._config?.header_double_tap_action_temperature
+          : this._config?.header_tap_action_temperature;
+
+    executeAction(this, this._hass!, actionConfig, temperatureActionEntity, actionType);
   }
 
-  private _handleHeaderTap(actionConfig?: ActionConfig, entity?: string) {
-    this._executeTapAction(actionConfig, entity);
-  }
+  private _handleConditionAction(actionType: string) {
+    const actionConfig =
+      actionType === 'hold'
+        ? this._config?.header_hold_action_condition
+        : actionType === 'double_tap'
+          ? this._config?.header_double_tap_action_condition
+          : this._config?.header_tap_action_condition;
 
-  private _handleHeaderKeydown(event: KeyboardEvent, actionConfig?: ActionConfig, entity?: string) {
-    if (event.key !== 'Enter' && event.key !== ' ') {
-      return;
+    if (actionConfig) {
+      executeAction(this, this._hass!, actionConfig, this._entity, actionType);
+    } else if (actionType === 'tap' && this._config?.header_info?.length > 0) {
+      this._showAttributes = !this._showAttributes;
     }
-
-    event.preventDefault();
-    this._handleHeaderTap(actionConfig, entity);
   }
 
-  private _handleConditionTap() {
-    this._showAttributes = !this._showAttributes;
+  private _handleCompactHeaderConditionAction(ev: CustomEvent<{ action: string }>) {
+    this._handleConditionAction(ev.detail.action);
   }
 
-  private _handleConditionKeydown(event: KeyboardEvent) {
-    if (event.key !== 'Enter' && event.key !== ' ') {
-      return;
-    }
-
-    event.preventDefault();
-    this._handleConditionTap();
-  }
-
-  private _handleHeaderChipTap(actionConfig?: ActionConfig, entity?: string) {
-    this._executeTapAction(actionConfig, entity);
-  }
-
-  private _handleHeaderChipKeydown(event: KeyboardEvent, actionConfig?: ActionConfig, entity?: string) {
-    if (event.key !== 'Enter' && event.key !== ' ') {
-      return;
-    }
-    event.preventDefault();
-    this._handleHeaderChipTap(actionConfig, entity);
-  }
-
-  private _executeTapAction(actionConfig?: ActionConfig, entityOverride?: string) {
-    if (!this._hass || !this._config || !actionConfig || !hasAction(actionConfig)) {
-      return;
-    }
-
-    const actionType = (actionConfig as any).action as string | undefined;
-    const performAction = (actionConfig as any).perform_action as string | undefined;
-    if (actionType === 'perform-action' && performAction) {
-      const [domain, service] = performAction.split('.', 2);
-      if (domain && service) {
-        const data = (actionConfig as any).data ?? (actionConfig as any).service_data;
-        const target = (actionConfig as any).target;
-        this._hass.callService(domain, service, data, target);
-        return;
-      }
-    }
-
-    handleAction(
-      this,
-      this._hass,
-      {
-        entity: entityOverride || this._entity,
-        tap_action: actionConfig,
-      },
-      'tap',
-    );
+  private _handleHeaderChipAction(actionConfig?: ActionConfig, entity?: string, action: string = 'tap') {
+    executeAction(this, this._hass!, actionConfig, entity || this._entity, action);
   }
 }
 

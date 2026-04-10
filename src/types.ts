@@ -22,7 +22,9 @@ export type HeaderChipDisplay = {
   missing: boolean;
   tooltip: string;
   type: HeaderAttribute['type'];
-  action?: ActionConfig;
+  tap_action?: ActionConfig;
+  hold_action?: ActionConfig;
+  double_tap_action?: ActionConfig;
   icon?: string;
   entity?: string;
 };
@@ -47,6 +49,11 @@ export interface DetailedWeatherForecastConfig extends LovelaceCardConfig {
   daily_min_gap?: number;
   hourly_min_gap?: number;
   header_tap_action_temperature?: ActionConfig;
+  header_hold_action_temperature?: ActionConfig;
+  header_double_tap_action_temperature?: ActionConfig;
+  header_tap_action_condition?: ActionConfig;
+  header_hold_action_condition?: ActionConfig;
+  header_double_tap_action_condition?: ActionConfig;
   hourly_extra_attribute?: string;
   hourly_extra_attribute_unit?: string;
   hourly_extra_attribute_divisor?: number;
@@ -107,6 +114,8 @@ export interface HeaderWeatherAttribute {
   type: 'attribute';
   attribute: string;
   tap_action?: ActionConfig;
+  hold_action?: ActionConfig;
+  double_tap_action?: ActionConfig;
   name: string;
   icon?: string;
   unit?: string;
@@ -117,6 +126,8 @@ export interface HeaderEntity {
   type: 'entity';
   entity: string;
   tap_action?: ActionConfig;
+  hold_action?: ActionConfig;
+  double_tap_action?: ActionConfig;
   name: string;
   icon?: string;
 }
@@ -127,6 +138,9 @@ export interface ForecastAttributeConfig {
   icon?: string;
   unit?: string;
   divisor?: number;
+  tap_action?: ActionConfig;
+  hold_action?: ActionConfig;
+  double_tap_action?: ActionConfig;
 }
 
 export interface ForecastAttribute {

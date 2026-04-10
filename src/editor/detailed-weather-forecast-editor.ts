@@ -1032,6 +1032,31 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
         optional: true,
       },
       {
+        name: 'header_hold_action_temperature',
+        selector: { ui_action: {} },
+        optional: true,
+      },
+      {
+        name: 'header_double_tap_action_temperature',
+        selector: { ui_action: {} },
+        optional: true,
+      },
+      {
+        name: 'header_tap_action_condition',
+        selector: { ui_action: {} },
+        optional: true,
+      },
+      {
+        name: 'header_hold_action_condition',
+        selector: { ui_action: {} },
+        optional: true,
+      },
+      {
+        name: 'header_double_tap_action_condition',
+        selector: { ui_action: {} },
+        optional: true,
+      },
+      {
         name: 'moon_phase_entity',
         selector: { entity: { domain: 'sensor' } },
         optional: true,
@@ -1140,18 +1165,40 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
         if (chip.type === 'attribute') {
           const attribute = typeof chip.attribute === 'string' ? chip.attribute.trim() : '';
           const tap_action = chip.tap_action;
+          const hold_action = chip.hold_action;
+          const double_tap_action = chip.double_tap_action;
           const icon = typeof chip.icon === 'string' ? chip.icon.trim() : undefined;
           const unit = typeof chip.unit === 'string' ? chip.unit.trim() : undefined;
           const divisor = chip.divisor;
-          normalized.push({ type: 'attribute', attribute, name: chip.name ?? '', tap_action, icon, unit, divisor });
+          normalized.push({
+            type: 'attribute',
+            attribute,
+            name: chip.name ?? '',
+            tap_action,
+            hold_action,
+            double_tap_action,
+            icon,
+            unit,
+            divisor,
+          });
           continue;
         }
 
         if (chip.type === 'entity') {
           const entity = typeof chip.entity === 'string' ? chip.entity.trim() : '';
           const tap_action = chip.tap_action;
+          const hold_action = chip.hold_action;
+          const double_tap_action = chip.double_tap_action;
           const icon = typeof chip.icon === 'string' ? chip.icon.trim() : undefined;
-          normalized.push({ type: 'entity', entity, name: chip.name ?? '', tap_action, icon });
+          normalized.push({
+            type: 'entity',
+            entity,
+            name: chip.name ?? '',
+            tap_action,
+            hold_action,
+            double_tap_action,
+            icon,
+          });
         }
       }
     }

@@ -1,8 +1,10 @@
 import { hasAction } from 'custom-card-helpers';
+import type { ActionHandlerDetail } from 'custom-card-helpers/dist/types';
 import type { TemplateResult } from 'lit';
 import { css, html, LitElement, nothing, unsafeCSS } from 'lit';
 import { property } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
+import { actionHandler } from '../action-handler-directive';
 import * as customStyles from '../detailed-weather-forecast.css';
 import { localize } from '../localize/localize';
 import type { DetailedWeatherForecastConfig, WeatherEntity } from '../types';
@@ -32,24 +34,12 @@ export class DwfCompactHeader extends LitElement {
   @property({ type: Boolean })
   public isDaytime?: boolean;
 
-  private _handleTemperatureClick(): void {
-    this.dispatchEvent(new CustomEvent('dwf-temperature-click'));
+  private _handleTemperatureAction(ev: CustomEvent<ActionHandlerDetail>): void {
+    this.dispatchEvent(new CustomEvent('dwf-temperature-action', { detail: { action: ev.detail.action } }));
   }
 
-  private _handleConditionClick(): void {
-    this.dispatchEvent(new CustomEvent('dwf-condition-click'));
-  }
-
-  private _handleTemperatureKeydown(ev: KeyboardEvent): void {
-    if (ev.key === 'Enter' || ev.key === ' ') {
-      this._handleTemperatureClick();
-    }
-  }
-
-  private _handleConditionKeydown(ev: KeyboardEvent): void {
-    if (ev.key === 'Enter' || ev.key === ' ') {
-      this._handleConditionClick();
-    }
+  private _handleConditionAction(ev: CustomEvent<ActionHandlerDetail>): void {
+    this.dispatchEvent(new CustomEvent('dwf-condition-action', { detail: { action: ev.detail.action } }));
   }
 
   render() {
@@ -58,8 +48,15 @@ export class DwfCompactHeader extends LitElement {
     }
 
     let headerCondition: string | undefined = undefined;
-    const hasTemperatureTapAction = hasAction(this.config.header_tap_action_temperature);
-    const hasConditionTapAction = this.config.header_info.length > 0;
+    const hasTemperatureAction =
+      hasAction(this.config.header_tap_action_temperature) ||
+      hasAction(this.config.header_hold_action_temperature) ||
+      hasAction(this.config.header_double_tap_action_temperature);
+    const hasConditionAction =
+      this.config.header_info.length > 0 ||
+      hasAction(this.config.header_tap_action_condition) ||
+      hasAction(this.config.header_hold_action_condition) ||
+      hasAction(this.config.header_double_tap_action_condition);
 
     if (this.weatherEntity.attributes['pictocode'] !== undefined) {
       headerCondition = localize(`card.pictocode_hour.${this.weatherEntity.attributes['pictocode']}`);
@@ -72,31 +69,41 @@ export class DwfCompactHeader extends LitElement {
         <slot name="background"></slot>
         <div class="current-conditions" style="position: relative; z-index: 1;">
           <div
-            class=${classMap({ 'weather-icon': true, 'has-action': hasConditionTapAction })}
-            @click=${this._handleConditionClick}
-            @keydown=${this._handleConditionKeydown}
-            role=${hasConditionTapAction ? 'button' : nothing}
-            tabindex=${hasConditionTapAction ? 0 : nothing}
+            class=${classMap({ 'weather-icon': true, 'has-action': hasConditionAction })}
+            role=${hasConditionAction ? 'button' : nothing}
+            tabindex=${hasConditionAction ? 0 : nothing}
+            .actionHandler=${actionHandler({
+              hasHold: hasAction(this.config.header_hold_action_condition),
+              hasDoubleClick: hasAction(this.config.header_double_tap_action_condition),
+            })}
+            @action=${hasConditionAction ? this._handleConditionAction : undefined}
           >
+            ${hasConditionAction ? html`<mwc-ripple></mwc-ripple>` : nothing}
             ${getCurrentWeatherStateIcon(this.weatherEntity, this, !this.isDaytime, this.config.icon_map)}
           </div>
           <div
-            class=${classMap({ condition: true, 'has-action': hasConditionTapAction })}
-            @click=${this._handleConditionClick}
-            @keydown=${this._handleConditionKeydown}
-            role=${hasConditionTapAction ? 'button' : nothing}
-            tabindex=${hasConditionTapAction ? 0 : nothing}
+            class=${classMap({ condition: true, 'has-action': hasConditionAction })}
+            role=${hasConditionAction ? 'button' : nothing}
+            tabindex=${hasConditionAction ? 0 : nothing}
+            .actionHandler=${actionHandler({
+              hasHold: hasAction(this.config.header_hold_action_condition),
+              hasDoubleClick: hasAction(this.config.header_double_tap_action_condition),
+            })}
+            @action=${hasConditionAction ? this._handleConditionAction : undefined}
           >
-            ${headerCondition}
+            ${hasConditionAction ? html`<mwc-ripple></mwc-ripple>` : nothing} ${headerCondition}
           </div>
           <div
-            class=${classMap({ temperature: true, 'has-action': hasTemperatureTapAction })}
-            @click=${this._handleTemperatureClick}
-            @keydown=${this._handleTemperatureKeydown}
-            role=${hasTemperatureTapAction ? 'button' : nothing}
-            tabindex=${hasTemperatureTapAction ? 0 : nothing}
+            class=${classMap({ temperature: true, 'has-action': hasTemperatureAction })}
+            role=${hasTemperatureAction ? 'button' : nothing}
+            tabindex=${hasTemperatureAction ? 0 : nothing}
+            .actionHandler=${actionHandler({
+              hasHold: hasAction(this.config.header_hold_action_temperature),
+              hasDoubleClick: hasAction(this.config.header_double_tap_action_temperature),
+            })}
+            @action=${hasTemperatureAction ? this._handleTemperatureAction : undefined}
           >
-            ${this.headerTemperature}
+            ${hasTemperatureAction ? html`<mwc-ripple></mwc-ripple>` : nothing} ${this.headerTemperature}
           </div>
         </div>
         ${this.nowcastPanelTemplate

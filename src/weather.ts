@@ -1,5 +1,5 @@
 // Code adapted from frontend/src/data/weather.ts to make it useable in custom cards
-import { type HomeAssistant } from 'custom-card-helpers';
+import { handleAction, hasAction, type ActionConfig, type HomeAssistant } from 'custom-card-helpers';
 import type { HassEntity, HassEntityBase } from 'home-assistant-js-websocket';
 import type { SVGTemplateResult, TemplateResult } from 'lit';
 import { html, svg } from 'lit';
@@ -687,4 +687,42 @@ export const getSunPosition = (timeOfDay: TimeOfDay, width: number, height: numb
       y: height * 0.3,
     };
   }
+};
+
+export const executeAction = (
+  element: HTMLElement,
+  hass: ExtendedHomeAssistant,
+  actionConfig: ActionConfig | undefined,
+  entityFallback: string,
+  action: string = 'tap',
+): void => {
+  if (!hass || !actionConfig || !hasAction(actionConfig)) {
+    return;
+  }
+
+  const actionType = (actionConfig as any).action as string | undefined;
+
+  // Polyfill für 'perform-action' (HA 2024.8+) und legacy 'call-service'
+  if (actionType === 'perform-action' || actionType === 'call-service') {
+    const performAction = (actionConfig as any).perform_action || (actionConfig as any).service;
+    if (performAction) {
+      const [domain, service] = performAction.split('.', 2);
+      if (domain && service) {
+        const data = (actionConfig as any).data ?? (actionConfig as any).service_data;
+        const target = (actionConfig as any).target;
+        hass.callService(domain, service, data, target);
+      }
+    }
+    return;
+  }
+
+  handleAction(
+    element,
+    hass,
+    {
+      entity: entityFallback,
+      [`${action}_action`]: actionConfig,
+    },
+    action,
+  );
 };
