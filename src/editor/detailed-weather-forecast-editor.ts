@@ -969,33 +969,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     return Array.from(entries);
   }
 
-  private _buildAttributeOptions(): Array<{ value: string; label: string }> {
-    if (!this.hass) {
-      return [{ value: '', label: localize('editor.common.none', '', '') }];
-    }
-
-    const entityId = this._config?.entity;
-    if (!entityId) {
-      return [{ value: '', label: localize('editor.common.none', '', '') }];
-    }
-
-    const entityState = this.hass.states[entityId];
-    if (!entityState) {
-      return [{ value: '', label: localize('editor.common.none', '', '') }];
-    }
-
-    const attributeNames = Object.keys(entityState.attributes ?? {}).sort((a, b) => a.localeCompare(b));
-    const weather = entityState as WeatherEntity;
-
-    return [
-      { value: '', label: localize('editor.common.none', '', '') },
-      ...attributeNames.map((attribute) => ({
-        value: attribute,
-        label: formatWeatherAttributeName(this.hass, weather, attribute),
-      })),
-    ];
-  }
-
   private _buildHourlyExtraAttributeOptions(includeDisallowed = false): Array<{ value: string; label: string }> {
     const disallowed = new Set(['datetime', 'condition', 'precipitation', 'temperature', 'templow']);
 

@@ -33,7 +33,6 @@ export class DWFHourlyList extends LitElement {
   @property({ attribute: false }) extraAttributeDimBelow?: number;
   @property({ attribute: false }) iconMap?: WeatherIconMap;
   @state() private selectedItem?: ForecastAttribute;
-  private _resizeObserver?: ResizeObserver;
   private _sunTimesByDay: SunTimesByDay = {};
   private _currentDayKey?: string;
   private _boundHandleScroll = this._handleScroll.bind(this);
