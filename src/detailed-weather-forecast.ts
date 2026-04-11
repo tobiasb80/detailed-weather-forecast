@@ -247,20 +247,36 @@ export class DetailedWeatherForecast extends LitElement {
         if (chip.type === 'attribute') {
           const attr = typeof chip.attribute === 'string' ? chip.attribute.trim() : '';
           const tap_action = typeof chip.tap_action === 'object' && chip.tap_action ? chip.tap_action : undefined;
+          const hold_action = typeof chip.hold_action === 'object' && chip.hold_action ? chip.hold_action : undefined;
+          const double_tap_action =
+            typeof chip.double_tap_action === 'object' && chip.double_tap_action ? chip.double_tap_action : undefined;
           const icon = typeof chip.icon === 'string' ? chip.icon.trim() : undefined;
           const unit = typeof chip.unit === 'string' ? chip.unit.trim() : undefined;
           const divisor = typeof chip.divisor === 'number' ? chip.divisor : undefined;
           const name = typeof chip.name === 'string' ? chip.name.trim() : undefined;
-          normalized.push({ type: 'attribute', attribute: attr, tap_action, name, icon, unit, divisor });
+          normalized.push({
+            type: 'attribute',
+            attribute: attr,
+            tap_action,
+            hold_action,
+            double_tap_action,
+            name,
+            icon,
+            unit,
+            divisor,
+          });
           continue;
         }
 
         if (chip.type === 'entity') {
           const entity = typeof chip.entity === 'string' ? chip.entity.trim() : '';
           const tap_action = typeof chip.tap_action === 'object' && chip.tap_action ? chip.tap_action : undefined;
+          const hold_action = typeof chip.hold_action === 'object' && chip.hold_action ? chip.hold_action : undefined;
+          const double_tap_action =
+            typeof chip.double_tap_action === 'object' && chip.double_tap_action ? chip.double_tap_action : undefined;
           const icon = typeof chip.icon === 'string' ? chip.icon.trim() : undefined;
           const name = typeof chip.name === 'string' ? chip.name.trim() : undefined;
-          normalized.push({ type: 'entity', entity, tap_action, name, icon });
+          normalized.push({ type: 'entity', entity, tap_action, hold_action, double_tap_action, name, icon });
         }
       }
     }

@@ -82,8 +82,9 @@ export class DwfCurrentWeatherAttributes extends LitElement {
       name = formatted.name;
     }
 
-    const hasTapAction = hasAction(attrConfig.tap_action);
-    const hasHoldAction = hasAction(attrConfig.hold_action);
+    const isEntity = attrConfig.type === 'entity';
+    const hasTapAction = isEntity || hasAction(attrConfig.tap_action);
+    const hasHoldAction = isEntity || hasAction(attrConfig.hold_action);
     const hasDoubleTapAction = hasAction(attrConfig.double_tap_action);
     const hasAnyAction = hasTapAction || hasHoldAction || hasDoubleTapAction;
     const attributeClassMap = {
@@ -126,10 +127,6 @@ export class DwfCurrentWeatherAttributes extends LitElement {
         : action === 'double_tap'
           ? attrConfig.double_tap_action
           : attrConfig.tap_action;
-
-    if (!hasAction(actionConfig)) {
-      return;
-    }
 
     const entityFallback =
       attrConfig.type === 'entity' && attrConfig.entity ? attrConfig.entity : this.weatherEntity.entity_id;

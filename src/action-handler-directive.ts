@@ -19,6 +19,7 @@ interface ActionHandler extends HTMLElement {
   dblClickTimeout?: number;
   isRepeating: boolean;
   repeatTimeout?: number;
+  lastTouchEnd?: number;
   bind(element: ActionHandlerElement, options?: ActionHandlerOptions): void;
   startAnimation(x: number, y: number): void;
   stopAnimation(): void;
@@ -105,6 +106,10 @@ const setupActionHandlerMethods = (element: HTMLElement): ActionHandler => {
       if ((ev as unknown as { detail?: { ignore?: boolean } }).detail?.ignore) {
         return;
       }
+      if (ev.type === 'mousedown' && actionHandler.lastTouchEnd && Date.now() - actionHandler.lastTouchEnd < 500) {
+        return;
+      }
+
       actionHandler.cancelled = false;
       actionHandler.held = false;
       let x;
@@ -142,6 +147,13 @@ const setupActionHandlerMethods = (element: HTMLElement): ActionHandler => {
     element.actionHandler.end = (ev: Event) => {
       if ((ev as unknown as { detail?: { ignore?: boolean } }).detail?.ignore) {
         return;
+      }
+
+      if (ev.type === 'click' && actionHandler.lastTouchEnd && Date.now() - actionHandler.lastTouchEnd < 500) {
+        return;
+      }
+      if (ev.type === 'touchend') {
+        actionHandler.lastTouchEnd = Date.now();
       }
 
       if (['touchend', 'touchcancel'].includes(ev.type) && actionHandler.cancelled) {
@@ -239,7 +251,7 @@ const setupActionHandlerMethods = (element: HTMLElement): ActionHandler => {
   };
 
   // Add global cancellation listeners
-  ['touchcancel', 'mouseout', 'mouseup', 'touchmove', 'mousewheel', 'wheel', 'scroll'].forEach((ev) => {
+  ['touchcancel', 'mouseout', 'mouseup', 'mousewheel', 'wheel', 'scroll'].forEach((ev) => {
     document.addEventListener(
       ev,
       () => {
@@ -289,6 +301,7 @@ const getActionHandler = (): ActionHandler => {
   typedDiv.dblClickTimeout = undefined;
   typedDiv.isRepeating = false;
   typedDiv.repeatTimeout = undefined;
+  typedDiv.lastTouchEnd = undefined;
 
   body.appendChild(div);
 

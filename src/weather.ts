@@ -1,5 +1,5 @@
 // Code adapted from frontend/src/data/weather.ts to make it useable in custom cards
-import { handleAction, hasAction, type ActionConfig, type HomeAssistant } from 'custom-card-helpers';
+import { handleAction, type ActionConfig, type HomeAssistant } from 'custom-card-helpers';
 import type { HassEntity, HassEntityBase } from 'home-assistant-js-websocket';
 import type { SVGTemplateResult, TemplateResult } from 'lit';
 import { html, svg } from 'lit';
@@ -696,11 +696,11 @@ export const executeAction = (
   entityFallback: string,
   action: string = 'tap',
 ): void => {
-  if (!hass || !actionConfig || !hasAction(actionConfig)) {
+  if (!hass || (actionConfig !== undefined && actionConfig.action === 'none')) {
     return;
   }
 
-  const actionType = (actionConfig as any).action as string | undefined;
+  const actionType = (actionConfig as any)?.action as string | undefined;
 
   // Polyfill für 'perform-action' (HA 2024.8+) und legacy 'call-service'
   if (actionType === 'perform-action' || actionType === 'call-service') {
@@ -721,7 +721,7 @@ export const executeAction = (
     hass,
     {
       entity: entityFallback,
-      [`${action}_action`]: actionConfig,
+      ...(actionConfig ? { [`${action}_action`]: actionConfig } : {}),
     },
     action,
   );

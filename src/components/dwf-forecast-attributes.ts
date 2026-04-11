@@ -88,8 +88,9 @@ export class DwfForecastAttributes extends LitElement {
     const attribute = attrConfig.attribute;
     const name = formatted.name;
 
-    const hasTapAction = hasAction(attrConfig.tap_action);
-    const hasHoldAction = hasAction(attrConfig.hold_action);
+    const isEntity = (attrConfig as any).type === 'entity';
+    const hasTapAction = isEntity || hasAction(attrConfig.tap_action);
+    const hasHoldAction = isEntity || hasAction(attrConfig.hold_action);
     const hasDoubleTapAction = hasAction(attrConfig.double_tap_action);
     const hasAnyAction = hasTapAction || hasHoldAction || hasDoubleTapAction;
 
@@ -129,9 +130,7 @@ export class DwfForecastAttributes extends LitElement {
           ? attrConfig.double_tap_action
           : attrConfig.tap_action;
 
-    if (hasAction(actionConfig)) {
-      executeAction(this, this.hass, actionConfig, this.weatherEntity.entity_id, action);
-    }
+    executeAction(this, this.hass, actionConfig, this.weatherEntity.entity_id, action);
   }
 }
 
