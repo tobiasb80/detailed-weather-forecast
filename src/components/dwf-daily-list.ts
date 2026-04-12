@@ -170,10 +170,14 @@ export class DWFDailyList extends LitElement {
             // Calculate the desired scroll position to center the element
             const targetScrollLeft = scrollLeft + elementLeftInContainer - containerWidth / 2 + elementWidth / 2;
 
-            scrollContainer.scrollTo({
-              left: targetScrollLeft,
-              behavior: 'smooth',
-            });
+            if ('scrollBehavior' in document.documentElement.style) {
+              scrollContainer.scrollTo({
+                left: targetScrollLeft,
+                behavior: 'smooth',
+              });
+            } else {
+              scrollContainer.scrollLeft = targetScrollLeft; // Fallback for older iPads
+            }
           }
         }
       });

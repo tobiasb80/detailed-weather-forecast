@@ -738,6 +738,14 @@ export class DetailedWeatherForecast extends LitElement {
 
     return html`
       <ha-card class="weather-card" style=${cardStyle}>
+        <style>
+          /* Fixes a bug on older iPads/iOS where flex center alignment cuts off the left side of overflowing content */
+          .forecast.daily,
+          .forecast.hourly {
+            justify-content: flex-start !important;
+            -webkit-overflow-scrolling: touch;
+          }
+        </style>
         ${!showHeader ? getAnimationTemplate() : nothing}
         ${showHeader
           ? this._config.compact_header
@@ -1621,6 +1629,10 @@ export class DetailedWeatherForecast extends LitElement {
         entryDate.getFullYear() === targetYear
       );
     });
+
+    if (targetIndex === -1) {
+      return;
+    }
 
     const hourlyContainer = this.shadowRoot?.querySelector<HTMLElement>('.forecast.hourly');
     if (!hourlyContainer) {
