@@ -15,12 +15,15 @@ type HaFormSelector =
   | { text: Record<string, never> }
   | { number: Record<number, never> }
   | { icon: Record<string, never> }
-  | { ui_action: { actions?: Array<'tap' | 'hold' | 'double_tap'> } }
+  | { ui_action: { default_action?: string; actions?: Array<'tap' | 'hold' | 'double_tap'> } }
   | { select: { options: Array<{ value: string; label: string }>; custom_value?: boolean; multiple?: boolean } };
 
 type HaFormSchema = {
   name: string;
-  selector: HaFormSelector;
+  selector?: HaFormSelector;
+  type?: string;
+  flatten?: boolean;
+  schema?: HaFormSchema[];
   optional?: boolean;
   disabled?: boolean;
 };
@@ -60,9 +63,17 @@ const computeSchema = (
 
   schema.push({ name: 'name', selector: { text: {} } });
   schema.push({ name: 'icon', selector: { icon: {} } });
-  schema.push({ name: 'tap_action', selector: { ui_action: {} }, optional: true });
-  schema.push({ name: 'hold_action', selector: { ui_action: {} }, optional: true });
-  schema.push({ name: 'double_tap_action', selector: { ui_action: {} }, optional: true });
+  schema.push({ name: 'tap_action', selector: { ui_action: {} } });
+
+  schema.push({
+    name: '',
+    type: 'optional_actions',
+    flatten: true,
+    schema: [
+      { name: 'hold_action', selector: { ui_action: { default_action: 'none' } }, optional: true },
+      { name: 'double_tap_action', selector: { ui_action: { default_action: 'none' } }, optional: true },
+    ],
+  });
 
   if (type === 'attribute') {
     schema.push({ name: 'unit', selector: { text: {} } });
@@ -121,7 +132,16 @@ export class HeaderInfoEditor extends LitElement {
 
   private _valueChanged(ev: CustomEvent): void {
     ev.stopPropagation();
-    const config = ev.detail.value;
+    const config = { ...ev.detail.value };
+
+    // Wenn die Aktion auf "Keine" gesetzt wird, entfernen wir sie
+    if (config.hold_action?.action === 'none') {
+      delete config.hold_action;
+    }
+    if (config.double_tap_action?.action === 'none') {
+      delete config.double_tap_action;
+    }
+
     this._type = config.type;
     fireEvent(this, 'header-info-config-changed', config);
   }

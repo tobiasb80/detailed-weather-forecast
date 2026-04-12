@@ -43,12 +43,15 @@ type HaFormSelector =
   | { text: Record<string, never> }
   | { number: Record<number, never> }
   | { icon: Record<string, never> }
-  | { ui_action: { actions?: Array<'tap' | 'hold' | 'double_tap'> } }
+  | { ui_action: { default_action?: string; actions?: Array<'tap' | 'hold' | 'double_tap'> } }
   | { select: { options: Array<{ value: string; label: string }>; custom_value?: boolean; multiple?: boolean } };
 
 type HaFormSchema = {
-  name: keyof DetailedWeatherForecastConfig | 'entity';
-  selector: HaFormSelector;
+  name: keyof DetailedWeatherForecastConfig | 'entity' | '';
+  selector?: HaFormSelector;
+  type?: string;
+  flatten?: boolean;
+  schema?: HaFormSchema[];
   optional?: boolean;
   disabled?: boolean;
 };
@@ -576,7 +579,22 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
   private _handleValueChanged(event: CustomEvent<{ value: DetailedWeatherForecastConfig }>) {
     event.stopPropagation();
-    this._updateConfig(event.detail.value);
+    const config = { ...event.detail.value };
+
+    const actionKeys: (keyof DetailedWeatherForecastConfig)[] = [
+      'header_hold_action_temperature',
+      'header_double_tap_action_temperature',
+      'header_hold_action_condition',
+      'header_double_tap_action_condition',
+    ];
+
+    for (const key of actionKeys) {
+      if ((config[key] as any)?.action === 'none') {
+        delete config[key];
+      }
+    }
+
+    this._updateConfig(config);
   }
 
   private _computeLabel = (schema: HaFormSchema) => {
@@ -1032,14 +1050,21 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
         optional: true,
       },
       {
-        name: 'header_hold_action_temperature',
-        selector: { ui_action: {} },
-        optional: true,
-      },
-      {
-        name: 'header_double_tap_action_temperature',
-        selector: { ui_action: {} },
-        optional: true,
+        name: '',
+        type: 'optional_actions',
+        flatten: true,
+        schema: [
+          {
+            name: 'header_hold_action_temperature',
+            selector: { ui_action: { default_action: 'none' } },
+            optional: true,
+          },
+          {
+            name: 'header_double_tap_action_temperature',
+            selector: { ui_action: { default_action: 'none' } },
+            optional: true,
+          },
+        ],
       },
       {
         name: 'header_tap_action_condition',
@@ -1047,14 +1072,21 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
         optional: true,
       },
       {
-        name: 'header_hold_action_condition',
-        selector: { ui_action: {} },
-        optional: true,
-      },
-      {
-        name: 'header_double_tap_action_condition',
-        selector: { ui_action: {} },
-        optional: true,
+        name: '',
+        type: 'optional_actions',
+        flatten: true,
+        schema: [
+          {
+            name: 'header_hold_action_condition',
+            selector: { ui_action: { default_action: 'none' } },
+            optional: true,
+          },
+          {
+            name: 'header_double_tap_action_condition',
+            selector: { ui_action: { default_action: 'none' } },
+            optional: true,
+          },
+        ],
       },
       {
         name: 'moon_phase_entity',
@@ -1164,41 +1196,37 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
         if (chip.type === 'attribute') {
           const attribute = typeof chip.attribute === 'string' ? chip.attribute.trim() : '';
-          const tap_action = chip.tap_action;
-          const hold_action = chip.hold_action;
-          const double_tap_action = chip.double_tap_action;
           const icon = typeof chip.icon === 'string' ? chip.icon.trim() : undefined;
           const unit = typeof chip.unit === 'string' ? chip.unit.trim() : undefined;
           const divisor = chip.divisor;
-          normalized.push({
+          const normalizedChip: any = {
             type: 'attribute',
             attribute,
             name: chip.name ?? '',
-            tap_action,
-            hold_action,
-            double_tap_action,
-            icon,
-            unit,
-            divisor,
-          });
+          };
+          if (chip.tap_action !== undefined) normalizedChip.tap_action = chip.tap_action;
+          if (chip.hold_action !== undefined) normalizedChip.hold_action = chip.hold_action;
+          if (chip.double_tap_action !== undefined) normalizedChip.double_tap_action = chip.double_tap_action;
+          if (icon !== undefined) normalizedChip.icon = icon;
+          if (unit !== undefined) normalizedChip.unit = unit;
+          if (divisor !== undefined) normalizedChip.divisor = divisor;
+          normalized.push(normalizedChip);
           continue;
         }
 
         if (chip.type === 'entity') {
           const entity = typeof chip.entity === 'string' ? chip.entity.trim() : '';
-          const tap_action = chip.tap_action;
-          const hold_action = chip.hold_action;
-          const double_tap_action = chip.double_tap_action;
           const icon = typeof chip.icon === 'string' ? chip.icon.trim() : undefined;
-          normalized.push({
+          const normalizedChip: any = {
             type: 'entity',
             entity,
             name: chip.name ?? '',
-            tap_action,
-            hold_action,
-            double_tap_action,
-            icon,
-          });
+          };
+          if (chip.tap_action !== undefined) normalizedChip.tap_action = chip.tap_action;
+          if (chip.hold_action !== undefined) normalizedChip.hold_action = chip.hold_action;
+          if (chip.double_tap_action !== undefined) normalizedChip.double_tap_action = chip.double_tap_action;
+          if (icon !== undefined) normalizedChip.icon = icon;
+          normalized.push(normalizedChip);
         }
       }
     }
