@@ -138,9 +138,6 @@ export interface ForecastAttributeConfig {
   icon?: string;
   unit?: string;
   divisor?: number;
-  tap_action?: ActionConfig;
-  hold_action?: ActionConfig;
-  double_tap_action?: ActionConfig;
 }
 
 export interface ForecastAttribute {
