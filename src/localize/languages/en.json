@@ -9,6 +9,7 @@
     },
     "main": {
       "entity": "Weather Entity",
+      "interactions": "Interactions",
       "header_temperature_entity": "Local Temperature Sensor Entity (Overrides the current temperature value of the forecast)",
       "header_tap_action_temperature": "Temperature tap action",
       "header_hold_action_temperature": "Temperature hold action",

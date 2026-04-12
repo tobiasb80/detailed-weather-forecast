@@ -9,6 +9,7 @@
     },
     "main": {
       "entity": "Wetter-Entität",
+      "interactions": "Interaktionen",
       "header_temperature_entity": "Lokaler Temperatursensor (Überschreibt den aktuellen Temperaturwert der Vorhersage)",
       "header_tap_action_temperature": "Temperatur-Tipp-Aktion",
       "header_hold_action_temperature": "Temperatur-Halte-Aktion",

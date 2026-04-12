@@ -3,6 +3,7 @@ import { html, LitElement, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { localize } from '../localize/localize';
 import type { ForecastAttributeConfig } from '../types';
+import memoizeOne from 'memoize-one';
 
 const fireEvent = (node: HTMLElement, type: string, detail?: unknown) => {
   node.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
@@ -14,7 +15,6 @@ type HaFormSelector =
   | { text: Record<string, never> }
   | { icon: Record<string, never> }
   | { number: Record<number, never> }
-  | { ui_action: { actions?: Array<'tap' | 'hold' | 'double_tap'> } }
   | { select: { options: Array<{ value: string; label: string }>; custom_value?: boolean; multiple?: boolean } };
 
 type HaFormSchema = {
@@ -24,7 +24,7 @@ type HaFormSchema = {
   disabled?: boolean;
 };
 
-const computeSchema = (attributeOptions: Array<{ value: string; label: string }>): HaFormSchema[] => {
+const computeSchema = memoizeOne((attributeOptions: Array<{ value: string; label: string }>): HaFormSchema[] => {
   const schema: HaFormSchema[] = [
     {
       name: 'attribute',
@@ -42,7 +42,7 @@ const computeSchema = (attributeOptions: Array<{ value: string; label: string }>
   ];
 
   return schema;
-};
+});
 
 @customElement('forecast-attribute-editor')
 export class ForecastAttributeEditor extends LitElement {
@@ -69,12 +69,11 @@ export class ForecastAttributeEditor extends LitElement {
 
     const attributeOptions = this._buildAttributeOptions();
     const schema = computeSchema(attributeOptions);
-    const data = { ...this.config };
 
     return html`
       <ha-form
         .hass=${this.hass}
-        .data=${data}
+        .data=${this.config}
         .schema=${schema}
         .computeLabel=${this._computeLabel}
         @value-changed=${this._valueChanged}
@@ -87,12 +86,14 @@ export class ForecastAttributeEditor extends LitElement {
     fireEvent(this, 'forecast-info-config-changed', ev.detail.value);
   }
 
+  private _defaultOptions = [{ value: '', label: 'None' }];
+
   private _buildAttributeOptions(): Array<{ value: string; label: string }> {
     if (this.extraAttributeOptions && this.extraAttributeOptions.length > 0) {
       return this.extraAttributeOptions;
     }
 
-    return [{ value: '', label: 'None' }];
+    return this._defaultOptions;
   }
 }
 

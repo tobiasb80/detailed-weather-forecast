@@ -1,4 +1,4 @@
-import { css, html, LitElement, nothing, TemplateResult, unsafeCSS } from 'lit';
+import { css, html, LitElement, nothing, PropertyValues, TemplateResult, unsafeCSS } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { HomeAssistant, LovelaceCardEditor } from 'custom-card-helpers';
 import { localize } from '../localize/localize';
@@ -14,6 +14,7 @@ import './entity-info-editor';
 import './forecast-attribute-editor';
 import { formatWeatherAttributeName } from '../weather';
 import * as editorStyles from './detailed-weather-forecast-editor.css';
+import memoizeOne from 'memoize-one';
 
 const SOLAR_FORECAST_OPTION = 'solar_forecast';
 const FORECAST_OPTIONS_CACHE = new Map<string, { hourly: string[]; daily: string[] }>();
@@ -47,13 +48,15 @@ type HaFormSelector =
   | { select: { options: Array<{ value: string; label: string }>; custom_value?: boolean; multiple?: boolean } };
 
 type HaFormSchema = {
-  name: keyof DetailedWeatherForecastConfig | 'entity' | '';
+  name: string;
   selector?: HaFormSelector;
   type?: string;
   flatten?: boolean;
   schema?: HaFormSchema[];
   optional?: boolean;
   disabled?: boolean;
+  icon?: string;
+  iconPath?: string;
 };
 
 type ToggleName = 'show_header' | 'hourly_forecast' | 'daily_forecast';
@@ -104,6 +107,16 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
   @state() private _expandedSections: Record<string, boolean> = {};
 
+  @state() private _subElementEditorConfig?: {
+    type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info';
+    index: number;
+  };
+
+  @state() private _draggedIndex = -1;
+  @state() private _draggedListType?: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info';
+  @state() private _dragOverIndex = -1;
+  @state() private _dragOverListType?: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info';
+
   private _forecastOptionSubscriptions: Partial<Record<ModernForecastType, Promise<() => void> | undefined>> = {};
 
   private _forecastOptionsEntity?: string;
@@ -114,6 +127,68 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
   static styles = css`
     ${unsafeCSS(editorStyles.default || editorStyles)}
+    .sub-element-editor {
+      margin-top: 8px;
+    }
+    .sub-element-editor .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .sub-element-editor .header .title {
+      font-size: 18px;
+      font-weight: 500;
+      margin-left: 8px;
+    }
+    .info-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      margin-bottom: 8px;
+      background: var(--secondary-background-color);
+      border-radius: 8px;
+    }
+    .info-list-content {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      overflow: hidden;
+    }
+    .info-list-label {
+      font-size: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .info-list-secondary {
+      font-size: 12px;
+      color: var(--secondary-text-color);
+    }
+    .info-list-item.dragging {
+      opacity: 0.4;
+    }
+    .info-list-item.drag-over {
+      box-shadow: 0 0 0 2px var(--primary-color);
+    }
+    .info-list-item .handle {
+      cursor: grab;
+      padding-right: 12px;
+      color: var(--secondary-text-color);
+      display: flex;
+      align-items: center;
+    }
+    .info-list-item .handle:active {
+      cursor: grabbing;
+    }
+    .info-list-item > * {
+      pointer-events: none;
+    }
+    .info-list-item .info-list-content,
+    .info-list-item ha-icon-button,
+    .info-list-item .handle {
+      pointer-events: auto;
+    }
   `;
 
   public setConfig(config: DetailedWeatherForecastConfig): void {
@@ -142,18 +217,25 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     this._refreshSolarForecastOptions(true);
   }
 
+  protected updated(changedProps: PropertyValues): void {
+    super.updated(changedProps);
+    if (changedProps.has('hass') && this.hass && this._config?.entity && !this._forecastOptionsEntity) {
+      this._refreshForecastOptions();
+    }
+  }
+
   protected render() {
     if (!this.hass || !this._config) {
       return html``;
     }
 
-    this._refreshForecastOptions();
-    this._ensureSolarForecastOptions();
+    if (this._subElementEditorConfig) {
+      return this._renderSubElementEditor();
+    }
 
     const {
       general: generalSchema,
       header: headerSchema,
-      nowcast: nowcastSchema,
       hourly: hourlySchema,
       daily: dailySchema,
     } = this._buildSchemas();
@@ -275,38 +357,16 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
               localize('editor.section.chips', '', ''),
               html`
                 <p class="chips-hint">${localize('editor.section.chips_description', '', '')}</p>
-                ${[0, 1, 2].map(
-                  (index) => html`
-                    <div class="chip-editor">
-                      <header-info-editor
-                        .hass=${this.hass}
-                        .weatherEntity=${this._config?.entity}
-                        .config=${(this._config?.header_chips?.[index] as HeaderAttribute) ||
-                        ({
-                          type: 'attribute',
-                          attribute: '',
-                          name: '',
-                        } as HeaderAttribute)}
-                        @header-info-config-changed=${(e: CustomEvent) => this._headerChipChanged(e, index)}
-                      ></header-info-editor>
-                    </div>
-                  `,
+                ${this._config.header_chips?.map((chip, index) =>
+                  this._renderHeaderAttributeItem(chip, index, 'header_chips'),
                 )}
-              `,
-              { nested: true },
-            )}
-            ${this._renderExpander(
-              'header-nowcast',
-              localize('editor.section.nowcast', '', ''),
-              html`
-                <p class="location-description">${localize('editor.section.nowcast_description', '', '')}</p>
-                <ha-form
-                  .hass=${this.hass}
-                  .data=${formData}
-                  .schema=${nowcastSchema}
-                  .computeLabel=${this._computeLabel}
-                  @value-changed=${this._handleValueChanged}
-                ></ha-form>
+                ${(this._config.header_chips?.length || 0) < 3
+                  ? html`
+                      <ha-button @click=${this._addHeaderChip}>
+                        ${localize('editor.section.add_attribute', '', '')}
+                      </ha-button>
+                    `
+                  : nothing}
               `,
               { nested: true },
             )}
@@ -315,20 +375,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
               localize('editor.section.header_info', '', ''),
               html`
                 <p class="chips-hint">${localize('editor.section.header_info_description', '', '')}</p>
-                ${this._config.header_info?.map(
-                  (info, index) => html`
-                    <div class="header-info-item">
-                      <header-info-editor
-                        .hass=${this.hass}
-                        .weatherEntity=${this._config?.entity}
-                        .config=${info}
-                        @header-info-config-changed=${(e: CustomEvent) => this._headerInfoChanged(e, index)}
-                      ></header-info-editor>
-                      <ha-icon-button @click=${() => this._deleteHeaderInfo(index)}>
-                        <ha-icon icon="mdi:delete"></ha-icon>
-                      </ha-icon-button>
-                    </div>
-                  `,
+                ${this._config.header_info?.map((info, index) =>
+                  this._renderHeaderAttributeItem(info, index, 'header_info'),
                 )}
                 <ha-button @click=${this._addHeaderInfo}>
                   ${localize('editor.section.add_attribute', '', '')}
@@ -416,20 +464,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
               localize('editor.section.daily_forecast_info', '', ''),
               html`
                 <p class="chips-hint">${localize('editor.section.daily_forecast_info_description', '', '')}</p>
-                ${this._config.daily_info?.map(
-                  (info, index) => html`
-                    <div class="forecast-info-item">
-                      <forecast-attribute-editor
-                        .hass=${this.hass}
-                        .config=${info}
-                        .extraAttributeOptions=${this._buildDailyExtraAttributeOptions(true)}
-                        @forecast-info-config-changed=${(e: CustomEvent) => this._dailyInfoChanged(e, index)}
-                      ></forecast-attribute-editor>
-                      <ha-icon-button @click=${() => this._deleteDailyInfo(index)}>
-                        <ha-icon icon="mdi:delete"></ha-icon>
-                      </ha-icon-button>
-                    </div>
-                  `,
+                ${this._config.daily_info?.map((info, index) =>
+                  this._renderForecastInfoItem(info, index, 'daily_info'),
                 )}
                 <ha-button @click=${this._addDailyInfo}>
                   ${localize('editor.section.add_attribute', '', '')}
@@ -528,20 +564,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
               localize('editor.section.hourly_forecast_info', '', ''),
               html`
                 <p class="chips-hint">${localize('editor.section.hourly_forecast_info_description', '', '')}</p>
-                ${this._config.hourly_info?.map(
-                  (info, index) => html`
-                    <div class="forecast-info-item">
-                      <forecast-attribute-editor
-                        .hass=${this.hass}
-                        .config=${info}
-                        .extraAttributeOptions=${this._buildHourlyExtraAttributeOptions(true)}
-                        @forecast-info-config-changed=${(e: CustomEvent) => this._hourlyInfoChanged(e, index)}
-                      ></forecast-attribute-editor>
-                      <ha-icon-button @click=${() => this._deleteHourlyInfo(index)}>
-                        <ha-icon icon="mdi:delete"></ha-icon>
-                      </ha-icon-button>
-                    </div>
-                  `,
+                ${this._config.hourly_info?.map((info, index) =>
+                  this._renderForecastInfoItem(info, index, 'hourly_info'),
                 )}
                 <ha-button @click=${this._addHourlyInfo}>
                   ${localize('editor.section.add_attribute', '', '')}
@@ -590,7 +614,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
     for (const key of actionKeys) {
       if ((config[key] as any)?.action === 'none') {
-        delete config[key];
+        config[key] = undefined;
       }
     }
 
@@ -608,8 +632,14 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       return haTranslation;
     }
 
+    const sectionKey = `editor.section.${schema.name}`;
+    let localized = localize(sectionKey);
+    if (localized !== sectionKey) {
+      return localized;
+    }
+
     const customKey = `editor.main.${schema.name}`;
-    const localized = localize(customKey);
+    localized = localize(customKey);
     if (localized !== customKey) {
       return localized;
     }
@@ -706,10 +736,26 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     }
 
     const newInfo = [...this._config.header_info];
-    const oldItem = newInfo[index];
-    newInfo[index] = { ...oldItem, ...e.detail };
+    newInfo[index] = e.detail;
 
     this._updateConfig({ header_info: newInfo });
+  }
+
+  private _deleteHeaderChip(index: number) {
+    if (!this._config?.header_chips) {
+      return;
+    }
+    const newChips = [...this._config.header_chips];
+    newChips.splice(index, 1);
+    this._updateConfig({ header_chips: newChips });
+  }
+
+  private _addHeaderChip() {
+    const newChips = this._config?.header_chips ? [...this._config.header_chips] : [];
+    if (newChips.length >= 3) return;
+    newChips.push({ type: 'attribute', attribute: '', name: '' } as any);
+    this._updateConfig({ header_chips: newChips });
+    this._editHeaderChip(newChips.length - 1);
   }
 
   private _deleteHeaderInfo(index: number) {
@@ -729,6 +775,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       name: '',
     });
     this._updateConfig({ header_info: newInfo });
+    this._editHeaderInfo(newInfo.length - 1);
   }
 
   private _dailyInfoChanged(e: CustomEvent, index: number) {
@@ -737,8 +784,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     }
 
     const newInfo = [...this._config.daily_info];
-    const oldItem = newInfo[index];
-    newInfo[index] = { ...oldItem, ...e.detail };
+    newInfo[index] = e.detail;
 
     this._updateConfig({ daily_info: newInfo });
   }
@@ -759,6 +805,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       name: '',
     });
     this._updateConfig({ daily_info: newInfo });
+    this._editDailyInfo(newInfo.length - 1);
   }
 
   private _hourlyInfoChanged(e: CustomEvent, index: number) {
@@ -767,8 +814,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     }
 
     const newInfo = [...this._config.hourly_info];
-    const oldItem = newInfo[index];
-    newInfo[index] = { ...oldItem, ...e.detail };
+    newInfo[index] = e.detail;
 
     this._updateConfig({ hourly_info: newInfo });
   }
@@ -789,6 +835,257 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       name: '',
     });
     this._updateConfig({ hourly_info: newInfo });
+    this._editHourlyInfo(newInfo.length - 1);
+  }
+
+  private _editHeaderChip(index: number) {
+    this._subElementEditorConfig = { type: 'header_chips', index };
+  }
+
+  private _editHeaderInfo(index: number) {
+    this._subElementEditorConfig = { type: 'header_info', index };
+  }
+
+  private _editDailyInfo(index: number) {
+    this._subElementEditorConfig = { type: 'daily_info', index };
+  }
+
+  private _editHourlyInfo(index: number) {
+    this._subElementEditorConfig = { type: 'hourly_info', index };
+  }
+
+  private _goBack(ev?: Event) {
+    if (ev) {
+      ev.stopPropagation();
+    }
+
+    // Rekursiv das wirklich aktive Element finden (auch durch Shadow DOMs wie bei ha-form)
+    let active = this.shadowRoot?.activeElement;
+    while (active?.shadowRoot?.activeElement) {
+      active = active.shadowRoot.activeElement;
+    }
+    if (active && typeof (active as HTMLElement).blur === 'function') {
+      (active as HTMLElement).blur();
+    }
+
+    const editorConfig = this._subElementEditorConfig;
+
+    // Erhöhe den Timeout (150ms), damit HA-Dropdowns ihre Schließ-Animation beenden können
+    window.setTimeout(async () => {
+      this._subElementEditorConfig = undefined;
+      if (editorConfig) {
+        await this.updateComplete;
+        // Noch einen Frame warten, bis das DOM fertig gezeichnet und berechnet ist, bevor gescrollt wird
+        requestAnimationFrame(() => {
+          const el = this.shadowRoot?.querySelector(`#info-item-${editorConfig.type}-${editorConfig.index}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
+      }
+    }, 150);
+  }
+
+  private _renderSubElementEditor() {
+    if (!this._subElementEditorConfig || !this._config) {
+      return nothing;
+    }
+
+    const { type, index } = this._subElementEditorConfig;
+
+    let editorTemplate;
+    let title = '';
+
+    if (type === 'header_info' || type === 'header_chips') {
+      title =
+        type === 'header_info'
+          ? localize('editor.section.header_info', '', '')
+          : localize('editor.section.chips', '', '');
+      const config = type === 'header_info' ? this._config.header_info[index] : this._config.header_chips![index];
+      editorTemplate = html`
+        <header-info-editor
+          .hass=${this.hass}
+          .weatherEntity=${this._config.entity}
+          .config=${config}
+          @header-info-config-changed=${(e: CustomEvent) =>
+            type === 'header_info' ? this._headerInfoChanged(e, index) : this._headerChipChanged(e, index)}
+        ></header-info-editor>
+      `;
+    } else if (type === 'daily_info') {
+      title = localize('editor.section.daily_forecast_info', '', '');
+      const config = this._config.daily_info[index];
+      editorTemplate = html`
+        <forecast-attribute-editor
+          .hass=${this.hass}
+          .config=${config}
+          .extraAttributeOptions=${this._buildDailyExtraAttributeOptions(true)}
+          @forecast-info-config-changed=${(e: CustomEvent) => this._dailyInfoChanged(e, index)}
+        ></forecast-attribute-editor>
+      `;
+    } else if (type === 'hourly_info') {
+      title = localize('editor.section.hourly_forecast_info', '', '');
+      const config = this._config.hourly_info[index];
+      editorTemplate = html`
+        <forecast-attribute-editor
+          .hass=${this.hass}
+          .config=${config}
+          .extraAttributeOptions=${this._buildHourlyExtraAttributeOptions(true)}
+          @forecast-info-config-changed=${(e: CustomEvent) => this._hourlyInfoChanged(e, index)}
+        ></forecast-attribute-editor>
+      `;
+    }
+
+    return html`
+      <div class="sub-element-editor">
+        <div class="header">
+          <ha-icon-button @click=${this._goBack}>
+            <ha-icon icon="mdi:arrow-left"></ha-icon>
+          </ha-icon-button>
+          <span class="title">${title}</span>
+        </div>
+        ${editorTemplate}
+      </div>
+    `;
+  }
+
+  private _renderHeaderAttributeItem(info: any, index: number, type: 'header_info' | 'header_chips') {
+    const label = info.type === 'entity' ? info.entity : info.attribute;
+    const typeLabel =
+      info.type === 'entity' ? localize('editor.chip.entity', '', '') : localize('editor.chip.attribute', '', '');
+    const displayLabel = info.name
+      ? `${info.name} (${label || localize('editor.common.none', '', '')})`
+      : label || localize('editor.common.none', '', '');
+
+    const isDragging = this._draggedIndex === index && this._draggedListType === type;
+    const isDragOver = this._dragOverIndex === index && this._dragOverListType === type;
+    const classes = `info-list-item ${isDragging ? 'dragging' : ''} ${isDragOver ? 'drag-over' : ''}`;
+
+    return html`
+      <div
+        class="${classes}"
+        id="info-item-${type}-${index}"
+        draggable="true"
+        @dragstart=${(e: DragEvent) => this._handleDragStart(e, type, index)}
+        @dragend=${() => this._handleDragEnd()}
+        @dragover=${(e: DragEvent) => this._handleDragOver(e, type, index)}
+        @drop=${(e: DragEvent) => this._handleDrop(e, type, index)}
+      >
+        <div class="handle">
+          <ha-icon icon="mdi:drag"></ha-icon>
+        </div>
+        <div class="info-list-content">
+          <span class="info-list-label">${displayLabel}</span>
+          <span class="info-list-secondary">${typeLabel}</span>
+        </div>
+        <ha-icon-button
+          @click=${() => (type === 'header_info' ? this._editHeaderInfo(index) : this._editHeaderChip(index))}
+        >
+          <ha-icon icon="mdi:pencil"></ha-icon>
+        </ha-icon-button>
+        <ha-icon-button
+          @click=${() => (type === 'header_info' ? this._deleteHeaderInfo(index) : this._deleteHeaderChip(index))}
+        >
+          <ha-icon icon="mdi:close"></ha-icon>
+        </ha-icon-button>
+      </div>
+    `;
+  }
+
+  private _renderForecastInfoItem(info: any, index: number, type: 'daily_info' | 'hourly_info') {
+    const label = info.attribute || localize('editor.common.none', '', '');
+    const displayLabel = info.name ? `${info.name} (${label})` : label;
+
+    const isDragging = this._draggedIndex === index && this._draggedListType === type;
+    const isDragOver = this._dragOverIndex === index && this._dragOverListType === type;
+    const classes = `info-list-item ${isDragging ? 'dragging' : ''} ${isDragOver ? 'drag-over' : ''}`;
+
+    return html`
+      <div
+        class="${classes}"
+        id="info-item-${type}-${index}"
+        draggable="true"
+        @dragstart=${(e: DragEvent) => this._handleDragStart(e, type, index)}
+        @dragend=${() => this._handleDragEnd()}
+        @dragover=${(e: DragEvent) => this._handleDragOver(e, type, index)}
+        @drop=${(e: DragEvent) => this._handleDrop(e, type, index)}
+      >
+        <div class="handle">
+          <ha-icon icon="mdi:drag"></ha-icon>
+        </div>
+        <div class="info-list-content">
+          <span class="info-list-label">${displayLabel}</span>
+        </div>
+        <ha-icon-button
+          @click=${() => (type === 'daily_info' ? this._editDailyInfo(index) : this._editHourlyInfo(index))}
+        >
+          <ha-icon icon="mdi:pencil"></ha-icon>
+        </ha-icon-button>
+        <ha-icon-button
+          @click=${() => (type === 'daily_info' ? this._deleteDailyInfo(index) : this._deleteHourlyInfo(index))}
+        >
+          <ha-icon icon="mdi:close"></ha-icon>
+        </ha-icon-button>
+      </div>
+    `;
+  }
+
+  private _handleDragStart(
+    ev: DragEvent,
+    type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info',
+    index: number,
+  ) {
+    this._draggedIndex = index;
+    this._draggedListType = type;
+    if (ev.dataTransfer) {
+      ev.dataTransfer.effectAllowed = 'move';
+      ev.dataTransfer.setData('text/plain', index.toString());
+    }
+  }
+
+  private _handleDragEnd() {
+    this._draggedIndex = -1;
+    this._draggedListType = undefined;
+    this._dragOverIndex = -1;
+    this._dragOverListType = undefined;
+  }
+
+  private _handleDragOver(
+    ev: DragEvent,
+    type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info',
+    index: number,
+  ) {
+    ev.preventDefault(); // Wird benötigt, um das Fallenlassen (Drop) zu erlauben
+    if (this._draggedListType === type && this._draggedIndex !== index) {
+      if (ev.dataTransfer) {
+        ev.dataTransfer.dropEffect = 'move';
+      }
+      if (this._dragOverIndex !== index) {
+        this._dragOverIndex = index;
+        this._dragOverListType = type;
+      }
+    }
+  }
+
+  private _handleDrop(
+    ev: DragEvent,
+    type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info',
+    targetIndex: number,
+  ) {
+    ev.preventDefault();
+    const sourceIndex = this._draggedIndex;
+    const sourceType = this._draggedListType;
+
+    this._handleDragEnd(); // Reset Drag-Zustände
+
+    if (sourceType !== type || sourceIndex === -1 || sourceIndex === targetIndex) {
+      return;
+    }
+
+    const list = [...(this._config![type] || [])];
+    const movedItem = list.splice(sourceIndex, 1)[0];
+    list.splice(targetIndex, 0, movedItem);
+
+    this._updateConfig({ [type]: list });
   }
 
   private _getIconMapValue(condition: WeatherCondition): string {
@@ -875,7 +1172,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           <span>${title}</span>
           <ha-icon icon="mdi:chevron-down"></ha-icon>
         </summary>
-        <div class="expander-content">${content}</div>
+        <div class="expander-content">${isOpen ? content : nothing}</div>
       </details>
     `;
   }
@@ -912,7 +1209,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
             <ha-icon icon="mdi:chevron-down"></ha-icon>
           </span>
         </summary>
-        <div class="expander-content">${content}</div>
+        <div class="expander-content">${isOpen ? content : nothing}</div>
       </details>
     `;
   }
@@ -987,195 +1284,157 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     return Array.from(entries);
   }
 
-  private _buildHourlyExtraAttributeOptions(includeDisallowed = false): Array<{ value: string; label: string }> {
-    const disallowed = new Set(['datetime', 'condition', 'precipitation', 'temperature', 'templow']);
+  private _generalSchema: HaFormSchema[] = [{ name: 'entity', selector: { entity: { domain: 'weather' } } }];
 
-    const options = this._hourlyExtraOptions.length
-      ? this._hourlyExtraOptions.filter((opt) => includeDisallowed || !disallowed.has(opt))
-      : [];
-
-    const solarOption = this._solarForecastEntryIds.length
-      ? [{ value: SOLAR_FORECAST_OPTION, label: localize('editor.common.solar_forecast', '', '') }]
-      : [];
-
-    const weather = this._config?.entity ? (this.hass.states[this._config.entity] as WeatherEntity) : undefined;
-
-    const attributeOptions = options.map((attribute) => {
-      const name = weather ? formatWeatherAttributeName(this.hass, weather, attribute) : attribute;
-      return { value: attribute, label: name };
-    });
-
-    return [{ value: '', label: localize('editor.common.none', '', '') }, ...solarOption, ...attributeOptions];
-  }
-
-  private _buildDailyExtraAttributeOptions(includeDisallowed = false): Array<{ value: string; label: string }> {
-    const disallowed = new Set(['datetime', 'condition', 'precipitation', 'temperature', 'templow']);
-
-    const options = this._dailyExtraOptions.length
-      ? this._dailyExtraOptions.filter((opt) => includeDisallowed || !disallowed.has(opt))
-      : [];
-
-    const solarOption = this._solarForecastEntryIds.length
-      ? [{ value: SOLAR_FORECAST_OPTION, label: localize('editor.common.solar_forecast', '', '') }]
-      : [];
-
-    const weather = this._config?.entity ? (this.hass.states[this._config.entity] as WeatherEntity) : undefined;
-
-    const attributeOptions = options.map((attribute) => {
-      const name = weather ? formatWeatherAttributeName(this.hass, weather, attribute) : attribute;
-      return { value: attribute, label: name };
-    });
-
-    return [{ value: '', label: localize('editor.common.none', '', '') }, ...solarOption, ...attributeOptions];
-  }
-
-  private _buildSchemas(): {
-    general: HaFormSchema[];
-    header: HaFormSchema[];
-    nowcast: HaFormSchema[];
-    hourly: HaFormSchema[];
-    daily: HaFormSchema[];
-  } {
-    const generalSchema: HaFormSchema[] = [{ name: 'entity', selector: { entity: { domain: 'weather' } } }];
-
-    const headerSchema: HaFormSchema[] = [
+  private _buildHeaderSchema = memoizeOne((compactHeader?: boolean, nowcastEntity?: string): HaFormSchema[] => {
+    const schema: HaFormSchema[] = [
       {
         name: 'header_temperature_entity',
         selector: { entity: { domain: 'sensor', device_class: 'temperature' } },
         optional: true,
       },
-      {
-        name: 'header_tap_action_temperature',
-        selector: { ui_action: {} },
-        optional: true,
-      },
-      {
-        name: '',
-        type: 'optional_actions',
-        flatten: true,
-        schema: [
-          {
-            name: 'header_hold_action_temperature',
-            selector: { ui_action: { default_action: 'none' } },
-            optional: true,
-          },
-          {
-            name: 'header_double_tap_action_temperature',
-            selector: { ui_action: { default_action: 'none' } },
-            optional: true,
-          },
-        ],
-      },
-      {
-        name: 'header_tap_action_condition',
-        selector: { ui_action: {} },
-        optional: true,
-      },
-      {
-        name: '',
-        type: 'optional_actions',
-        flatten: true,
-        schema: [
-          {
-            name: 'header_hold_action_condition',
-            selector: { ui_action: { default_action: 'none' } },
-            optional: true,
-          },
-          {
-            name: 'header_double_tap_action_condition',
-            selector: { ui_action: { default_action: 'none' } },
-            optional: true,
-          },
-        ],
-      },
-      {
-        name: 'moon_phase_entity',
-        selector: { entity: { domain: 'sensor' } },
-        optional: true,
-      },
-      {
-        name: 'compact_header',
-        selector: { boolean: {} },
-      },
+      { name: 'moon_phase_entity', selector: { entity: { domain: 'sensor' } }, optional: true },
+      { name: 'compact_header', selector: { boolean: {} } },
     ];
 
-    if (!this._config?.compact_header) {
-      headerSchema.push({
-        name: 'show_animation',
-        selector: { boolean: {} },
-      });
-      headerSchema.push({
-        name: 'use_night_header_backgrounds',
-        selector: { boolean: {} },
-      });
+    if (!compactHeader) {
+      schema.push({ name: 'show_animation', selector: { boolean: {} } });
+      schema.push({ name: 'use_night_header_backgrounds', selector: { boolean: {} } });
     }
 
-    const nowcastSchema: HaFormSchema[] = [
-      {
-        name: 'nowcast_entity',
-        selector: { entity: { domain: 'weather' } },
-        optional: true,
-      },
-      {
-        name: 'nowcast_always_show',
-        selector: { boolean: {} },
-        optional: true,
-        disabled: !this._config?.nowcast_entity,
-      },
-    ];
+    schema.push({
+      name: 'nowcast',
+      type: 'expandable',
+      flatten: true,
+      schema: [
+        { name: 'nowcast_entity', selector: { entity: { domain: 'weather' } }, optional: true },
+        { name: 'nowcast_always_show', selector: { boolean: {} }, optional: true, disabled: !nowcastEntity },
+      ],
+    });
 
-    const hourlySchema: HaFormSchema[] = [
-      {
-        name: 'hourly_extra_attribute',
-        selector: {
-          select: {
-            options: this._buildHourlyExtraAttributeOptions(),
-            custom_value: true,
-          },
+    schema.push({
+      name: 'interactions',
+      type: 'expandable',
+      flatten: true,
+      icon: 'mdi:gesture-tap',
+      schema: [
+        { name: 'header_tap_action_temperature', selector: { ui_action: {} }, optional: true },
+        {
+          name: 'header_hold_action_temperature',
+          selector: { ui_action: { default_action: 'none' } },
+          optional: true,
         },
-        optional: true,
-      },
-      {
-        name: 'hourly_extra_attribute_unit',
-        selector: { text: {} },
-        optional: true,
-      },
-      {
-        name: 'hourly_extra_attribute_divisor',
-        selector: { text: {} },
-        optional: true,
-      },
-    ];
-    const dailySchema: HaFormSchema[] = [
-      {
-        name: 'daily_extra_attribute',
-        selector: {
-          select: {
-            options: this._buildDailyExtraAttributeOptions(),
-            custom_value: true,
-          },
+        {
+          name: 'header_double_tap_action_temperature',
+          selector: { ui_action: { default_action: 'none' } },
+          optional: true,
         },
-        optional: true,
-      },
+        { name: 'header_tap_action_condition', selector: { ui_action: {} }, optional: true },
+        {
+          name: 'header_hold_action_condition',
+          selector: { ui_action: { default_action: 'none' } },
+        },
+        {
+          name: 'header_double_tap_action_condition',
+          selector: { ui_action: { default_action: 'none' } },
+        },
+      ],
+    });
+
+    return schema;
+  });
+
+  private _buildHourlySchema = memoizeOne((options: Array<{ value: string; label: string }>): HaFormSchema[] => [
+    { name: 'hourly_extra_attribute', selector: { select: { options, custom_value: true } }, optional: true },
+    { name: 'hourly_extra_attribute_unit', selector: { text: {} }, optional: true },
+    { name: 'hourly_extra_attribute_divisor', selector: { text: {} }, optional: true },
+  ]);
+
+  private _buildDailySchema = memoizeOne(
+    (options: Array<{ value: string; label: string }>, dailyExtraAttr?: string): HaFormSchema[] => [
+      { name: 'daily_extra_attribute', selector: { select: { options, custom_value: true } }, optional: true },
       {
         name: 'daily_extra_attribute_unit',
         selector: { text: {} },
         optional: true,
-        disabled: this._config?.daily_extra_attribute === 'precipitation_probability',
+        disabled: dailyExtraAttr === 'precipitation_probability',
       },
-      {
-        name: 'daily_extra_attribute_divisor',
-        selector: { number: {} },
-        optional: true,
-      },
-    ];
+      { name: 'daily_extra_attribute_divisor', selector: { number: {} }, optional: true },
+    ],
+  );
 
+  private _hourlyOptionsMemo = memoizeOne(
+    (extraOptions: string[], solarIds: string[], weatherEntityId: string | undefined) => {
+      return this._buildOptionsArray(extraOptions, solarIds, weatherEntityId, false);
+    },
+  );
+
+  private _dailyOptionsMemo = memoizeOne(
+    (extraOptions: string[], solarIds: string[], weatherEntityId: string | undefined) => {
+      return this._buildOptionsArray(extraOptions, solarIds, weatherEntityId, false);
+    },
+  );
+
+  private _buildOptionsArray(
+    sourceOptions: string[],
+    solarIds: string[],
+    weatherEntityId: string | undefined,
+    includeDisallowed: boolean,
+  ): Array<{ value: string; label: string }> {
+    const disallowed = new Set(['datetime', 'condition', 'precipitation', 'temperature', 'templow']);
+    const options = sourceOptions.length
+      ? sourceOptions.filter((opt) => includeDisallowed || !disallowed.has(opt))
+      : [];
+
+    const solarOption = solarIds.length
+      ? [{ value: SOLAR_FORECAST_OPTION, label: localize('editor.common.solar_forecast', '', '') }]
+      : [];
+
+    const weather = weatherEntityId && this.hass ? (this.hass.states[weatherEntityId] as WeatherEntity) : undefined;
+
+    const attributeOptions = options.map((attribute) => {
+      const name = weather && this.hass ? formatWeatherAttributeName(this.hass, weather, attribute) : attribute;
+      return { value: attribute, label: name };
+    });
+
+    return [{ value: '', label: localize('editor.common.none', '', '') }, ...solarOption, ...attributeOptions];
+  }
+
+  private _buildHourlyExtraAttributeOptions(includeDisallowed = false): Array<{ value: string; label: string }> {
+    if (includeDisallowed) {
+      return this._buildOptionsArray(
+        this._hourlyExtraOptions,
+        this._solarForecastEntryIds,
+        this._config?.entity,
+        includeDisallowed,
+      );
+    }
+    return this._hourlyOptionsMemo(this._hourlyExtraOptions, this._solarForecastEntryIds, this._config?.entity);
+  }
+
+  private _buildDailyExtraAttributeOptions(includeDisallowed = false): Array<{ value: string; label: string }> {
+    if (includeDisallowed) {
+      return this._buildOptionsArray(
+        this._dailyExtraOptions,
+        this._solarForecastEntryIds,
+        this._config?.entity,
+        includeDisallowed,
+      );
+    }
+    return this._dailyOptionsMemo(this._dailyExtraOptions, this._solarForecastEntryIds, this._config?.entity);
+  }
+
+  private _buildSchemas(): {
+    general: HaFormSchema[];
+    header: HaFormSchema[];
+    hourly: HaFormSchema[];
+    daily: HaFormSchema[];
+  } {
     return {
-      general: generalSchema,
-      header: headerSchema,
-      nowcast: nowcastSchema,
-      hourly: hourlySchema,
-      daily: dailySchema,
+      general: this._generalSchema,
+      header: this._buildHeaderSchema(this._config?.compact_header, this._config?.nowcast_entity),
+      hourly: this._buildHourlySchema(this._buildHourlyExtraAttributeOptions()),
+      daily: this._buildDailySchema(this._buildDailyExtraAttributeOptions(), this._config?.daily_extra_attribute),
     };
   }
 
@@ -1279,7 +1538,13 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           this._hourlyExtraOptions = [];
           this._dailyExtraOptions = [];
         }
-        this._forecastOptionsLoading = { hourly: false, daily: false, twice_daily: false };
+        if (
+          this._forecastOptionsLoading.hourly ||
+          this._forecastOptionsLoading.daily ||
+          this._forecastOptionsLoading.twice_daily
+        ) {
+          this._forecastOptionsLoading = { hourly: false, daily: false, twice_daily: false };
+        }
         this._forecastOptionsEntity = undefined;
         return;
       }
@@ -1312,27 +1577,43 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
         needed.add('daily');
       }
 
+      const nextLoading = { ...this._forecastOptionsLoading };
+      let loadingChanged = false;
+
       (['hourly', 'daily'] as ModernForecastType[]).forEach((type) => {
         if (!needed.has(type)) {
           this._teardownForecastOptionSubscriptions([type]);
-          this._forecastOptionsLoading = { ...this._forecastOptionsLoading, [type]: false };
+          if (nextLoading[type]) {
+            nextLoading[type] = false;
+            loadingChanged = true;
+          }
         } else if (!this._forecastOptionSubscriptions[type]) {
           try {
             this._forecastOptionSubscriptions[type] = this._subscribeForecast(entityId, type, (event) =>
               this._handleForecastOptionsEvent(type, event),
             );
             const hasOptions = type === 'hourly' ? this._hourlyExtraOptions.length : this._dailyExtraOptions.length;
-            if (!hasOptions) {
-              this._forecastOptionsLoading = { ...this._forecastOptionsLoading, [type]: true };
+            const isLoading = !hasOptions;
+            if (nextLoading[type] !== isLoading) {
+              nextLoading[type] = isLoading;
+              loadingChanged = true;
             }
           } catch {
             // ignore subscription errors to avoid breaking the editor
           }
         } else {
           const hasOptions = type === 'hourly' ? this._hourlyExtraOptions.length : this._dailyExtraOptions.length;
-          this._forecastOptionsLoading = { ...this._forecastOptionsLoading, [type]: !hasOptions };
+          const isLoading = !hasOptions;
+          if (nextLoading[type] !== isLoading) {
+            nextLoading[type] = isLoading;
+            loadingChanged = true;
+          }
         }
       });
+
+      if (loadingChanged) {
+        this._forecastOptionsLoading = nextLoading;
+      }
     } catch {
       // Fall back to attribute-based detection to keep the editor alive
       try {
@@ -1462,12 +1743,22 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
   private _teardownForecastOptionSubscriptions(types?: ModernForecastType[]) {
     const targets = types ?? (['hourly', 'daily'] as ModernForecastType[]);
+    const nextLoading = { ...this._forecastOptionsLoading };
+    let loadingChanged = false;
+
     targets.forEach((type) => {
       const sub = this._forecastOptionSubscriptions[type];
       sub?.then((unsub) => unsub?.()).catch(() => undefined);
       delete this._forecastOptionSubscriptions[type];
-      this._forecastOptionsLoading = { ...this._forecastOptionsLoading, [type]: false };
+      if (nextLoading[type]) {
+        nextLoading[type] = false;
+        loadingChanged = true;
+      }
     });
+
+    if (loadingChanged) {
+      this._forecastOptionsLoading = nextLoading;
+    }
   }
 
   disconnectedCallback(): void {
