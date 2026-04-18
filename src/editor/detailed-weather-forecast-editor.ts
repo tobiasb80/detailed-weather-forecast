@@ -833,7 +833,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
         @dragstart=${(e: DragEvent) => this._handleDragStart(e, type, index)}
         @dragend=${() => this._handleDragEnd()}
         @dragover=${(e: DragEvent) => this._handleDragOver(e, type, index)}
-        @drop=${(e: DragEvent) => this._handleDrop(e, type, index)}
+        @drop=${(e: DragEvent) => this._handleDrop(e, type)}
       >
         <div class="handle">
           <ha-icon icon="mdi:drag"></ha-icon>
