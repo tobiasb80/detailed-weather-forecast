@@ -29,11 +29,23 @@ export type HeaderChipDisplay = {
   entity?: string;
 };
 
+export interface HeaderTemperatureConfig {
+  entity?: string;
+  tap_action?: ActionConfig;
+  hold_action?: ActionConfig;
+  double_tap_action?: ActionConfig;
+}
+
+export interface HeaderConditionConfig {
+  tap_action?: ActionConfig;
+  hold_action?: ActionConfig;
+  double_tap_action?: ActionConfig;
+}
+
 export interface DetailedWeatherForecastConfig extends LovelaceCardConfig {
   type: 'custom:detailed-weather-forecast-card';
   entity: string;
   name?: string;
-  header_temperature_entity?: string;
   nowcast_entity?: string;
   nowcast_always_show?: boolean;
   header_chips?: HeaderAttribute[];
@@ -48,22 +60,10 @@ export interface DetailedWeatherForecastConfig extends LovelaceCardConfig {
   use_night_header_backgrounds?: boolean;
   daily_min_gap?: number;
   hourly_min_gap?: number;
-  header_tap_action_temperature?: ActionConfig;
-  header_hold_action_temperature?: ActionConfig;
-  header_double_tap_action_temperature?: ActionConfig;
-  header_tap_action_condition?: ActionConfig;
-  header_hold_action_condition?: ActionConfig;
-  header_double_tap_action_condition?: ActionConfig;
-  hourly_extra_attribute?: string;
-  hourly_extra_attribute_unit?: string;
-  hourly_extra_attribute_divisor?: number;
-  hourly_extra_attribute_color?: string;
-  hourly_extra_attribute_dim_below?: number;
-  daily_extra_attribute?: string;
-  daily_extra_attribute_unit?: string;
-  daily_extra_attribute_divisor?: number;
-  daily_extra_attribute_color?: string;
-  daily_extra_attribute_dim_below?: number;
+  header_temperature?: HeaderTemperatureConfig;
+  header_condition?: HeaderConditionConfig;
+  hourly_extra_config?: ExtraForecastAttributeConfig;
+  daily_extra_config?: ExtraForecastAttributeConfig;
   solar_forecast_entries?: string[];
   masonry_rows?: number;
   header_info?: HeaderAttribute[];
@@ -130,6 +130,14 @@ export interface HeaderEntity {
   double_tap_action?: ActionConfig;
   name: string;
   icon?: string;
+}
+
+export interface ExtraForecastAttributeConfig {
+  attribute: string;
+  unit?: string;
+  divisor?: number;
+  color?: string;
+  dim_below?: number;
 }
 
 export interface ForecastAttributeConfig {

@@ -214,3 +214,66 @@
 .editor-expander.nested .expander-content > ha-button {
   align-self: flex-start;
 }
+
+.sub-element-editor {
+  margin-top: 8px;
+}
+.sub-element-editor .header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.sub-element-editor .header .title {
+  font-size: 18px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+.info-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  margin-bottom: 8px;
+  background: var(--secondary-background-color);
+  border-radius: 8px;
+}
+.info-list-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+}
+.info-list-label {
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.info-list-secondary {
+  font-size: 12px;
+  color: var(--secondary-text-color);
+}
+.info-list-item.dragging {
+  opacity: 0.4;
+}
+.info-list-item.drag-over {
+  box-shadow: 0 0 0 2px var(--primary-color);
+}
+.info-list-item .handle {
+  cursor: grab;
+  padding-right: 12px;
+  color: var(--secondary-text-color);
+  display: flex;
+  align-items: center;
+}
+.info-list-item .handle:active {
+  cursor: grabbing;
+}
+.info-list-item > * {
+  pointer-events: none;
+}
+.info-list-item .info-list-content,
+.info-list-item ha-icon-button,
+.info-list-item .handle {
+  pointer-events: auto;
+}

@@ -49,14 +49,14 @@ export class DwfCompactHeader extends LitElement {
 
     let headerCondition: string | undefined = undefined;
     const hasTemperatureAction =
-      hasAction(this.config.header_tap_action_temperature) ||
-      hasAction(this.config.header_hold_action_temperature) ||
-      hasAction(this.config.header_double_tap_action_temperature);
+      hasAction(this.config.header_temperature?.tap_action) ||
+      hasAction(this.config.header_temperature?.hold_action) ||
+      hasAction(this.config.header_temperature?.double_tap_action);
     const hasConditionAction =
       this.config.header_info.length > 0 ||
-      hasAction(this.config.header_tap_action_condition) ||
-      hasAction(this.config.header_hold_action_condition) ||
-      hasAction(this.config.header_double_tap_action_condition);
+      hasAction(this.config.header_condition?.tap_action) ||
+      hasAction(this.config.header_condition?.hold_action) ||
+      hasAction(this.config.header_condition?.double_tap_action);
 
     if (this.weatherEntity.attributes['pictocode'] !== undefined) {
       headerCondition = localize(`card.pictocode_hour.${this.weatherEntity.attributes['pictocode']}`);
@@ -73,8 +73,8 @@ export class DwfCompactHeader extends LitElement {
             role=${hasConditionAction ? 'button' : nothing}
             tabindex=${hasConditionAction ? 0 : nothing}
             .actionHandler=${actionHandler({
-              hasHold: hasAction(this.config.header_hold_action_condition),
-              hasDoubleClick: hasAction(this.config.header_double_tap_action_condition),
+              hasHold: hasAction(this.config.header_condition?.hold_action),
+              hasDoubleClick: hasAction(this.config.header_condition?.double_tap_action),
             })}
             @action=${hasConditionAction ? this._handleConditionAction : undefined}
           >
@@ -86,8 +86,8 @@ export class DwfCompactHeader extends LitElement {
             role=${hasConditionAction ? 'button' : nothing}
             tabindex=${hasConditionAction ? 0 : nothing}
             .actionHandler=${actionHandler({
-              hasHold: hasAction(this.config.header_hold_action_condition),
-              hasDoubleClick: hasAction(this.config.header_double_tap_action_condition),
+              hasHold: hasAction(this.config.header_condition?.hold_action),
+              hasDoubleClick: hasAction(this.config.header_condition?.double_tap_action),
             })}
             @action=${hasConditionAction ? this._handleConditionAction : undefined}
           >
@@ -98,8 +98,8 @@ export class DwfCompactHeader extends LitElement {
             role=${hasTemperatureAction ? 'button' : nothing}
             tabindex=${hasTemperatureAction ? 0 : nothing}
             .actionHandler=${actionHandler({
-              hasHold: hasAction(this.config.header_hold_action_temperature),
-              hasDoubleClick: hasAction(this.config.header_double_tap_action_temperature),
+              hasHold: hasAction(this.config.header_temperature?.hold_action),
+              hasDoubleClick: hasAction(this.config.header_temperature?.double_tap_action),
             })}
             @action=${hasTemperatureAction ? this._handleTemperatureAction : undefined}
           >

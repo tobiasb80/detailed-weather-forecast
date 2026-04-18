@@ -1,0 +1,21 @@
+.editor-expander {
+  border: 1px solid var(--divider-color, #e0e0e0);
+  border-radius: var(--ha-card-border-radius, 8px);
+  margin-top: 16px;
+}
+.editor-expander summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  min-height: 48px;
+  font-size: 16px;
+  cursor: pointer;
+  list-style: none;
+}
+.editor-expander summary::-webkit-details-marker {
+  display: none;
+}
+.editor-expander .expander-content {
+  padding: 0 16px 16px 16px;
+}

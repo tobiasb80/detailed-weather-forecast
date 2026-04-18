@@ -69,24 +69,27 @@ header_chips:
     entity: sensor.precipitation_today
     tap_action:
       action: more-info
-header_temperature_entity: sensor.outdoor_temperatur
+header_temperature:
+  entity: sensor.outdoor_temperatur
+  tap_action:
+    action: more-info
 show_sun_times: true
 hourly_min_gap: '10'
 daily_min_gap: '10'
 nowcast_entity: weather.dwd_nowcast
 entity: weather.home
-header_tap_action_temperature:
-  action: more-info
-daily_extra_attribute: sun_duration
-daily_extra_attribute_dim_below: 3600
-daily_extra_attribute_color: '#ffdd00'
-daily_extra_attribute_unit: h
-daily_extra_attribute_divisor: 3600
-hourly_extra_attribute: sun_duration
-hourly_extra_attribute_color: '#ffdd00'
-hourly_extra_attribute_dim_below: 600
-hourly_extra_attribute_unit: min
-hourly_extra_attribute_divisor: '60'
+daily_extra_config:
+  attribute: sun_duration
+  dim_below: 3600
+  color: '#ffdd00'
+  unit: h
+  divisor: 3600
+hourly_extra_config:
+  attribute: sun_duration
+  color: '#ffdd00'
+  dim_below: 600
+  unit: min
+  divisor: 60
 header_info:
   - type: attribute
     attribute: visibility
@@ -137,40 +140,35 @@ hourly_info:
 
 ## Configuration options
 
-| Option                             | Type             | Default                                 | Description                                                                                                                                                                            |
-| ---------------------------------- | ---------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `type`                             | string           | `custom:detailed-weather-forecast-card` | Lovelace card type identifier.                                                                                                                                                         |
-| `entity`                           | string           | required                                | Weather entity that supplies current conditions and forecast data.                                                                                                                     |
-| `header_temperature_entity`        | string           | current weather temperature             | Optional sensor to use for the header temperature. Must report a numeric temperature.                                                                                                  |
-| `nowcast_entity`                   | string           | none                                    | Weather entity that supports `get_minute_forecast` and provides minute-level precipitation.                                                                                            |
-| `nowcast_always_show`              | boolean          | `false`                                 | When enabled, the nowcast chart stays visible even if no rain is predicted. Useful to keep the header layout consistent.                                                               |
-| `show_header`                      | boolean          | `true`                                  | Toggles hero header containing artwork, current temperature, and condition text.                                                                                                       |
-| `hourly_forecast`                  | boolean          | `true`                                  | Shows the hourly forecast. Requires the selected weather entity to provide hourly data.                                                                                                |
-| `daily_forecast`                   | boolean          | `true`                                  | Shows the daily forecast.                                                                                                                                                              |
-| `daily_min_gap`                    | number           | `30`                                    | Minimum gap in pixels between daily forecast items. Must be `≥ 10`.                                                                                                                    |
-| `hourly_min_gap`                   | number           | `16`                                    | Minimum gap in pixels between hourly forecast items. Must be `≥ 10`.                                                                                                                   |
-| `show_sun_times`                   | boolean          | `false`                                 | Adds sunrise and sunset markers to the hourly forecast. Requires valid coordinates.                                                                                                    |
-| `sun_use_home_coordinates`         | boolean          | `true`                                  | Uses Home Assistant's home location for sun calculations when `show_sun_times` is enabled. Set to `false` to provide manual coordinates.                                               |
-| `sun_latitude`                     | number \| string | Home Assistant latitude                 | Latitude used when `sun_use_home_coordinates` is `false`. Accepts decimal degrees as string or number.                                                                                 |
-| `sun_longitude`                    | number \| string | Home Assistant longitude                | Longitude used when `sun_use_home_coordinates` is `false`. Accepts decimal degrees as string or number.                                                                                |
-| `compact_header`                   | boolean          | `false`                                 | If this is true, a compact header view without a background image is displayed.                                                                                                        |
-| `use_night_header_backgrounds`     | boolean          | `true`                                  | Switches the header artwork to night variants when the sun is down. Set to `false` to always use the day theme. This is only enabled if `compact_header` is `false`.                   |
-| `icon_map`                         | object           | none                                    | Optional overrides for forecast condition icons. Keys are weather conditions, values are Home Assistant icon names (including custom icon sets).                                       |
-| `header_tap_action_temperature`    | action           | none                                    | Lovelace action that fires when the header temperature pill is tapped. Only tap actions are supported.                                                                                 |
-| `hourly_extra_attribute`           | string           | none                                    | Optional third text line under the hourly precipitation rows.                                                                                                                          |
-| `hourly_extra_attribute_unit`      | string           | none                                    | Optional unit suffix displayed after the hourly extra attribute (e.g., `%` for `cloud_coverage`).                                                                                      |
-| `hourly_extra_attribute_color`     | string           | none                                    | Optional CSS color used for the hourly extra attribute text (e.g., `#30b3ff`).                                                                                                         |
-| `hourly_extra_attribute_dim_below` | number           | none                                    | Optional numeric threshold. Values below are displayed with lowered opacity in the hourly extra attribute.                                                                             |
-| `daily_extra_attribute`            | string           | none                                    | Optional third text line under the daily precipitation rows. `precipitation_probability` shows colored as blue and with a % sign automatically.                                        |
-| `daily_extra_attribute_unit`       | string           | none                                    | Optional unit suffix displayed after the daily extra attribute. Disabled/ignored when `daily_extra_attribute` is `precipitation_probability`.                                          |
-| `daily_extra_attribute_color`      | string           | none                                    | Optional CSS color used for the daily extra attribute text (e.g., `#30b3ff`).                                                                                                          |
-| `daily_extra_attribute_dim_below`  | number           | none                                    | Optional numeric threshold. values below are displayed with lowered opacity in the daily extra attribute.                                                                              |
-| `header_chips`                     | array            | `[]`                                    | Up to three chip definitions shown in the header. Each chip can display an entity attribute or template output and may include its own `icon` and `tap_action`.                        |
-| `header_info`                      | array            | `[]`                                    | A list of attribute objects to show in the expandable detail view for the current weather conditions.                                                                                  |
-| `daily_info`                       | array            | `[]`                                    | A list of attribute objects to show in the expandable detail view for each daily forecast item.                                                                                        |
-| `hourly_info`                      | array            | `[]`                                    | A list of attribute objects to show in the expandable detail view for each hourly forecast item.                                                                                       |
-| `solar_forecast_entries`           | array            | all Energy solar forecasts              | Optional list of config entry IDs to include when `solar_forecast` is selected as an extra attribute. Leave empty to include none, or omit to include all Energy dashboard selections. |
-| `masonry_rows`                     | number           | none                                    | Masonry layout only: override the card height (1 row is handled as 50px by HA). Ignored in Sections view.                                                                              |
+| Option                         | Type             | Default                                 | Description                                                                                                                                                                            |
+| ------------------------------ | ---------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`                         | string           | `custom:detailed-weather-forecast-card` | Lovelace card type identifier.                                                                                                                                                         |
+| `entity`                       | string           | required                                | Weather entity that supplies current conditions and forecast data.                                                                                                                     |
+| `header_temperature_entity`    | string           | current weather temperature             | Optional sensor to use for the header temperature. Must report a numeric temperature.                                                                                                  |
+| `nowcast_entity`               | string           | none                                    | Weather entity that supports `get_minute_forecast` and provides minute-level precipitation.                                                                                            |
+| `nowcast_always_show`          | boolean          | `false`                                 | When enabled, the nowcast chart stays visible even if no rain is predicted. Useful to keep the header layout consistent.                                                               |
+| `show_header`                  | boolean          | `true`                                  | Toggles hero header containing artwork, current temperature, and condition text.                                                                                                       |
+| `hourly_forecast`              | boolean          | `true`                                  | Shows the hourly forecast. Requires the selected weather entity to provide hourly data.                                                                                                |
+| `daily_forecast`               | boolean          | `true`                                  | Shows the daily forecast.                                                                                                                                                              |
+| `daily_min_gap`                | number           | `30`                                    | Minimum gap in pixels between daily forecast items. Must be `≥ 10`.                                                                                                                    |
+| `hourly_min_gap`               | number           | `16`                                    | Minimum gap in pixels between hourly forecast items. Must be `≥ 10`.                                                                                                                   |
+| `show_sun_times`               | boolean          | `false`                                 | Adds sunrise and sunset markers to the hourly forecast. Requires valid coordinates.                                                                                                    |
+| `sun_use_home_coordinates`     | boolean          | `true`                                  | Uses Home Assistant's home location for sun calculations when `show_sun_times` is enabled. Set to `false` to provide manual coordinates.                                               |
+| `sun_latitude`                 | number \| string | Home Assistant latitude                 | Latitude used when `sun_use_home_coordinates` is `false`. Accepts decimal degrees as string or number.                                                                                 |
+| `sun_longitude`                | number \| string | Home Assistant longitude                | Longitude used when `sun_use_home_coordinates` is `false`. Accepts decimal degrees as string or number.                                                                                |
+| `compact_header`               | boolean          | `false`                                 | If this is true, a compact header view without a background image is displayed.                                                                                                        |
+| `use_night_header_backgrounds` | boolean          | `true`                                  | Switches the header artwork to night variants when the sun is down. Set to `false` to always use the day theme. This is only enabled if `compact_header` is `false`.                   |
+| `icon_map`                     | object           | none                                    | Optional overrides for forecast condition icons. Keys are weather conditions, values are Home Assistant icon names (including custom icon sets).                                       |
+| `header_temperature`           | object           | none                                    | Configuration for the header temperature pill including `entity`, `tap_action`, `hold_action` and `double_tap_action`.                                                                 |
+| `header_condition`             | object           | none                                    | Configuration for the header condition pill including `tap_action`, `hold_action` and `double_tap_action`.                                                                             |
+| `hourly_extra_config`          | object           | none                                    | Optional third text line under the hourly precipitation rows. Includes `attribute`, `unit`, `divisor`, `color`, and `dim_below`.                                                       |
+| `daily_extra_config`           | object           | none                                    | Optional third text line under the daily precipitation rows. Includes `attribute`, `unit`, `divisor`, `color`, and `dim_below`.                                                        |
+| `header_chips`                 | array            | `[]`                                    | Up to three chip definitions shown in the header. Each chip can display an entity attribute or template output and may include its own `icon` and `tap_action`.                        |
+| `header_info`                  | array            | `[]`                                    | A list of attribute objects to show in the expandable detail view for the current weather conditions.                                                                                  |
+| `daily_info`                   | array            | `[]`                                    | A list of attribute objects to show in the expandable detail view for each daily forecast item.                                                                                        |
+| `hourly_info`                  | array            | `[]`                                    | A list of attribute objects to show in the expandable detail view for each hourly forecast item.                                                                                       |
+| `solar_forecast_entries`       | array            | all Energy solar forecasts              | Optional list of config entry IDs to include when `solar_forecast` is selected as an extra attribute. Leave empty to include none, or omit to include all Energy dashboard selections. |
+| `masonry_rows`                 | number           | none                                    | Masonry layout only: override the card height (1 row is handled as 50px by HA). Ignored in Sections view.                                                                              |
 
 > Tip: The card editor prevents you from hiding every section at once, but in YAML you should also keep at least one of `show_header`, `daily_forecast`, or `hourly_forecast` enabled so the card has content to render.
 
@@ -250,8 +248,9 @@ Add a third text row beneath the temperature bar in the daily forecast. Choose a
 ```yaml
 type: custom:detailed-weather-forecast-card
 entity: weather.home
-daily_extra_attribute: pressure
-daily_extra_attribute_unit: ' hPa'
+daily_extra_config:
+  attribute: pressure
+  unit: ' hPa'
 ```
 
 ### Hourly Extra Attribute

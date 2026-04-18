@@ -6,7 +6,7 @@ import { formatForecastAttribute, getWeatherStateIcon } from '../weather';
 import type { HomeAssistant } from 'custom-card-helpers';
 import type { ActionHandlerDetail } from 'custom-card-helpers/dist/types';
 import { actionHandler } from '../action-handler-directive';
-import type { ForecastAttribute, WeatherEntity, WeatherIconMap } from '../types';
+import type { ExtraForecastAttributeConfig, ForecastAttribute, WeatherEntity, WeatherIconMap } from '../types';
 
 const PRECIPITATION_DISPLAY_THRESHOLD = 0.3;
 const DAILY_PRECIPITATION_MIN_SCALE = 4;
@@ -18,11 +18,7 @@ export class DWFDailyList extends LitElement {
   @property({ attribute: false }) weatherEntity!: WeatherEntity;
   @property({ attribute: false }) forecast: ForecastAttribute[] = [];
   @property({ attribute: false }) precipitationUnit?: string;
-  @property({ attribute: false }) extraAttribute?: string;
-  @property({ attribute: false }) extraAttributeUnit?: string;
-  @property({ attribute: false }) extraAttributeDivisor?: number;
-  @property({ attribute: false }) extraAttributeColor?: string;
-  @property({ attribute: false }) extraAttributeDimBelow?: number;
+  @property({ attribute: false }) extraConfig?: ExtraForecastAttributeConfig;
   @property({ attribute: false }) iconMap?: WeatherIconMap;
   @state() private _selectedForecast?: ForecastAttribute;
   @state() private _showForecastAttribute?: ForecastAttribute;
@@ -249,7 +245,7 @@ export class DWFDailyList extends LitElement {
   }
 
   private _renderExtraAttribute(item: ForecastAttribute): TemplateResult | typeof nothing {
-    const key = this.extraAttribute?.trim();
+    const key = this.extraConfig?.attribute?.trim();
     if (!key) {
       return nothing;
     }
@@ -264,23 +260,23 @@ export class DWFDailyList extends LitElement {
       item,
       key,
       undefined,
-      this.extraAttributeUnit,
+      this.extraConfig?.unit,
       undefined,
-      this.extraAttributeDivisor,
+      this.extraConfig?.divisor,
     );
 
     if (!formatted) {
       return nothing;
     }
 
-    const dimBelow = this._normalizeDimBelow(this.extraAttributeDimBelow);
+    const dimBelow = this._normalizeDimBelow(this.extraConfig?.dim_below);
     const numericValue = this._parseNumericValue(rawValue);
     const isDimmed = dimBelow !== undefined && numericValue !== undefined && numericValue < dimBelow;
     const classes = ['daily-extra'];
     if (isDimmed) {
       classes.push('dimmed');
     }
-    const color = this.extraAttributeColor?.trim();
+    const color = this.extraConfig?.color?.trim();
     const style = color
       ? styleMap({
           color,

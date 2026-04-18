@@ -31,7 +31,6 @@ const computeSchema = memoizeOne((attributeOptions: Array<{ value: string; label
       selector: {
         select: {
           options: attributeOptions,
-          custom_value: true,
         },
       },
     },
@@ -86,7 +85,7 @@ export class ForecastAttributeEditor extends LitElement {
     fireEvent(this, 'forecast-info-config-changed', ev.detail.value);
   }
 
-  private _defaultOptions = [{ value: '', label: 'None' }];
+  private _defaultOptions: Array<{ value: string; label: string }> = [];
 
   private _buildAttributeOptions(): Array<{ value: string; label: string }> {
     if (this.extraAttributeOptions && this.extraAttributeOptions.length > 0) {

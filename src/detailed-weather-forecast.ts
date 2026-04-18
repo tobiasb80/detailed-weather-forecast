@@ -155,10 +155,6 @@ export class DetailedWeatherForecast extends LitElement {
     const normalizedHeaderChips = this._normalizeHeaderChips(config);
     const normalizedDailyMinGap = this._normalizeMinGapValue(config.daily_min_gap);
     const normalizedHourlyMinGap = this._normalizeMinGapValue(config.hourly_min_gap);
-    const normalizedHourlyDimBelow = this._normalizeOptionalNumber(config.hourly_extra_attribute_dim_below);
-    const normalizedDailyDimBelow = this._normalizeOptionalNumber(config.daily_extra_attribute_dim_below);
-    const normalizedHourlyColor = this._normalizeOptionalText(config.hourly_extra_attribute_color);
-    const normalizedDailyColor = this._normalizeOptionalText(config.daily_extra_attribute_color);
     const normalizedIconMap = this._normalizeIconMap(config.icon_map);
     const normalizedMasonryRows = this._normalizeMasonryRows(config.masonry_rows);
 
@@ -174,20 +170,14 @@ export class DetailedWeatherForecast extends LitElement {
       sun_use_home_coordinates: config.sun_use_home_coordinates ?? true,
       use_night_header_backgrounds: config.use_night_header_backgrounds ?? true,
       moon_phase_entity: config.moon_phase_entity,
+      header_temperature: config.header_temperature,
+      header_condition: config.header_condition,
       header_chips: normalizedHeaderChips,
       icon_map: normalizedIconMap,
       daily_min_gap: normalizedDailyMinGap,
       hourly_min_gap: normalizedHourlyMinGap,
-      hourly_extra_attribute: config.hourly_extra_attribute,
-      hourly_extra_attribute_unit: config.hourly_extra_attribute_unit,
-      hourly_extra_attribute_divisor: config.hourly_extra_attribute_divisor,
-      hourly_extra_attribute_color: normalizedHourlyColor,
-      hourly_extra_attribute_dim_below: normalizedHourlyDimBelow,
-      daily_extra_attribute: config.daily_extra_attribute,
-      daily_extra_attribute_unit: config.daily_extra_attribute_unit,
-      daily_extra_attribute_divisor: config.daily_extra_attribute_divisor,
-      daily_extra_attribute_color: normalizedDailyColor,
-      daily_extra_attribute_dim_below: normalizedDailyDimBelow,
+      hourly_extra_config: config.hourly_extra_config,
+      daily_extra_config: config.daily_extra_config,
       solar_forecast_entries: Array.isArray(config.solar_forecast_entries) ? config.solar_forecast_entries : undefined,
       masonry_rows: normalizedMasonryRows,
       header_info: config.header_info ?? [],
@@ -222,7 +212,7 @@ export class DetailedWeatherForecast extends LitElement {
       this._name = fn ? fn : this._entity;
     }
 
-    const headerTemperatureEntity = this._config?.header_temperature_entity;
+    const headerTemperatureEntity = this._config?.header_temperature?.entity;
     this._headerTemperatureState = headerTemperatureEntity
       ? (hass.states[headerTemperatureEntity] as HassEntity | undefined)
       : undefined;
@@ -296,22 +286,6 @@ export class DetailedWeatherForecast extends LitElement {
     }
     const clamped = Math.max(10, numericValue);
     return Math.round(clamped);
-  }
-
-  private _normalizeOptionalNumber(value?: number | string): number | undefined {
-    if (value === null || typeof value === 'undefined') {
-      return undefined;
-    }
-    const numericValue = typeof value === 'number' ? value : Number(value);
-    return Number.isFinite(numericValue) ? numericValue : undefined;
-  }
-
-  private _normalizeOptionalText(value?: string): string | undefined {
-    if (value === null || typeof value === 'undefined') {
-      return undefined;
-    }
-    const trimmed = String(value).trim();
-    return trimmed.length ? trimmed : undefined;
   }
 
   private _normalizeMasonryRows(value?: number | string): number | undefined {
@@ -564,15 +538,15 @@ export class DetailedWeatherForecast extends LitElement {
     const hourlyForecast = this._applySolarForecastToForecast(hourlyForecastRaw, 'hourly');
     const sunCoordinates = this._getLocationCoordinates();
     const showSunTimes = Boolean(this._config.show_sun_times && sunCoordinates && hourlyEnabled);
-    const temperatureTapAction = this._config.header_tap_action_temperature;
-    const temperatureHoldAction = this._config.header_hold_action_temperature;
-    const temperatureDoubleTapAction = this._config.header_double_tap_action_temperature;
-    const temperatureActionEntity = this._config.header_temperature_entity || this._entity;
+    const temperatureTapAction = this._config.header_temperature?.tap_action;
+    const temperatureHoldAction = this._config.header_temperature?.hold_action;
+    const temperatureDoubleTapAction = this._config.header_temperature?.double_tap_action;
+    const temperatureActionEntity = this._config.header_temperature?.entity || this._entity;
     const hasTemperatureAction =
       hasAction(temperatureTapAction) || hasAction(temperatureHoldAction) || hasAction(temperatureDoubleTapAction);
-    const conditionTapAction = this._config.header_tap_action_condition;
-    const conditionHoldAction = this._config.header_hold_action_condition;
-    const conditionDoubleTapAction = this._config.header_double_tap_action_condition;
+    const conditionTapAction = this._config.header_condition?.tap_action;
+    const conditionHoldAction = this._config.header_condition?.hold_action;
+    const conditionDoubleTapAction = this._config.header_condition?.double_tap_action;
     const hasConditionAction =
       this._config.header_info.length > 0 ||
       hasAction(conditionTapAction) ||
@@ -794,11 +768,7 @@ export class DetailedWeatherForecast extends LitElement {
                             .weatherEntity=${this._state}
                             .forecast=${dailyForecast}
                             .precipitationUnit=${this._state.attributes.precipitation_unit}
-                            .extraAttribute=${this._config.daily_extra_attribute}
-                            .extraAttributeUnit=${this._config.daily_extra_attribute_unit}
-                            .extraAttributeDivisor=${this._config.daily_extra_attribute_divisor}
-                            .extraAttributeColor=${this._config.daily_extra_attribute_color}
-                            .extraAttributeDimBelow=${this._config.daily_extra_attribute_dim_below}
+                            .extraConfig=${this._config.daily_extra_config}
                             .iconMap=${this._config.icon_map}
                             @dwf-daily-list-item-selected=${this._handleDailySelected}
                             @dwf-daily-list-item-show-attributes=${this._handleDailyShowAttributes}
@@ -829,11 +799,7 @@ export class DetailedWeatherForecast extends LitElement {
                             .showSunTimes=${showSunTimes}
                             .sunCoordinates=${sunCoordinates}
                             .precipitationUnit=${this._state.attributes.precipitation_unit}
-                            .extraAttribute=${this._config.hourly_extra_attribute}
-                            .extraAttributeUnit=${this._config.hourly_extra_attribute_unit}
-                            .extraAttributeDivisor=${this._config.hourly_extra_attribute_divisor}
-                            .extraAttributeColor=${this._config.hourly_extra_attribute_color}
-                            .extraAttributeDimBelow=${this._config.hourly_extra_attribute_dim_below}
+                            .extraConfig=${this._config.hourly_extra_config}
                             .iconMap=${this._config.icon_map}
                             @dwf-hourly-scrolled-to-new-day=${this._handleHourlyNewDay}
                             @dwf-hourly-list-item-selected=${this._handleHourlySelected}
@@ -1092,8 +1058,8 @@ export class DetailedWeatherForecast extends LitElement {
       return false;
     }
     return (
-      this._config.hourly_extra_attribute === SOLAR_FORECAST_ATTRIBUTE ||
-      this._config.daily_extra_attribute === SOLAR_FORECAST_ATTRIBUTE ||
+      this._config.hourly_extra_config?.attribute === SOLAR_FORECAST_ATTRIBUTE ||
+      this._config.daily_extra_config?.attribute === SOLAR_FORECAST_ATTRIBUTE ||
       this._config.hourly_info.some((info) => info.attribute === SOLAR_FORECAST_ATTRIBUTE) ||
       this._config.daily_info.some((info) => info.attribute === SOLAR_FORECAST_ATTRIBUTE)
     );
@@ -1670,14 +1636,14 @@ export class DetailedWeatherForecast extends LitElement {
   }
 
   private _handleCompactHeaderTemperatureAction(ev: CustomEvent<{ action: string }>) {
-    const temperatureActionEntity = this._config?.header_temperature_entity || this._entity;
+    const temperatureActionEntity = this._config?.header_temperature?.entity || this._entity;
     const actionType = ev.detail.action;
     const actionConfig =
       actionType === 'hold'
-        ? this._config?.header_hold_action_temperature
+        ? this._config?.header_temperature?.hold_action
         : actionType === 'double_tap'
-          ? this._config?.header_double_tap_action_temperature
-          : this._config?.header_tap_action_temperature;
+          ? this._config?.header_temperature?.double_tap_action
+          : this._config?.header_temperature?.tap_action;
 
     executeAction(this, this._hass!, actionConfig, temperatureActionEntity, actionType);
   }
@@ -1685,10 +1651,10 @@ export class DetailedWeatherForecast extends LitElement {
   private _handleConditionAction(actionType: string) {
     const actionConfig =
       actionType === 'hold'
-        ? this._config?.header_hold_action_condition
+        ? this._config?.header_condition?.hold_action
         : actionType === 'double_tap'
-          ? this._config?.header_double_tap_action_condition
-          : this._config?.header_tap_action_condition;
+          ? this._config?.header_condition?.double_tap_action
+          : this._config?.header_condition?.tap_action;
 
     if (actionConfig) {
       executeAction(this, this._hass!, actionConfig, this._entity, actionType);

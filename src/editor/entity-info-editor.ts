@@ -1,10 +1,11 @@
-import { css, html, LitElement, nothing, PropertyValues } from 'lit';
+import { css, html, LitElement, nothing, PropertyValues, unsafeCSS } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { HomeAssistant } from 'custom-card-helpers';
 import type { HeaderAttribute, WeatherEntity } from '../types';
 import { localize } from '../localize/localize';
 import { formatWeatherAttributeName } from '../weather';
 import memoizeOne from 'memoize-one';
+import * as editorStyles from './entity-info-editor.css';
 
 const fireEvent = (node: HTMLElement, type: string, detail?: unknown) => {
   node.dispatchEvent(new CustomEvent(type, { detail, bubbles: true, composed: true }));
@@ -56,7 +57,6 @@ const computeSchema = memoizeOne(
         selector: {
           select: {
             options: attributeOptions,
-            custom_value: true,
           },
         },
       });
@@ -87,6 +87,7 @@ export class HeaderInfoEditor extends LitElement {
   @property({ attribute: false }) public hass?: HomeAssistant;
   @property({ attribute: false }) public weatherEntity?: string;
   @property({ attribute: false }) public config?: HeaderAttribute;
+  @property({ attribute: false }) public usedAttributes?: string[];
   @state() private _type: 'attribute' | 'entity' = 'attribute';
   @state() private _interactionsExpanded = false;
 
@@ -123,27 +124,7 @@ export class HeaderInfoEditor extends LitElement {
   };
 
   static styles = css`
-    .editor-expander {
-      border: 1px solid var(--divider-color, #e0e0e0);
-      border-radius: var(--ha-card-border-radius, 8px);
-      margin-top: 16px;
-    }
-    .editor-expander summary {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      min-height: 48px;
-      font-size: 16px;
-      cursor: pointer;
-      list-style: none;
-    }
-    .editor-expander summary::-webkit-details-marker {
-      display: none;
-    }
-    .editor-expander .expander-content {
-      padding: 0 16px 16px 16px;
-    }
+    ${unsafeCSS(editorStyles.default || editorStyles)}
   `;
 
   protected render() {
@@ -151,7 +132,11 @@ export class HeaderInfoEditor extends LitElement {
       return nothing;
     }
 
-    const attributeOptions = this._attributeOptionsMemo(this.weatherEntity);
+    const attributeOptions = this._attributeOptionsMemo(
+      this.weatherEntity,
+      this.usedAttributes,
+      this.config.type === 'attribute' ? this.config.attribute : undefined,
+    );
     const schema = computeSchema(this._type, attributeOptions);
     const interactionsSchema = computeInteractionsSchema();
 
@@ -204,26 +189,51 @@ export class HeaderInfoEditor extends LitElement {
   }
 
   private _attributeOptionsMemo = memoizeOne(
-    (entityId: string | undefined): Array<{ value: string; label: string }> => {
+    (
+      entityId: string | undefined,
+      usedAttributes: string[] | undefined,
+      currentAttribute: string | undefined,
+    ): Array<{ value: string; label: string }> => {
       if (!this.hass || !entityId) {
-        return [{ value: '', label: 'None' }];
+        return [];
       }
 
       const entityState = this.hass.states[entityId];
       if (!entityState) {
-        return [{ value: '', label: 'None' }];
+        return [];
       }
 
       const weather = entityState as WeatherEntity;
-      const attributeNames = Object.keys(entityState.attributes ?? {}).sort((a, b) => a.localeCompare(b));
 
-      return [
-        { value: '', label: 'None' },
-        ...attributeNames.map((attribute) => ({
-          value: attribute,
-          label: formatWeatherAttributeName(this.hass!, weather, attribute),
-        })),
+      const commonAttributes = [
+        'temperature',
+        'humidity',
+        'pressure',
+        'wind_speed',
+        'wind_bearing',
+        'wind_gust_speed',
+        'visibility',
+        'precipitation',
+        'precipitation_probability',
+        'cloud_coverage',
+        'uv_index',
+        'dew_point',
       ];
+
+      const attributeNames = new Set([...Object.keys(entityState.attributes ?? {}), ...commonAttributes]);
+
+      if (currentAttribute) {
+        attributeNames.add(currentAttribute);
+      }
+
+      const filteredNames = Array.from(attributeNames)
+        .filter((attr) => !usedAttributes?.includes(attr) || attr === currentAttribute)
+        .sort((a, b) => a.localeCompare(b));
+
+      return filteredNames.map((attribute) => ({
+        value: attribute,
+        label: formatWeatherAttributeName(this.hass!, weather, attribute),
+      }));
     },
   );
 }

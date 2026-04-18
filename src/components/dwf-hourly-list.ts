@@ -3,6 +3,7 @@ import { styleMap } from 'lit/directives/style-map.js';
 import { customElement, property, state } from 'lit/decorators.js';
 import * as SunCalc from 'suncalc';
 import type {
+  ExtraForecastAttributeConfig,
   ForecastAttribute,
   SunCoordinates,
   SunEventType,
@@ -28,11 +29,7 @@ export class DWFHourlyList extends LitElement {
   @property({ attribute: false }) showSunTimes = false;
   @property({ attribute: false }) sunCoordinates?: SunCoordinates;
   @property({ attribute: false }) precipitationUnit?: string;
-  @property({ attribute: false }) extraAttribute?: string;
-  @property({ attribute: false }) extraAttributeUnit?: string;
-  @property({ attribute: false }) extraAttributeDivisor?: number;
-  @property({ attribute: false }) extraAttributeColor?: string;
-  @property({ attribute: false }) extraAttributeDimBelow?: number;
+  @property({ attribute: false }) extraConfig?: ExtraForecastAttributeConfig;
   @property({ attribute: false }) iconMap?: WeatherIconMap;
   @state() private selectedItem?: ForecastAttribute;
   private _sunTimesByDay: SunTimesByDay = {};
@@ -295,7 +292,7 @@ export class DWFHourlyList extends LitElement {
   }
 
   private _renderExtraAttribute(item: ForecastAttribute): TemplateResult | typeof nothing {
-    const key = this.extraAttribute?.trim();
+    const key = this.extraConfig?.attribute?.trim();
     if (!key) {
       return nothing;
     }
@@ -311,23 +308,23 @@ export class DWFHourlyList extends LitElement {
       item,
       key,
       undefined,
-      this.extraAttributeUnit,
+      this.extraConfig?.unit,
       undefined,
-      this.extraAttributeDivisor,
+      this.extraConfig?.divisor,
     );
 
     if (!formatted) {
       return nothing;
     }
 
-    const dimBelow = this._normalizeDimBelow(this.extraAttributeDimBelow);
+    const dimBelow = this._normalizeDimBelow(this.extraConfig?.dim_below);
     const numericValue = this._parseNumericValue(rawValue);
     const isDimmed = dimBelow !== undefined && numericValue !== undefined && numericValue < dimBelow;
     const classes = ['hourly-extra'];
     if (isDimmed) {
       classes.push('dimmed');
     }
-    const color = this.extraAttributeColor?.trim();
+    const color = this.extraConfig?.color?.trim();
     const style = color
       ? styleMap({
           color,
