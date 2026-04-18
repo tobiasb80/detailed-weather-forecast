@@ -4,8 +4,6 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { formatDateDayTwoDigit, formatDateWeekdayShort, isNewDay } from '../date-time';
 import { formatForecastAttribute, getWeatherStateIcon } from '../weather';
 import type { HomeAssistant } from 'custom-card-helpers';
-import type { ActionHandlerDetail } from 'custom-card-helpers/dist/types';
-import { actionHandler } from '../action-handler-directive';
 import type { ExtraForecastAttributeConfig, ForecastAttribute, WeatherEntity, WeatherIconMap } from '../types';
 
 const PRECIPITATION_DISPLAY_THRESHOLD = 0.3;
@@ -62,15 +60,7 @@ export class DWFDailyList extends LitElement {
     const isSelected = this._selectedForecast?.datetime === item.datetime;
 
     return html`
-      <div
-        class="forecast-item"
-        .actionHandler=${actionHandler({ hasHold: false, hasDoubleClick: false })}
-        @action=${(ev: CustomEvent<ActionHandlerDetail>) => {
-          if (ev.detail.action === 'tap') {
-            this._handleSelect(item);
-          }
-        }}
-      >
+      <div class="forecast-item" @click=${() => this._handleSelect(item)}>
         <mwc-ripple></mwc-ripple>
         <div class="date ${isSelected ? 'selected' : ''}">
           ${formatDateWeekdayShort(date, this.hass.locale as any, this.hass.config as any)}
