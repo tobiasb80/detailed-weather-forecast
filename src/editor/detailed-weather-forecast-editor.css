@@ -254,9 +254,7 @@
   color: var(--secondary-text-color);
 }
 .info-list-item.dragging {
-  opacity: 0.4;
-}
-.info-list-item.drag-over {
+  opacity: 0.6;
   box-shadow: 0 0 0 2px var(--primary-color);
 }
 .info-list-item .handle {

@@ -116,8 +116,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
   @state() private _draggedIndex = -1;
   @state() private _draggedListType?: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info';
-  @state() private _dragOverIndex = -1;
-  @state() private _dragOverListType?: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info';
+  @state() private _dragOriginalList?: any[];
 
   private _forecastOptionSubscriptions: Partial<Record<ModernForecastType, Promise<() => void> | undefined>> = {};
 
@@ -824,8 +823,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     const niceName = this._getNiceName(info.type || 'attribute', label);
 
     const isDragging = this._draggedIndex === index && this._draggedListType === type;
-    const isDragOver = this._dragOverIndex === index && this._dragOverListType === type;
-    const classes = `info-list-item ${isDragging ? 'dragging' : ''} ${isDragOver ? 'drag-over' : ''}`;
+    const classes = `info-list-item ${isDragging ? 'dragging' : ''}`;
 
     return html`
       <div
@@ -865,8 +863,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     const niceName = this._getNiceName('attribute', info.attribute);
 
     const isDragging = this._draggedIndex === index && this._draggedListType === type;
-    const isDragOver = this._dragOverIndex === index && this._dragOverListType === type;
-    const classes = `info-list-item ${isDragging ? 'dragging' : ''} ${isDragOver ? 'drag-over' : ''}`;
+    const classes = `info-list-item ${isDragging ? 'dragging' : ''}`;
 
     return html`
       <div
@@ -876,7 +873,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
         @dragstart=${(e: DragEvent) => this._handleDragStart(e, type, index)}
         @dragend=${() => this._handleDragEnd()}
         @dragover=${(e: DragEvent) => this._handleDragOver(e, type, index)}
-        @drop=${(e: DragEvent) => this._handleDrop(e, type, index)}
+        @drop=${(e: DragEvent) => this._handleDrop(e, type)}
       >
         <div class="handle">
           <ha-icon icon="mdi:drag"></ha-icon>
@@ -953,6 +950,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
   ) {
     this._draggedIndex = index;
     this._draggedListType = type;
+    this._dragOriginalList = [...(this._config![type] || [])];
     if (ev.dataTransfer) {
       ev.dataTransfer.effectAllowed = 'move';
       ev.dataTransfer.setData('text/plain', index.toString());
@@ -960,10 +958,12 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
   }
 
   private _handleDragEnd() {
+    if (this._dragOriginalList && this._draggedListType) {
+      this._config = { ...this._config!, [this._draggedListType]: this._dragOriginalList };
+    }
     this._draggedIndex = -1;
     this._draggedListType = undefined;
-    this._dragOverIndex = -1;
-    this._dragOverListType = undefined;
+    this._dragOriginalList = undefined;
   }
 
   private _handleDragOver(
@@ -976,33 +976,24 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       if (ev.dataTransfer) {
         ev.dataTransfer.dropEffect = 'move';
       }
-      if (this._dragOverIndex !== index) {
-        this._dragOverIndex = index;
-        this._dragOverListType = type;
-      }
+
+      const list = [...(this._config![type] || [])];
+      const movedItem = list.splice(this._draggedIndex, 1)[0];
+      list.splice(index, 0, movedItem);
+
+      this._config = { ...this._config!, [type]: list };
+      this._draggedIndex = index;
     }
   }
 
-  private _handleDrop(
-    ev: DragEvent,
-    type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info',
-    targetIndex: number,
-  ) {
+  private _handleDrop(ev: DragEvent, type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info') {
     ev.preventDefault();
-    const sourceIndex = this._draggedIndex;
-    const sourceType = this._draggedListType;
-
-    this._handleDragEnd(); // Reset Drag-Zustände
-
-    if (sourceType !== type || sourceIndex === -1 || sourceIndex === targetIndex) {
+    if (this._draggedListType !== type) {
       return;
     }
 
-    const list = [...(this._config![type] || [])];
-    const movedItem = list.splice(sourceIndex, 1)[0];
-    list.splice(targetIndex, 0, movedItem);
-
-    this._updateConfig({ [type]: list });
+    this._dragOriginalList = undefined; // Drop war erfolgreich, nicht mehr zurücksetzen
+    this._updateConfig({ [type]: this._config![type] });
   }
 
   private _getIconMapValue(condition: WeatherCondition): string {
