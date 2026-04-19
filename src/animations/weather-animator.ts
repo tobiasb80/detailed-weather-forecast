@@ -1,5 +1,38 @@
-import { getSunPosition } from '../weather';
-import { TimeOfDay, Position } from '../types';
+import type { TimeOfDay } from '../types';
+
+export interface Position {
+  x: number;
+  y: number;
+}
+
+const getSunPosition = (timeOfDay: TimeOfDay, width: number, height: number): Position => {
+  if (timeOfDay.type === 'sunrise') {
+    const progress = timeOfDay.progress;
+    return {
+      x: width * (0.3 + progress * 0.4),
+      y: height * (0.85 - progress * 0.55),
+    };
+  } else if (timeOfDay.type === 'sunset') {
+    const progress = timeOfDay.progress;
+    return {
+      x: width * (0.5 + progress * 0.3),
+      y: height * (0.3 + progress * 0.55),
+    };
+  } else if (timeOfDay.type === 'day') {
+    const progress = timeOfDay.progress;
+    const angle = progress * Math.PI;
+    return {
+      x: width * (0.5 + Math.sin(angle) * 0.25),
+      y: height * (0.25 - Math.sin(angle) * 0.1),
+    };
+  } else {
+    // Night: moon position
+    return {
+      x: width * 0.5,
+      y: height * 0.3,
+    };
+  }
+};
 
 export interface WindStreak {
   x: number;

@@ -10,7 +10,6 @@ import type {
   ForecastAttribute,
   ForecastEvent,
   DisplayAttribute,
-  Position,
   TimeOfDay,
   WeatherEntity,
 } from './types';
@@ -423,27 +422,16 @@ const supportsFeature = (stateObj: HassEntity, feature: number): boolean =>
 const supportsFeatureFromAttributes = (attributes: Record<string, any>, feature: number): boolean =>
   (attributes.supported_features! & feature) !== 0;
 
-export const formatWeatherAttribute = (
+const _formatAttributeValue = (
   hass: ExtendedHomeAssistant,
   weather: WeatherEntity,
   attribute: string,
+  rawValue: unknown,
   name?: string,
   unit?: string,
   icon?: string,
   divisor?: number,
 ): DisplayAttribute | undefined => {
-  if (!weather || !hass) {
-    return undefined;
-  }
-
-  // Check if attribute exists on the entity
-  const hasAttribute = Object.prototype.hasOwnProperty.call(weather.attributes, attribute);
-  if (!hasAttribute) {
-    return undefined;
-  }
-
-  const rawValue = (weather.attributes as unknown as Record<string, unknown>)[attribute];
-
   if (rawValue === undefined || rawValue === null) {
     return undefined;
   }
@@ -488,17 +476,35 @@ export const formatWeatherAttribute = (
 
   const value = display + (unit ? ` ${unit}` : '');
   const resolvedIcon = icon ? icon : WEATHER_ATTRIBUTE_ICON_MAP[attribute];
-  name =
-    name ||
-    hass.formatEntityAttributeName(weather, attribute) ||
-    hass.localize(getLocalizationKey(attribute)) ||
-    attribute.replace(/_/g, ' ');
+  name = name || formatWeatherAttributeName(hass, weather, attribute);
 
   return {
     value: value,
     name: name,
     icon: resolvedIcon,
   };
+};
+
+export const formatWeatherAttribute = (
+  hass: ExtendedHomeAssistant,
+  weather: WeatherEntity,
+  attribute: string,
+  name?: string,
+  unit?: string,
+  icon?: string,
+  divisor?: number,
+): DisplayAttribute | undefined => {
+  if (!weather || !hass) {
+    return undefined;
+  }
+
+  const hasAttribute = Object.prototype.hasOwnProperty.call(weather.attributes, attribute);
+  if (!hasAttribute) {
+    return undefined;
+  }
+
+  const rawValue = (weather.attributes as unknown as Record<string, unknown>)[attribute];
+  return _formatAttributeValue(hass, weather, attribute, rawValue, name, unit, icon, divisor);
 };
 
 export const formatForecastAttribute = (
@@ -514,62 +520,8 @@ export const formatForecastAttribute = (
   if (!weather || !hass || !forecast) {
     return undefined;
   }
-
-  // Check if attribute exists on the entity
   const rawValue = (forecast as any)?.[attribute];
-
-  if (rawValue === undefined || rawValue === null) {
-    return undefined;
-  }
-
-  let display: string;
-
-  if (typeof rawValue === 'number') {
-    if (attribute === 'wind_speed') {
-      const bearingValue = (weather.attributes as unknown as Record<string, unknown>)['wind_bearing'];
-      display = getWind(hass, weather, rawValue, typeof bearingValue === 'number' ? bearingValue : undefined);
-    } else if (attribute === 'wind_bearing') {
-      display = getWindBearing(rawValue);
-    } else if (divisor) {
-      const value = rawValue / divisor;
-      display = value.toLocaleString(hass?.locale?.language, {
-        maximumFractionDigits: 0,
-      });
-    } else {
-      display =
-        hass?.formatEntityAttributeValue?.(weather, attribute, rawValue) ||
-        rawValue.toLocaleString(hass?.locale?.language, {
-          maximumFractionDigits: 1,
-        });
-    }
-  } else if (typeof rawValue === 'string') {
-    const trimmed = rawValue.trim();
-    if (!trimmed.length) {
-      return undefined;
-    }
-    display = hass?.formatEntityAttributeValue?.(weather, attribute, trimmed) || trimmed;
-  } else {
-    try {
-      display = JSON.stringify(rawValue);
-    } catch {
-      return undefined;
-    }
-  }
-
-  // Try to format the attribute value using Home Assistant's built-in formatter
-  if (display === undefined || display === null) {
-    return undefined;
-  }
-
-  const value = display + (unit ? ` ${unit}` : '');
-  const resolvedIcon = icon ? icon : WEATHER_ATTRIBUTE_ICON_MAP[attribute];
-  name = name || formatWeatherAttributeName(hass, weather, attribute);
-
-  return {
-    value: value,
-    name: name,
-    icon: resolvedIcon,
-  };
+  return _formatAttributeValue(hass, weather, attribute, rawValue, name, unit, icon, divisor);
 };
 
 export const formatWeatherAttributeName = (
@@ -658,35 +610,6 @@ export const getTimeOfDay = (latitude?: number, longitude?: number): TimeOfDay =
 
   // Night
   return { type: 'night', progress: 0 };
-};
-
-export const getSunPosition = (timeOfDay: TimeOfDay, width: number, height: number): Position => {
-  if (timeOfDay.type === 'sunrise') {
-    const progress = timeOfDay.progress;
-    return {
-      x: width * (0.3 + progress * 0.4),
-      y: height * (0.85 - progress * 0.55),
-    };
-  } else if (timeOfDay.type === 'sunset') {
-    const progress = timeOfDay.progress;
-    return {
-      x: width * (0.5 + progress * 0.3),
-      y: height * (0.3 + progress * 0.55),
-    };
-  } else if (timeOfDay.type === 'day') {
-    const progress = timeOfDay.progress;
-    const angle = progress * Math.PI;
-    return {
-      x: width * (0.5 + Math.sin(angle) * 0.25),
-      y: height * (0.25 - Math.sin(angle) * 0.1),
-    };
-  } else {
-    // Night: moon position
-    return {
-      x: width * 0.5,
-      y: height * 0.3,
-    };
-  }
 };
 
 export const executeAction = (

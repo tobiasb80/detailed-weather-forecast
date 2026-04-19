@@ -146,7 +146,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       hourly_forecast: config.hourly_forecast ?? true,
       daily_forecast: config.daily_forecast ?? true,
       orientation: config.orientation ?? 'vertical',
-      compact_header: config.compact_header ?? false,
+      show_background: config.show_background ?? !(config.compact_header ?? false),
+      compact_header_chips: config.compact_header_chips ?? false,
       show_animation: config.show_animation ?? true,
       header_chips: normalizedChips,
       header_attributes: normalizedChips.filter((chip) => chip.type === 'attribute').map((chip) => chip.attribute),
@@ -172,7 +173,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       return this._renderSubElementEditor();
     }
 
-    const { general: generalSchema, header: headerSchema } = this._buildSchemas();
+    const { general: generalSchema, header: headerSchema, chips: chipsSchema } = this._buildSchemas();
     const formData = this._config;
 
     return html`
@@ -291,12 +292,19 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
               localize('editor.section.chips', '', ''),
               html`
                 <p class="chips-hint">${localize('editor.section.chips_description', '', '')}</p>
+                <ha-form
+                  .hass=${this.hass}
+                  .data=${formData}
+                  .schema=${chipsSchema}
+                  .computeLabel=${this._computeLabel}
+                  @value-changed=${this._handleValueChanged}
+                ></ha-form>
                 ${this._config.header_chips?.map((chip, index) =>
                   this._renderHeaderAttributeItem(chip, index, 'header_chips'),
                 )}
                 ${(this._config.header_chips?.length || 0) < 3
                   ? html`
-                      <ha-button @click=${this._addHeaderChip}>
+                      <ha-button @click=${() => this._addListItem('header_chips')}>
                         ${localize('editor.section.add_attribute', '', '')}
                       </ha-button>
                     `
@@ -312,7 +320,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
                 ${this._config.header_info?.map((info, index) =>
                   this._renderHeaderAttributeItem(info, index, 'header_info'),
                 )}
-                <ha-button @click=${this._addHeaderInfo}>
+                <ha-button @click=${() => this._addListItem('header_info')}>
                   ${localize('editor.section.add_attribute', '', '')}
                 </ha-button>
               `,
@@ -330,14 +338,11 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
             ${this._forecastOptionsLoading.daily && !this._dailyExtraOptions.length
               ? html`<p class="location-description">${localize('editor.main.loading_forecast_attributes')}</p>`
               : nothing}
-            ${this._renderExtraAttributeItem(this._config.daily_extra_config, 'daily_extra')}
 
             <div class="editor-subsection">
-              <h5 class="section-subtitle">${localize('editor.section.forecast_spacing', '', '')}</h5>
-              <p class="location-description">${localize('editor.section.forecast_spacing_description', '', '')}</p>
               <div class="sun-coordinates">
                 <label class="coordinate-field">
-                  <span>${localize('editor.section.daily_min_gap', '', '')}</span>
+                  <span>${localize('editor.section.forecast_spacing_description', '', '')}</span>
                   <input
                     type="number"
                     name="daily_min_gap"
@@ -350,6 +355,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
                 </label>
               </div>
             </div>
+
+            ${this._renderExtraAttributeItem(this._config.daily_extra_config, 'daily_extra')}
             ${this._renderExpander(
               'daily-info',
               localize('editor.section.daily_forecast_info', '', ''),
@@ -358,7 +365,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
                 ${this._config.daily_info?.map((info, index) =>
                   this._renderForecastInfoItem(info, index, 'daily_info'),
                 )}
-                <ha-button @click=${this._addDailyInfo}>
+                <ha-button @click=${() => this._addListItem('daily_info')}>
                   ${localize('editor.section.add_attribute', '', '')}
                 </ha-button>
               `,
@@ -376,7 +383,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
             ${this._forecastOptionsLoading.hourly && !this._hourlyExtraOptions.length
               ? html`<p class="location-description">${localize('editor.main.loading_forecast_attributes')}</p>`
               : nothing}
-            ${this._renderExtraAttributeItem(this._config.hourly_extra_config, 'hourly_extra')}
 
             <div class="editor-subsection">
               <h5 class="section-subtitle">${localize('editor.section.sunrise_sunset', '', '')}</h5>
@@ -390,11 +396,9 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
               </div>
             </div>
             <div class="editor-subsection">
-              <h5 class="section-subtitle">${localize('editor.section.forecast_spacing', '', '')}</h5>
-              <p class="location-description">${localize('editor.section.forecast_spacing_description', '', '')}</p>
               <div class="sun-coordinates">
                 <label class="coordinate-field">
-                  <span>${localize('editor.section.hourly_min_gap', '', '')}</span>
+                  <span>${localize('editor.section.forecast_spacing_description', '', '')}</span>
                   <input
                     type="number"
                     name="hourly_min_gap"
@@ -407,6 +411,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
                 </label>
               </div>
             </div>
+
+            ${this._renderExtraAttributeItem(this._config.hourly_extra_config, 'hourly_extra')}
             ${this._renderExpander(
               'hourly-info',
               localize('editor.section.hourly_forecast_info', '', ''),
@@ -415,7 +421,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
                 ${this._config.hourly_info?.map((info, index) =>
                   this._renderForecastInfoItem(info, index, 'hourly_info'),
                 )}
-                <ha-button @click=${this._addHourlyInfo}>
+                <ha-button @click=${() => this._addListItem('hourly_info')}>
                   ${localize('editor.section.add_attribute', '', '')}
                 </ha-button>
               `,
@@ -425,28 +431,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
         )}
       </div>
     `;
-  }
-
-  private _headerChipChanged(e: CustomEvent, index: number) {
-    if (!this._config) {
-      return;
-    }
-    const newChips = [...(this._config.header_chips ?? [])];
-    while (newChips.length <= index) {
-      newChips.push({ type: 'attribute', attribute: '', name: '' });
-    }
-    const newChip = { ...e.detail };
-
-    if (newChip.type === 'entity') {
-      delete (newChip as any).attribute;
-      delete (newChip as any).unit;
-      delete (newChip as any).divisor;
-    } else {
-      delete (newChip as any).entity;
-    }
-    newChips[index] = newChip;
-
-    this._updateConfig({ header_chips: newChips });
   }
 
   private _handleValueChanged(event: CustomEvent<{ value: DetailedWeatherForecastConfig }>) {
@@ -552,128 +536,64 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     return enabledCount <= 1 && this._isSectionEnabled(name, config);
   }
 
-  private _headerInfoChanged(e: CustomEvent, index: number) {
-    if (!this._config?.header_info) {
+  private _editListItem(type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info', index: number) {
+    this._subElementEditorConfig = { type, index };
+  }
+
+  private _deleteListItem(type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info', index: number) {
+    if (!this._config?.[type]) {
       return;
     }
-
-    const newInfo = [...this._config.header_info];
-    newInfo[index] = e.detail;
-
-    this._updateConfig({ header_info: newInfo });
+    const newList = [...(this._config[type] as any[])];
+    newList.splice(index, 1);
+    this._updateConfig({ [type]: newList } as Partial<DetailedWeatherForecastConfig>);
   }
 
-  private _deleteHeaderChip(index: number) {
-    if (!this._config?.header_chips) {
+  private _addListItem(type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info') {
+    const newList = this._config?.[type] ? [...(this._config[type] as any[])] : [];
+    if (type === 'header_chips' && newList.length >= 3) return;
+
+    const newItem =
+      type === 'header_chips' || type === 'header_info'
+        ? { type: 'attribute', attribute: '', name: '' }
+        : { attribute: '', name: '' };
+
+    newList.push(newItem as any);
+    this._updateConfig({ [type]: newList } as Partial<DetailedWeatherForecastConfig>);
+    this._editListItem(type, newList.length - 1);
+  }
+
+  private _listItemChanged(
+    e: CustomEvent,
+    type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info',
+    index: number,
+  ) {
+    if (!this._config) {
       return;
     }
-    const newChips = [...this._config.header_chips];
-    newChips.splice(index, 1);
-    this._updateConfig({ header_chips: newChips });
-  }
-
-  private _addHeaderChip() {
-    const newChips = this._config?.header_chips ? [...this._config.header_chips] : [];
-    if (newChips.length >= 3) return;
-    newChips.push({ type: 'attribute', attribute: '', name: '' } as any);
-    this._updateConfig({ header_chips: newChips });
-    this._editHeaderChip(newChips.length - 1);
-  }
-
-  private _deleteHeaderInfo(index: number) {
-    if (!this._config?.header_info) {
-      return;
-    }
-    const newInfo = [...this._config.header_info];
-    newInfo.splice(index, 1);
-    this._updateConfig({ header_info: newInfo });
-  }
-
-  private _addHeaderInfo() {
-    const newInfo = this._config?.header_info ? [...this._config.header_info] : [];
-    newInfo.push({
-      type: 'attribute',
-      attribute: '',
-      name: '',
-    });
-    this._updateConfig({ header_info: newInfo });
-    this._editHeaderInfo(newInfo.length - 1);
-  }
-
-  private _dailyInfoChanged(e: CustomEvent, index: number) {
-    if (!this._config?.daily_info) {
-      return;
+    const newList = [...((this._config[type] as any[]) ?? [])];
+    while (newList.length <= index) {
+      newList.push(
+        (type === 'header_chips' || type === 'header_info'
+          ? { type: 'attribute', attribute: '', name: '' }
+          : { attribute: '', name: '' }) as any,
+      );
     }
 
-    const newInfo = [...this._config.daily_info];
-    newInfo[index] = e.detail;
+    const newItem = { ...e.detail };
 
-    this._updateConfig({ daily_info: newInfo });
-  }
-
-  private _deleteDailyInfo(index: number) {
-    if (!this._config?.daily_info) {
-      return;
-    }
-    const newInfo = [...this._config.daily_info];
-    newInfo.splice(index, 1);
-    this._updateConfig({ daily_info: newInfo });
-  }
-
-  private _addDailyInfo() {
-    const newInfo = this._config?.daily_info ? [...this._config.daily_info] : [];
-    newInfo.push({
-      attribute: '',
-      name: '',
-    });
-    this._updateConfig({ daily_info: newInfo });
-    this._editDailyInfo(newInfo.length - 1);
-  }
-
-  private _hourlyInfoChanged(e: CustomEvent, index: number) {
-    if (!this._config?.hourly_info) {
-      return;
+    if (type === 'header_chips' || type === 'header_info') {
+      if (newItem.type === 'entity') {
+        delete (newItem as any).attribute;
+        delete (newItem as any).unit;
+        delete (newItem as any).divisor;
+      } else {
+        delete (newItem as any).entity;
+      }
     }
 
-    const newInfo = [...this._config.hourly_info];
-    newInfo[index] = e.detail;
-
-    this._updateConfig({ hourly_info: newInfo });
-  }
-
-  private _deleteHourlyInfo(index: number) {
-    if (!this._config?.hourly_info) {
-      return;
-    }
-    const newInfo = [...this._config.hourly_info];
-    newInfo.splice(index, 1);
-    this._updateConfig({ hourly_info: newInfo });
-  }
-
-  private _addHourlyInfo() {
-    const newInfo = this._config?.hourly_info ? [...this._config.hourly_info] : [];
-    newInfo.push({
-      attribute: '',
-      name: '',
-    });
-    this._updateConfig({ hourly_info: newInfo });
-    this._editHourlyInfo(newInfo.length - 1);
-  }
-
-  private _editHeaderChip(index: number) {
-    this._subElementEditorConfig = { type: 'header_chips', index };
-  }
-
-  private _editHeaderInfo(index: number) {
-    this._subElementEditorConfig = { type: 'header_info', index };
-  }
-
-  private _editDailyInfo(index: number) {
-    this._subElementEditorConfig = { type: 'daily_info', index };
-  }
-
-  private _editHourlyInfo(index: number) {
-    this._subElementEditorConfig = { type: 'hourly_info', index };
+    newList[index] = newItem;
+    this._updateConfig({ [type]: newList } as Partial<DetailedWeatherForecastConfig>);
   }
 
   private _goBack(ev?: Event) {
@@ -739,7 +659,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           .config=${config}
           .usedAttributes=${usedAttributes}
           @header-info-config-changed=${(e: CustomEvent) =>
-            type === 'header_info' ? this._headerInfoChanged(e, index) : this._headerChipChanged(e, index)}
+            this._listItemChanged(e, type as 'header_chips' | 'header_info', index!)}
         ></header-info-editor>
       `;
     } else if (type === 'daily_info') {
@@ -750,7 +670,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           .hass=${this.hass}
           .config=${config}
           .extraAttributeOptions=${this._buildDailyExtraAttributeOptions(true, config.attribute)}
-          @forecast-info-config-changed=${(e: CustomEvent) => this._dailyInfoChanged(e, index)}
+          @forecast-info-config-changed=${(e: CustomEvent) => this._listItemChanged(e, type as 'daily_info', index!)}
         ></forecast-attribute-editor>
       `;
     } else if (type === 'hourly_info') {
@@ -761,7 +681,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           .hass=${this.hass}
           .config=${config}
           .extraAttributeOptions=${this._buildHourlyExtraAttributeOptions(true, config.attribute)}
-          @forecast-info-config-changed=${(e: CustomEvent) => this._hourlyInfoChanged(e, index)}
+          @forecast-info-config-changed=${(e: CustomEvent) => this._listItemChanged(e, type as 'hourly_info', index!)}
         ></forecast-attribute-editor>
       `;
     } else if (type === 'hourly_extra' || type === 'daily_extra') {
@@ -842,14 +762,10 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           <span class="info-list-label">${niceName}</span>
           <span class="info-list-secondary">${displayLabel}</span>
         </div>
-        <ha-icon-button
-          @click=${() => (type === 'header_info' ? this._editHeaderInfo(index) : this._editHeaderChip(index))}
-        >
+        <ha-icon-button @click=${() => this._editListItem(type, index)}>
           <ha-icon icon="mdi:pencil"></ha-icon>
         </ha-icon-button>
-        <ha-icon-button
-          @click=${() => (type === 'header_info' ? this._deleteHeaderInfo(index) : this._deleteHeaderChip(index))}
-        >
+        <ha-icon-button @click=${() => this._deleteListItem(type, index)}>
           <ha-icon icon="mdi:close"></ha-icon>
         </ha-icon-button>
       </div>
@@ -882,14 +798,10 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           <span class="info-list-label">${niceName}</span>
           <span class="info-list-secondary">${displayLabel}</span>
         </div>
-        <ha-icon-button
-          @click=${() => (type === 'daily_info' ? this._editDailyInfo(index) : this._editHourlyInfo(index))}
-        >
+        <ha-icon-button @click=${() => this._editListItem(type, index)}>
           <ha-icon icon="mdi:pencil"></ha-icon>
         </ha-icon-button>
-        <ha-icon-button
-          @click=${() => (type === 'daily_info' ? this._deleteDailyInfo(index) : this._deleteHourlyInfo(index))}
-        >
+        <ha-icon-button @click=${() => this._deleteListItem(type, index)}>
           <ha-icon icon="mdi:close"></ha-icon>
         </ha-icon-button>
       </div>
@@ -1178,16 +1090,24 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
   private _generalSchema: HaFormSchema[] = [{ name: 'entity', selector: { entity: { domain: 'weather' } } }];
 
-  private _buildHeaderSchema = memoizeOne((compactHeader?: boolean, nowcastEntity?: string): HaFormSchema[] => {
+  private _buildHeaderSchema = memoizeOne((showBackground?: boolean, nowcastEntity?: string): HaFormSchema[] => {
     const schema: HaFormSchema[] = [
       { name: 'moon_phase_entity', selector: { entity: { domain: 'sensor' } }, optional: true },
-      { name: 'compact_header', selector: { boolean: {} } },
     ];
 
-    if (!compactHeader) {
-      schema.push({ name: 'show_animation', selector: { boolean: {} } });
-      schema.push({ name: 'use_night_header_backgrounds', selector: { boolean: {} } });
+    const bgSchema: HaFormSchema[] = [{ name: 'show_background', selector: { boolean: {} } }];
+
+    if (showBackground !== false) {
+      bgSchema.push({ name: 'show_animation', selector: { boolean: {} } });
+      bgSchema.push({ name: 'use_night_header_backgrounds', selector: { boolean: {} } });
     }
+
+    schema.push({
+      name: 'bg_options',
+      type: 'grid',
+      flatten: true,
+      schema: bgSchema,
+    });
 
     schema.push({
       name: 'nowcast',
@@ -1331,10 +1251,12 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
   private _buildSchemas(): {
     general: HaFormSchema[];
     header: HaFormSchema[];
+    chips: HaFormSchema[];
   } {
     return {
       general: this._generalSchema,
-      header: this._buildHeaderSchema(this._config?.compact_header, this._config?.nowcast_entity),
+      header: this._buildHeaderSchema(this._config?.show_background, this._config?.nowcast_entity),
+      chips: [{ name: 'compact_header_chips', selector: { boolean: {} } }],
     };
   }
 

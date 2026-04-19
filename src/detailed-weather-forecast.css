@@ -142,7 +142,8 @@ ha-card {
   flex-direction: column;
 }
 
-.weather.header-only {
+.weather.header-only,
+.compact-header.header-only {
   height: 100%;
   flex: 1 1 auto;
   border-bottom-left-radius: var(--ha-card-border-radius, 12px);
@@ -173,7 +174,6 @@ ha-card {
   min-width: 0;
 }
 
-.weather .header-attributes,
 .header-attributes {
   display: flex;
   flex-direction: row;
@@ -184,7 +184,6 @@ ha-card {
   min-height: 0;
 }
 
-.weather .attribute-chip,
 .attribute-chip {
   font-size: var(--ha-font-size-m);
   line-height: calc(6px + var(--ha-font-size-m));
@@ -201,25 +200,21 @@ ha-card {
   overflow: hidden;
 }
 
-.weather .attribute-chip .chip-icon,
 .attribute-chip .chip-icon {
   margin-right: 6px;
   --mdc-icon-size: 20px;
   color: inherit;
 }
 
-.weather .attribute-chip.has-action,
 .attribute-chip.has-action {
   cursor: pointer;
 }
 
-.weather .attribute-chip.has-action:focus-visible,
 .attribute-chip.has-action:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline: 2px solid currentColor;
   outline-offset: 2px;
 }
 
-.weather .attribute-chip.missing,
 .attribute-chip.missing {
   opacity: 0.8;
   font-style: italic;
@@ -753,6 +748,10 @@ dwf-current-weather-attributes {
   border-radius: 4px;
 }
 
+.weather .dwf-current-attribute {
+  color: inherit;
+}
+
 .dwf-current-attribute.has-action {
   cursor: pointer;
 }
@@ -760,6 +759,10 @@ dwf-current-weather-attributes {
 .dwf-current-attribute-icon {
   color: var(--state-icon-color, #616161);
   padding-left: var(--ha-space-2, 8px);
+}
+
+.weather .dwf-current-attribute-icon {
+  color: inherit;
 }
 
 .dwf-current-attribute-value,
@@ -817,11 +820,17 @@ dwf-current-weather-attributes {
 .compact-header .weather-icon ha-icon {
   --mdc-icon-size: var(--icon-size);
 }
-.compact-header .temperature {
+.compact-header .temp {
   font-size: var(--ha-font-size-3xl, 28px);
   font-weight: var(--ha-font-weight-normal, 400);
   position: relative;
   overflow: hidden;
+}
+.compact-header .temp.has-action:focus-visible,
+.compact-header .condition.has-action:focus-visible,
+.compact-header .weather-icon.has-action:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 .compact-header .nowcast-panel {
   padding: 0 var(--ha-space-4, 16px);

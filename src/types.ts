@@ -1,20 +1,7 @@
 // Collection of types from HA frontend
 
-import type { ActionConfig, HomeAssistant, LovelaceCardConfig } from 'custom-card-helpers';
+import type { ActionConfig, LovelaceCardConfig } from 'custom-card-helpers';
 import type { HassEntityAttributeBase, HassEntityBase } from 'home-assistant-js-websocket';
-
-export type HassConnection = HomeAssistant['connection'];
-export type HassUnsubscribeFunc = ReturnType<HassConnection['subscribeMessage']> extends Promise<infer T> ? T : never;
-
-// From frontend/src/panels/lovelace/types.ts
-export interface LovelaceGridOptions {
-  columns?: number | 'full';
-  rows?: number | 'auto';
-  max_columns?: number;
-  min_columns?: number;
-  min_rows?: number;
-  max_rows?: number;
-}
 
 export type HeaderChipDisplay = {
   label: string;
@@ -69,7 +56,8 @@ export interface DetailedWeatherForecastConfig extends LovelaceCardConfig {
   header_info?: HeaderAttribute[];
   daily_info?: ForecastAttributeConfig[];
   hourly_info?: ForecastAttributeConfig[];
-  compact_header?: boolean;
+  show_background?: boolean;
+  compact_header_chips?: boolean;
   show_animation?: boolean;
   fixed_condition?: string;
   fixed_time_of_day?: TimeOfDay['type'];
@@ -203,36 +191,4 @@ export interface DisplayAttribute {
 export interface TimeOfDay {
   type: 'sunrise' | 'day' | 'sunset' | 'night';
   progress: number;
-}
-
-// Position
-export interface Position {
-  x: number;
-  y: number;
-}
-
-// RGB Color
-export interface RGBColor {
-  r: number;
-  g: number;
-  b: number;
-}
-
-// Background Gradient
-export interface BackgroundGradient {
-  start: RGBColor;
-  end: RGBColor;
-}
-
-// Sun/Moon Data
-export interface SunMoonData {
-  sunrise: Date | null;
-  sunset: Date | null;
-}
-
-// Sun Data with hasSunData flag (used by components)
-export interface SunData {
-  sunrise: Date | null;
-  sunset: Date | null;
-  hasSunData: boolean;
 }

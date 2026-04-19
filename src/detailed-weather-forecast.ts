@@ -1,14 +1,10 @@
-import { hasAction, type ActionConfig, type HomeAssistant } from 'custom-card-helpers';
-import type { ActionHandlerDetail } from 'custom-card-helpers/dist/types';
+import { hasAction, type HomeAssistant } from 'custom-card-helpers';
 import type { HassEntity } from 'home-assistant-js-websocket';
 import type { PropertyValues } from 'lit';
 import { html, LitElement, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
-import { classMap } from 'lit/directives/class-map.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import * as SunCalc from 'suncalc';
-import { actionHandler } from './action-handler-directive';
-import './components/dwf-compact-header';
 import './components/dwf-current-weather-attributes';
 import './components/dwf-daily-list';
 import './components/dwf-forecast-attributes';
@@ -33,13 +29,7 @@ import {
 import { AnimationManager } from './animations/animation-manager';
 import { enableMomentumScroll } from './utils/momentum-scroll';
 import type { ExtendedHomeAssistant } from './weather';
-import {
-  executeAction,
-  formatWeatherAttribute,
-  getSupportedForecastTypes,
-  subscribeForecast,
-  getTimeOfDay,
-} from './weather';
+import { formatWeatherAttribute, getSupportedForecastTypes, subscribeForecast, getTimeOfDay } from './weather';
 import { DEFAULT_WEATHER_IMAGE, WeatherImages } from './weather-images';
 
 // Styled console banner so your card is easy to spot in the browser console.
@@ -183,7 +173,8 @@ export class DetailedWeatherForecast extends LitElement {
       header_info: config.header_info ?? [],
       daily_info: config.daily_info ?? [],
       hourly_info: config.hourly_info ?? [],
-      compact_header: config.compact_header ?? false,
+      show_background: config.show_background ?? !(config.compact_header ?? false),
+      compact_header_chips: config.compact_header_chips ?? false,
       show_animation: config.show_animation ?? true,
     };
 
@@ -274,6 +265,8 @@ export class DetailedWeatherForecast extends LitElement {
     if (normalized.length) {
       return normalized.slice(0, limit);
     }
+
+    return [];
   }
 
   private _normalizeMinGapValue(value?: number | string): number | undefined {
@@ -364,6 +357,8 @@ export class DetailedWeatherForecast extends LitElement {
       entity: weatherEntity ?? 'weather.home',
       header_attributes: [],
       show_header: true,
+      show_background: true,
+      compact_header_chips: false,
       hourly_forecast: true,
       daily_forecast: true,
       orientation: 'vertical',
@@ -386,7 +381,7 @@ export class DetailedWeatherForecast extends LitElement {
   private async _subscribeForecast(type: ForecastType) {
     if (this._subscriptions[type]) return;
 
-    this._subscriptions[type] = subscribeForecast(this._hass, this._entity, type, (event) => {
+    this._subscriptions[type] = subscribeForecast(this._hass!, this._entity, type, (event) => {
       if (type === 'hourly') this._forecastHourlyEvent = event;
       if (type === 'daily') this._forecastDailyEvent = event;
     }).catch((e) => {
@@ -463,9 +458,9 @@ export class DetailedWeatherForecast extends LitElement {
       this._refreshNowcastData();
     }
 
-    const card = this.shadowRoot.querySelector('ha-card') as HTMLElement;
-    const daily = this.shadowRoot.querySelector('.forecast.daily') as HTMLElement;
-    const hourly = this.shadowRoot.querySelector('.forecast.hourly') as HTMLElement;
+    const card = this.shadowRoot?.querySelector('ha-card') as HTMLElement | null;
+    const daily = this.shadowRoot?.querySelector('.forecast.daily') as HTMLElement | null;
+    const hourly = this.shadowRoot?.querySelector('.forecast.hourly') as HTMLElement | null;
 
     if (daily) {
       this._initDragScroll('daily', daily);
@@ -538,40 +533,12 @@ export class DetailedWeatherForecast extends LitElement {
     const hourlyForecast = this._applySolarForecastToForecast(hourlyForecastRaw, 'hourly');
     const sunCoordinates = this._getLocationCoordinates();
     const showSunTimes = Boolean(this._config.show_sun_times && sunCoordinates && hourlyEnabled);
-    const temperatureTapAction = this._config.header_temperature?.tap_action;
-    const temperatureHoldAction = this._config.header_temperature?.hold_action;
-    const temperatureDoubleTapAction = this._config.header_temperature?.double_tap_action;
-    const temperatureActionEntity = this._config.header_temperature?.entity || this._entity;
-    const hasTemperatureAction =
-      hasAction(temperatureTapAction) || hasAction(temperatureHoldAction) || hasAction(temperatureDoubleTapAction);
-    const conditionTapAction = this._config.header_condition?.tap_action;
-    const conditionHoldAction = this._config.header_condition?.hold_action;
-    const conditionDoubleTapAction = this._config.header_condition?.double_tap_action;
-    const hasConditionAction =
-      this._config.header_info.length > 0 ||
-      hasAction(conditionTapAction) ||
-      hasAction(conditionHoldAction) ||
-      hasAction(conditionDoubleTapAction);
     const headerTemperature = this._computeHeaderTemperature();
-
-    let headerCondition: string | undefined = undefined;
-
-    if (this._state.attributes['pictocode'] !== undefined) {
-      headerCondition = localize(`card.pictocode_hour.${this._state.attributes['pictocode']}`);
-    } else {
-      headerCondition = this._hass?.formatEntityState?.(this._state) || this._state.state;
-    }
 
     const headerOnly = showHeader && !showForecasts;
     const nowcastEnabled = this._isNowcastEnabled();
     const showInlineNowcast =
       nowcastEnabled && (this._config.nowcast_always_show || this._nowcastHasRain || headerOnly);
-
-    const headerClassMap = {
-      weather: true,
-      'header-only': headerOnly,
-      'nowcast-inline': showInlineNowcast,
-    };
 
     const hasContent = showHeader || dailyEnabled || hourlyEnabled;
 
@@ -626,66 +593,6 @@ export class DetailedWeatherForecast extends LitElement {
       headerStyles['--dwf-header-height'] = 'calc(4 * var(--row-height, 56px))';
     }
 
-    const headerAttributesTemplate = headerChips.length
-      ? html`<dwf-header-chips
-          .headerChips=${headerChips}
-          @dwf-chip-click=${(e: CustomEvent) =>
-            this._handleHeaderChipAction(e.detail.actionConfig, e.detail.entity, e.detail.action)}
-        ></dwf-header-chips>`
-      : nothing;
-
-    const headerMainTemplate = html`
-      <div class="header-main">
-        <div
-          class=${classMap({
-            condition: true,
-            'has-action': hasConditionAction,
-          })}
-          role=${hasConditionAction ? 'button' : undefined}
-          tabindex=${hasConditionAction ? 0 : undefined}
-          .actionHandler=${actionHandler({
-            hasHold: hasAction(conditionHoldAction),
-            hasDoubleClick: hasAction(conditionDoubleTapAction),
-          })}
-          @action=${hasConditionAction
-            ? (ev: CustomEvent<ActionHandlerDetail>) => this._handleConditionAction(ev.detail.action)
-            : undefined}
-        >
-          ${hasConditionAction ? html`<mwc-ripple></mwc-ripple>` : nothing}
-          <span class="header-pill-text"> ${headerCondition} </span>
-        </div>
-        <div
-          class=${classMap({
-            temp: true,
-            'has-action': hasTemperatureAction,
-          })}
-          role=${hasTemperatureAction ? 'button' : undefined}
-          tabindex=${hasTemperatureAction ? 0 : undefined}
-          .actionHandler=${actionHandler({
-            hasHold: hasAction(temperatureHoldAction),
-            hasDoubleClick: hasAction(temperatureDoubleTapAction),
-          })}
-          @action=${hasTemperatureAction
-            ? (ev: CustomEvent<ActionHandlerDetail>) => {
-                const actionType = ev.detail.action;
-                const actionConfig =
-                  actionType === 'hold'
-                    ? temperatureHoldAction
-                    : actionType === 'double_tap'
-                      ? temperatureDoubleTapAction
-                      : temperatureTapAction;
-                executeAction(this, this._hass!, actionConfig, temperatureActionEntity, actionType);
-              }
-            : undefined}
-        >
-          ${hasTemperatureAction ? html`<mwc-ripple></mwc-ripple>` : nothing}
-          <span class="header-pill-text">${headerTemperature}</span>
-        </div>
-      </div>
-    `;
-
-    const headerLayoutTemplate = html` ${headerMainTemplate} ${headerAttributesTemplate} `;
-
     const nowcastPanelTemplate = html`
       <div
         class="nowcast-panel"
@@ -695,8 +602,17 @@ export class DetailedWeatherForecast extends LitElement {
       </div>
     `;
 
-    const timeOfDay = this._getTimeOfDay();
-    const currentCondition = this._config.fixed_condition || this._state.state;
+    let timeOfDay = this._getTimeOfDay();
+    let currentCondition = this._config.fixed_condition || this._state.state;
+
+    if (this._config.use_night_header_backgrounds === false) {
+      if (timeOfDay.type !== 'day') {
+        timeOfDay = { type: 'day', progress: 0.5 };
+      }
+      if (currentCondition === 'clear-night') {
+        currentCondition = 'sunny';
+      }
+    }
     const animationClass = this._getAnimationContainerClass(timeOfDay.type, currentCondition);
 
     const getAnimationTemplate = (slotName?: string) =>
@@ -722,37 +638,31 @@ export class DetailedWeatherForecast extends LitElement {
         </style>
         ${!showHeader ? getAnimationTemplate() : nothing}
         ${showHeader
-          ? this._config.compact_header
-            ? html`
-                <dwf-compact-header
-                  .hass=${this._hass}
-                  .weatherEntity=${this._state}
-                  .config=${this._config}
-                  .nowcastPanelTemplate=${showInlineNowcast ? nowcastPanelTemplate : undefined}
-                  .headerTemperature=${headerTemperature}
-                  @dwf-temperature-action=${this._handleCompactHeaderTemperatureAction}
-                  @dwf-condition-action=${this._handleCompactHeaderConditionAction}
-                >
-                </dwf-compact-header>
-              `
-            : html`
-                <dwf-header
-                  .headerClassMap=${headerClassMap}
-                  .headerStyles=${headerStyles}
-                  .headerLayoutTemplate=${headerLayoutTemplate}
-                  .showInlineNowcast=${showInlineNowcast}
-                  .nowcastPanelTemplate=${nowcastPanelTemplate}
-                >
-                  ${getAnimationTemplate('background')}
-                </dwf-header>
-              `
+          ? html`
+              <dwf-header
+                .hass=${this._hass}
+                .weatherEntity=${this._state}
+                .config=${this._config}
+                .nowcastPanelTemplate=${showInlineNowcast ? nowcastPanelTemplate : undefined}
+                .headerTemperature=${headerTemperature}
+                .isDaytime=${this._isDaytimeNow()}
+                .headerChipsDisplays=${headerChips}
+                .headerOnly=${headerOnly}
+                .headerStyles=${headerStyles}
+                @dwf-toggle-attributes=${() => {
+                  this._showAttributes = !this._showAttributes;
+                }}
+              >
+                ${getAnimationTemplate('background')}
+              </dwf-header>
+            `
           : nothing}
         ${showHeader && showForecasts ? html`<div class="divider card-divider"></div>` : nothing}
-        ${this._config.header_info.length > 0 && this._showAttributes
+        ${(this._config.header_info?.length ?? 0) > 0 && this._showAttributes
           ? html`<dwf-current-weather-attributes
                 .hass=${this._hass}
                 .weatherEntity=${this._state}
-                .attributeConfigs=${this._config.header_info}
+                .attributeConfigs=${this._config.header_info ?? []}
               ></dwf-current-weather-attributes>
               <div class="divider card-divider"></div>`
           : nothing}
@@ -777,13 +687,13 @@ export class DetailedWeatherForecast extends LitElement {
                       </div>
                     `
                   : nothing}
-                ${this._selectedDailyForecast && this._config.daily_info.length > 0
+                ${this._selectedDailyForecast && (this._config.daily_info?.length ?? 0) > 0
                   ? html`<div class="divider card-divider"></div>
                       <dwf-forecast-attributes
                         .hass=${this._hass}
                         .weatherEntity=${this._state}
                         .forecastAttribute=${this._selectedDailyForecast}
-                        .attributeConfigs=${this._config.daily_info}
+                        .attributeConfigs=${this._config.daily_info ?? []}
                         .dailyForecast=${true}
                       ></dwf-forecast-attributes>`
                   : nothing}
@@ -811,13 +721,13 @@ export class DetailedWeatherForecast extends LitElement {
               </div>
             `
           : nothing}
-        ${this._selectedHourlyForecast && this._config.hourly_info.length > 0
+        ${this._selectedHourlyForecast && (this._config.hourly_info?.length ?? 0) > 0
           ? html`<div class="divider card-divider"></div>
               <dwf-forecast-attributes
                 .hass=${this._hass}
                 .weatherEntity=${this._state}
                 .forecastAttribute=${this._selectedHourlyForecast}
-                .attributeConfigs=${this._config.hourly_info}
+                .attributeConfigs=${this._config.hourly_info ?? []}
               ></dwf-forecast-attributes>`
           : nothing}
       </ha-card>
@@ -893,9 +803,22 @@ export class DetailedWeatherForecast extends LitElement {
 
   private _getDrawParams() {
     if (!this._state) return null;
+
+    let timeOfDay = this._getTimeOfDay();
+    let condition = this._config.fixed_condition || this._state.state;
+
+    if (this._config?.use_night_header_backgrounds === false) {
+      if (timeOfDay.type !== 'day') {
+        timeOfDay = { type: 'day', progress: 0.5 };
+      }
+      if (condition === 'clear-night') {
+        condition = 'sunny';
+      }
+    }
+
     return {
-      condition: this._config.fixed_condition || this._state.state,
-      timeOfDay: this._getTimeOfDay(),
+      condition,
+      timeOfDay,
       cloudCover: this._getCloudCover(),
       moonPhase: this._moonPhaseState?.state,
     };
@@ -1060,8 +983,8 @@ export class DetailedWeatherForecast extends LitElement {
     return (
       this._config.hourly_extra_config?.attribute === SOLAR_FORECAST_ATTRIBUTE ||
       this._config.daily_extra_config?.attribute === SOLAR_FORECAST_ATTRIBUTE ||
-      this._config.hourly_info.some((info) => info.attribute === SOLAR_FORECAST_ATTRIBUTE) ||
-      this._config.daily_info.some((info) => info.attribute === SOLAR_FORECAST_ATTRIBUTE)
+      (this._config.hourly_info ?? []).some((info) => info.attribute === SOLAR_FORECAST_ATTRIBUTE) ||
+      (this._config.daily_info ?? []).some((info) => info.attribute === SOLAR_FORECAST_ATTRIBUTE)
     );
   }
 
@@ -1501,9 +1424,9 @@ export class DetailedWeatherForecast extends LitElement {
   }
 
   private _updateGap() {
-    const container = this.shadowRoot.querySelector('ha-card') as HTMLElement | null;
-    const daily = this.shadowRoot.querySelector('.forecast.daily') as HTMLElement | null;
-    const hourly = this.shadowRoot.querySelector('.forecast.hourly') as HTMLElement | null;
+    const container = this.shadowRoot?.querySelector('ha-card') as HTMLElement | null;
+    const daily = this.shadowRoot?.querySelector('.forecast.daily') as HTMLElement | null;
+    const hourly = this.shadowRoot?.querySelector('.forecast.hourly') as HTMLElement | null;
     if (!container || (!daily && !hourly)) {
       return;
     }
@@ -1633,42 +1556,6 @@ export class DetailedWeatherForecast extends LitElement {
 
   private _handleDailyShowAttributes(e: CustomEvent<ForecastAttribute | null>) {
     this._selectedDailyForecast = e.detail ?? undefined;
-  }
-
-  private _handleCompactHeaderTemperatureAction(ev: CustomEvent<{ action: string }>) {
-    const temperatureActionEntity = this._config?.header_temperature?.entity || this._entity;
-    const actionType = ev.detail.action;
-    const actionConfig =
-      actionType === 'hold'
-        ? this._config?.header_temperature?.hold_action
-        : actionType === 'double_tap'
-          ? this._config?.header_temperature?.double_tap_action
-          : this._config?.header_temperature?.tap_action;
-
-    executeAction(this, this._hass!, actionConfig, temperatureActionEntity, actionType);
-  }
-
-  private _handleConditionAction(actionType: string) {
-    const actionConfig =
-      actionType === 'hold'
-        ? this._config?.header_condition?.hold_action
-        : actionType === 'double_tap'
-          ? this._config?.header_condition?.double_tap_action
-          : this._config?.header_condition?.tap_action;
-
-    if (actionConfig) {
-      executeAction(this, this._hass!, actionConfig, this._entity, actionType);
-    } else if (actionType === 'tap' && this._config?.header_info?.length > 0) {
-      this._showAttributes = !this._showAttributes;
-    }
-  }
-
-  private _handleCompactHeaderConditionAction(ev: CustomEvent<{ action: string }>) {
-    this._handleConditionAction(ev.detail.action);
-  }
-
-  private _handleHeaderChipAction(actionConfig?: ActionConfig, entity?: string, action: string = 'tap') {
-    executeAction(this, this._hass!, actionConfig, entity || this._entity, action);
   }
 }
 
