@@ -166,8 +166,8 @@ export class DetailedWeatherForecast extends LitElement {
       icon_map: normalizedIconMap,
       daily_min_gap: normalizedDailyMinGap,
       hourly_min_gap: normalizedHourlyMinGap,
-      hourly_extra_config: config.hourly_extra_config,
-      daily_extra_config: config.daily_extra_config,
+      hourly_extra_attribute: config.hourly_extra_attribute,
+      daily_extra_attribute: config.daily_extra_attribute,
       solar_forecast_entries: Array.isArray(config.solar_forecast_entries) ? config.solar_forecast_entries : undefined,
       masonry_rows: normalizedMasonryRows,
       header_info: config.header_info ?? [],
@@ -678,7 +678,7 @@ export class DetailedWeatherForecast extends LitElement {
                             .weatherEntity=${this._state}
                             .forecast=${dailyForecast}
                             .precipitationUnit=${this._state.attributes.precipitation_unit}
-                            .extraConfig=${this._config.daily_extra_config}
+                            .extraConfig=${this._config.daily_extra_attribute}
                             .iconMap=${this._config.icon_map}
                             @dwf-daily-list-item-selected=${this._handleDailySelected}
                             @dwf-daily-list-item-show-attributes=${this._handleDailyShowAttributes}
@@ -709,7 +709,7 @@ export class DetailedWeatherForecast extends LitElement {
                             .showSunTimes=${showSunTimes}
                             .sunCoordinates=${sunCoordinates}
                             .precipitationUnit=${this._state.attributes.precipitation_unit}
-                            .extraConfig=${this._config.hourly_extra_config}
+                            .extraConfig=${this._config.hourly_extra_attribute}
                             .iconMap=${this._config.icon_map}
                             @dwf-hourly-scrolled-to-new-day=${this._handleHourlyNewDay}
                             @dwf-hourly-list-item-selected=${this._handleHourlySelected}
@@ -981,8 +981,8 @@ export class DetailedWeatherForecast extends LitElement {
       return false;
     }
     return (
-      this._config.hourly_extra_config?.attribute === SOLAR_FORECAST_ATTRIBUTE ||
-      this._config.daily_extra_config?.attribute === SOLAR_FORECAST_ATTRIBUTE ||
+      this._config.hourly_extra_attribute?.attribute === SOLAR_FORECAST_ATTRIBUTE ||
+      this._config.daily_extra_attribute?.attribute === SOLAR_FORECAST_ATTRIBUTE ||
       (this._config.hourly_info ?? []).some((info) => info.attribute === SOLAR_FORECAST_ATTRIBUTE) ||
       (this._config.daily_info ?? []).some((info) => info.attribute === SOLAR_FORECAST_ATTRIBUTE)
     );

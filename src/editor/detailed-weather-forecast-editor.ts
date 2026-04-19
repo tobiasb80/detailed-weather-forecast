@@ -356,7 +356,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
               </div>
             </div>
 
-            ${this._renderExtraAttributeItem(this._config.daily_extra_config, 'daily_extra')}
+            ${this._renderExtraAttributeItem(this._config.daily_extra_attribute, 'daily_extra')}
             ${this._renderExpander(
               'daily-info',
               localize('editor.section.daily_forecast_info', '', ''),
@@ -412,7 +412,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
               </div>
             </div>
 
-            ${this._renderExtraAttributeItem(this._config.hourly_extra_config, 'hourly_extra')}
+            ${this._renderExtraAttributeItem(this._config.hourly_extra_attribute, 'hourly_extra')}
             ${this._renderExpander(
               'hourly-info',
               localize('editor.section.hourly_forecast_info', '', ''),
@@ -691,8 +691,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           : localize('editor.main.daily_extra_attribute', '', '');
       const config =
         type === 'hourly_extra'
-          ? this._config.hourly_extra_config || { attribute: '' }
-          : this._config.daily_extra_config || { attribute: '' };
+          ? this._config.hourly_extra_attribute || { attribute: '' }
+          : this._config.daily_extra_attribute || { attribute: '' };
 
       editorTemplate = html`
         <extra-attribute-editor
@@ -845,13 +845,13 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
   }
 
   private _deleteExtraAttribute(type: 'hourly_extra' | 'daily_extra') {
-    const field = type === 'hourly_extra' ? 'hourly_extra_config' : 'daily_extra_config';
+    const field = type === 'hourly_extra' ? 'hourly_extra_attribute' : 'daily_extra_attribute';
     this._updateConfig({ [field]: undefined });
   }
 
   private _extraAttributeChanged(e: CustomEvent, type: 'hourly_extra' | 'daily_extra') {
     e.stopPropagation();
-    const field = type === 'hourly_extra' ? 'hourly_extra_config' : 'daily_extra_config';
+    const field = type === 'hourly_extra' ? 'hourly_extra_attribute' : 'daily_extra_attribute';
     this._updateConfig({ [field]: e.detail });
   }
 
@@ -1199,8 +1199,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     this._config?.hourly_info?.forEach((info) => {
       if (info.attribute) used.add(info.attribute);
     });
-    if (this._config?.hourly_extra_config?.attribute) {
-      used.add(this._config.hourly_extra_config.attribute);
+    if (this._config?.hourly_extra_attribute?.attribute) {
+      used.add(this._config.hourly_extra_attribute.attribute);
     }
     if (currentAttribute) {
       used.delete(currentAttribute);
@@ -1232,8 +1232,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     this._config?.daily_info?.forEach((info) => {
       if (info.attribute) used.add(info.attribute);
     });
-    if (this._config?.daily_extra_config?.attribute) {
-      used.add(this._config.daily_extra_config.attribute);
+    if (this._config?.daily_extra_attribute?.attribute) {
+      used.add(this._config.daily_extra_attribute.attribute);
     }
     if (currentAttribute) {
       used.delete(currentAttribute);

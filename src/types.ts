@@ -49,8 +49,8 @@ export interface DetailedWeatherForecastConfig extends LovelaceCardConfig {
   hourly_min_gap?: number;
   header_temperature?: HeaderTemperatureConfig;
   header_condition?: HeaderConditionConfig;
-  hourly_extra_config?: ExtraForecastAttributeConfig;
-  daily_extra_config?: ExtraForecastAttributeConfig;
+  hourly_extra_attribute?: ExtraForecastAttributeConfig;
+  daily_extra_attribute?: ExtraForecastAttributeConfig;
   solar_forecast_entries?: string[];
   masonry_rows?: number;
   header_info?: HeaderAttribute[];

@@ -313,7 +313,7 @@ export class DWFHourlyList extends LitElement {
     if (isDimmed) {
       classes.push('dimmed');
     }
-    const color = this.extraConfig?.color?.trim();
+    const color = this._resolveColor(this.extraConfig?.color?.trim());
     const style = color
       ? styleMap({
           color,
@@ -322,6 +322,20 @@ export class DWFHourlyList extends LitElement {
       : undefined;
 
     return html`<div class=${classes.join(' ')} style=${style}>${formatted.value}</div>`;
+  }
+
+  private _resolveColor(color?: string): string | undefined {
+    if (!color) return undefined;
+    if (
+      color.startsWith('#') ||
+      color.startsWith('var(') ||
+      color.startsWith('rgb') ||
+      color.startsWith('hsl') ||
+      color.includes(' ')
+    ) {
+      return color;
+    }
+    return `var(--${color}-color, ${color})`;
   }
 
   private _normalizeDimBelow(value?: number): number | undefined {
