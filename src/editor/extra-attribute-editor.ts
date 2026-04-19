@@ -110,6 +110,11 @@ export class ExtraAttributeEditor extends LitElement {
   private _formValueChanged(ev: CustomEvent): void {
     ev.stopPropagation();
     const newConfig = { ...this.config, ...ev.detail.value };
+
+    if (newConfig.unit === '') {
+      delete newConfig.unit;
+    }
+
     fireEvent(this, 'extra-attribute-config-changed', newConfig);
   }
 }

@@ -12,13 +12,13 @@
 
 ## Overview
 
-Detailed Weather Forecast is a Lovelace custom card for Home Assistant that combines a large weather header with interactive daily and hourly forecasts. The card displays the forecast from the selected `weather` entity, and adds visual context such as sunrise and sunset markers, precipitation values, and day or night specific artwork.
+Detailed Weather Forecast is a Lovelace custom card for Home Assistant that combines a large weather header with interactive daily and hourly forecasts. The card displays the forecast from the selected `weather` entity, and adds visual context such as sunrise and sunset markers, precipitation values, and day or night specific artwork or animations.
 
 This card is a further development of the [Weather Forecast Extended Card](https://github.com/Thyraz/weather-forecast-extended) and was also inspired by the [Weather Forecast Card](https://github.com/troinine/ha-weather-forecast-card). The card was primarily developed for my own dashboard, but can of course also be used by other users. The main requirement for this card was a compact view, which nevertheless gives you the opportunity to see all available information about the current weather and the weather forecast via interaction.
 
 ## Features
 
-- Header area that shows the current condition and temperature with day and night background artwork.
+- Header area that shows the current condition and temperature with either an animated background or day and night background artwork.
 - Daily and hourly forecast sections that can be shown together or independently.
 - Optional sunrise and sunset times embedded in the hourly forecast, using either the Home Assistant location or custom coordinates for sun calculations.
 - Support to display daily / hourly solar forecast.
@@ -49,93 +49,46 @@ entity: weather.home
 ### Extended example
 
 ```yaml
-type: custom:weather-forecast-extended-card
+type: custom:detailed-weather-forecast-card
+entity: weather.home
 show_header: true
+show_background: true
+compact_header_chips: true
 hourly_forecast: true
 daily_forecast: true
 use_night_header_backgrounds: true
-nowcast_always_show: false
-compact_header: false
+header_info:
+  - type: attribute
+    attribute: pressure
+  - type: entity
+    entity: sensor.precipitation_today
+daily_info:
+  - attribute: humidity
+hourly_info:
+  - attribute: cloud_coverage
+nowcast_always_show: true
+show_animation: true
 header_chips:
   - type: attribute
     attribute: humidity
-    tap_action:
-      action: more-info
-  - type: attribute
-    attribute: pressure
-    tap_action:
-      action: more-info
   - type: entity
-    entity: sensor.precipitation_today
-    tap_action:
-      action: more-info
+    entity: sensor.precipitation_rate
+show_sun_times: true
+sun_use_home_coordinates: false
+sun_latitude: "48.137"
+sun_longitude: "11.575"
+icon_map:
+  clear-night: wi:clear-night
+moon_phase_entity: sensor.moon_phase
+nowcast_entity: weather.nowcast
 header_temperature:
-  entity: sensor.outdoor_temperatur
+  entity: sensor.outdoor_temperature
   tap_action:
     action: more-info
-show_sun_times: true
-hourly_min_gap: '10'
-daily_min_gap: '10'
-nowcast_entity: weather.dwd_nowcast
-entity: weather.home
-daily_extra_config:
-  attribute: sun_duration
-  dim_below: 3600
-  color: '#ffdd00'
-  unit: h
-  divisor: 3600
-hourly_extra_config:
-  attribute: sun_duration
-  color: '#ffdd00'
-  dim_below: 600
-  unit: min
-  divisor: 60
-header_info:
-  - type: attribute
-    attribute: visibility
-    name: ''
-  - type: attribute
-    attribute: uv_index
-    name: ''
-  - type: attribute
-    attribute: wind_speed
-    name: ''
-daily_info:
-  - attribute: cloud_coverage
-    name: ''
-  - attribute: pressure
-    name: ''
-  - attribute: fog_probability
-    name: 'Fog probability'
-    icon: mdi:weather-fog
-  - attribute: visibility
-    name: ''
-  - attribute: uv_index
-    name: ''
-  - attribute: wind_speed
-    name: ''
-  - attribute: solar_forecast
-    name: ''
-    icon: mdi:solar-panel
-    unit: 'kWh '
-hourly_info:
-  - attribute: cloud_coverage
-    name: ''
-  - attribute: pressure
-    name: ''
-  - attribute: fog_probability
-    name: 'Fog probability'
-    icon: mdi:weather-fog
-  - attribute: visibility
-    name: ''
-  - attribute: uv_index
-    name: ''
-  - attribute: wind_speed
-    name: ''
-  - attribute: solar_forecast
-    name: ''
-    icon: mdi:solar-panel
-    unit: kWh
+daily_extra_attribute:
+  attribute: cloud_coverage
+hourly_extra_attribute:
+  attribute: visibility
 ```
 
 ## Configuration options
@@ -144,10 +97,10 @@ hourly_info:
 | ------------------------------ | ---------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `type`                         | string           | `custom:detailed-weather-forecast-card` | Lovelace card type identifier.                                                                                                                                                         |
 | `entity`                       | string           | required                                | Weather entity that supplies current conditions and forecast data.                                                                                                                     |
-| `header_temperature_entity`    | string           | current weather temperature             | Optional sensor to use for the header temperature. Must report a numeric temperature.                                                                                                  |
 | `nowcast_entity`               | string           | none                                    | Weather entity that supports `get_minute_forecast` and provides minute-level precipitation.                                                                                            |
 | `nowcast_always_show`          | boolean          | `false`                                 | When enabled, the nowcast chart stays visible even if no rain is predicted. Useful to keep the header layout consistent.                                                               |
 | `show_header`                  | boolean          | `true`                                  | Toggles hero header containing artwork, current temperature, and condition text.                                                                                                       |
+| `show_background`              | boolean          | `false`                                 | Toggles the background image in the header.                                                                                                                                            |
 | `hourly_forecast`              | boolean          | `true`                                  | Shows the hourly forecast. Requires the selected weather entity to provide hourly data.                                                                                                |
 | `daily_forecast`               | boolean          | `true`                                  | Shows the daily forecast.                                                                                                                                                              |
 | `daily_min_gap`                | number           | `30`                                    | Minimum gap in pixels between daily forecast items. Must be `≥ 10`.                                                                                                                    |
@@ -156,14 +109,16 @@ hourly_info:
 | `sun_use_home_coordinates`     | boolean          | `true`                                  | Uses Home Assistant's home location for sun calculations when `show_sun_times` is enabled. Set to `false` to provide manual coordinates.                                               |
 | `sun_latitude`                 | number \| string | Home Assistant latitude                 | Latitude used when `sun_use_home_coordinates` is `false`. Accepts decimal degrees as string or number.                                                                                 |
 | `sun_longitude`                | number \| string | Home Assistant longitude                | Longitude used when `sun_use_home_coordinates` is `false`. Accepts decimal degrees as string or number.                                                                                |
-| `compact_header`               | boolean          | `false`                                 | If this is true, a compact header view without a background image is displayed.                                                                                                        |
-| `use_night_header_backgrounds` | boolean          | `true`                                  | Switches the header artwork to night variants when the sun is down. Set to `false` to always use the day theme. This is only enabled if `compact_header` is `false`.                   |
+| `compact_header_chips`         | boolean          | `false`                                 | Uses a compact pill design for header chips.                                                                                                                                           |
+| `use_night_header_backgrounds` | boolean          | `true`                                  | Switches the header artwork to night variants when the sun is down. Set to `false` to always use the day theme.                                                                        |
+| `show_animation`               | boolean          | `false`                                 | Shows a weather animation in the header.                                                                                                                                               |
+| `moon_phase_entity`            | string           | none                                    | Optional sensor entity to display the current moon phase.                                                                                                                              |
 | `icon_map`                     | object           | none                                    | Optional overrides for forecast condition icons. Keys are weather conditions, values are Home Assistant icon names (including custom icon sets).                                       |
 | `header_temperature`           | object           | none                                    | Configuration for the header temperature pill including `entity`, `tap_action`, `hold_action` and `double_tap_action`.                                                                 |
 | `header_condition`             | object           | none                                    | Configuration for the header condition pill including `tap_action`, `hold_action` and `double_tap_action`.                                                                             |
-| `hourly_extra_config`          | object           | none                                    | Optional third text line under the hourly precipitation rows. Includes `attribute`, `unit`, `divisor`, `color`, and `dim_below`.                                                       |
-| `daily_extra_config`           | object           | none                                    | Optional third text line under the daily precipitation rows. Includes `attribute`, `unit`, `divisor`, `color`, and `dim_below`.                                                        |
-| `header_chips`                 | array            | `[]`                                    | Up to three chip definitions shown in the header. Each chip can display an entity attribute or template output and may include its own `icon` and `tap_action`.                        |
+| `hourly_extra_attribute`       | object           | none                                    | Optional third text line under the hourly precipitation rows. Includes `attribute`, `unit`, `divisor`, `color`, and `dim_below`.                                                       |
+| `daily_extra_attribute`        | object           | none                                    | Optional third text line under the daily precipitation rows. Includes `attribute`, `unit`, `divisor`, `color`, and `dim_below`.                                                        |
+| `header_chips`                 | array            | `[]`                                    | Up to three chip definitions shown in the header. Each chip can display an entity attribute or another entity's state and may include its own `icon` and `tap_action`.                 |
 | `header_info`                  | array            | `[]`                                    | A list of attribute objects to show in the expandable detail view for the current weather conditions.                                                                                  |
 | `daily_info`                   | array            | `[]`                                    | A list of attribute objects to show in the expandable detail view for each daily forecast item.                                                                                        |
 | `hourly_info`                  | array            | `[]`                                    | A list of attribute objects to show in the expandable detail view for each hourly forecast item.                                                                                       |
@@ -172,57 +127,64 @@ hourly_info:
 
 > Tip: The card editor prevents you from hiding every section at once, but in YAML you should also keep at least one of `show_header`, `daily_forecast`, or `hourly_forecast` enabled so the card has content to render.
 
-### Header chips
+### Header Chips & Expandable Info
 
-Header chips allow yout to display additional information, such as precipitation probability, feels-like temperature, or other entities. The editor lets you pick between **Attribute** and **Entity** mode for each slot.
+You can display additional weather details or sensor states in the header area using two different methods: **Header Chips** and **Header Info**.
+
+- **Header Chips (`header_chips`)**: Small, pill-shaped indicators that are **always visible** above the current temperature. You can configure up to three chips.
+- **Header Info (`header_info`)**: An expandable list of attributes that is **hidden by default**. It becomes visible only when a user clicks on the weather condition text in the header.
+  > **⚠️ Warning**: If you override the default tap action of the condition text (using `header_condition.tap_action`), the toggle to show or hide the `header_info` list will no longer work!
+
+Both options support two modes (`type`):
+- `attribute`: Displays an attribute from the configured weather entity. Accepts `attribute`, `name`, `icon`, `unit`, and `divisor`.
+- `entity`: Displays the state of any other Home Assistant entity. Accepts `entity`, `name`, and `icon`.
+
+In addition, `header_chips` support interaction options: `tap_action`, `hold_action`, and `double_tap_action`.
 
 ```yaml
-type: custom:detailed-weather-forecast-card
-entity: weather.home
 header_chips:
   - type: attribute
     attribute: humidity
-    tap_action:
-      action: more-info
-  - type: attribute
-    attribute: pressure
+    icon: mdi:water-percent
     tap_action:
       action: more-info
   - type: entity
-    entity: sensor.precipitation_today
-    tap_action:
-      action: more-info
+    entity: sensor.outdoor_temperature
+    name: 'Outside'
+header_info:
+  - type: attribute
+    attribute: visibility
+  - type: attribute
+    attribute: uv_index
+  - type: entity
+    entity: sensor.pollen_count
 ```
 
-- `attribute` chips expose an attribute from the configured weather entity. The editor provides a dropdown populated with the entity's attributes.
-- `template` chips are rendered by Home Assistant's template engine and can reference any entity.
-- Each chip accepts optional `icon` and `tap_action` (tap only).
+### Header Backgrounds
 
-### Detailed Information Attributes
+The card provides two different types of header backgrounds to visualize the current weather condition (requires `show_background: true`):
+- **Animation (`show_animation: true`)**: Displays a dynamic, animated SVG background (e.g., moving clouds, falling rain, or snow).
+- **Static Image (`show_animation: false`)**: Displays a beautiful, static landscape artwork that matches the current weather condition. If `use_night_header_backgrounds` is enabled, the artwork will automatically switch to a night-themed variant after sunset.
 
-The `header_info`, `daily_info`, and `hourly_info` options allow you to show more details in an expandable section. When a user clicks the condition text in the header, or a specific forecast item, a list of configured attributes is displayed. This is useful for showing data like cloud coverage, pressure, or UV index.
+### Forecast Detailed Information
 
-Each entry in these lists is an object that can contain an `attribute`, a `name` to override the default label, an `icon`, and a `unit`.
+The `daily_info` and `hourly_info` options allow you to show more details in an expandable section under each forecast item. When a user clicks on a specific daily or hourly forecast item, a list of configured attributes is displayed. This is useful for showing data like cloud coverage, pressure, or UV index.
+
+Each entry in these lists is an object that can contain an `attribute`, a `name` to override the default label, an `icon`, a `unit`, and a `divisor`.
 
 ```yaml
-type: custom:detailed-weather-forecast-card
-entity: weather.home
-header_info:
-  - attribute: visibility
-  - attribute: uv_index
-  - attribute: wind_speed
 daily_info:
   - attribute: cloud_coverage
-  - name: 'Fog'
-    attribute: fog_probability
-    icon: mdi:weather-fog
-  - attribute: solar_forecast
-    icon: mdi:solar-panel
-    unit: 'kWh'
+  - attribute: sun_duration
+    name: 'Sun'
+    unit: ' h'
+    divisor: 3600
 hourly_info:
   - attribute: pressure
-  - attribute: wind_gust_speed
-    unit: 'km/h'
+  - attribute: sun_duration
+    name: 'Sun'
+    unit: ' min'
+    divisor: 60
 ```
 
 ### Custom icons
@@ -230,8 +192,6 @@ hourly_info:
 Override the daily/hourly condition icons with any icon available in Home Assistant (including custom icon packs):
 
 ```yaml
-type: custom:detailed-weather-forecast-card
-entity: weather.home
 icon_map:
   sunny: mdi:weather-sunny
   rainy: phu:rainy
@@ -243,14 +203,13 @@ Supported keys: `clear-night`, `cloudy`, `fog`, `hail`, `lightning`, `lightning-
 
 ### Daily Extra Attribute
 
-Add a third text row beneath the temperature bar in the daily forecast. Choose any forecast attribute except the built-ins already shown (e.g., datetime, condition, temperature).
+Add a third text row beneath the temperature bar in the daily forecast. Choose any forecast attribute except the built-ins already shown (e.g., datetime, condition, temperature). You can use a `divisor` to convert values (e.g., converting seconds to hours).
 
 ```yaml
-type: custom:detailed-weather-forecast-card
-entity: weather.home
-daily_extra_config:
-  attribute: pressure
-  unit: ' hPa'
+daily_extra_attribute:
+  attribute: sun_duration
+  unit: ' h'
+  divisor: 3600
 ```
 
 ### Hourly Extra Attribute
@@ -258,12 +217,11 @@ daily_extra_config:
 Add a third text row beneath precipitation and probability in the hourly forecast. Choose any forecast attribute except the built-ins already shown (e.g., datetime, condition, precipitation, precipitation_probability, temperature).
 
 ```yaml
-type: custom:detailed-weather-forecast-card
-entity: weather.home
-hourly_extra_attribute: wind_gust_speed
-hourly_extra_attribute_unit: ' km/h'
-hourly_extra_attribute_color: '#30b3ff'
-hourly_extra_attribute_dim_below: 5
+hourly_extra_attribute:
+  attribute: sun_duration
+  name: 'Sun'
+  unit: ' min'
+  divisor: 60
 ```
 
 ### Solar forecast extra attribute

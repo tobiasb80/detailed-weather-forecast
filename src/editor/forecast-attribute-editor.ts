@@ -82,7 +82,19 @@ export class ForecastAttributeEditor extends LitElement {
 
   private _valueChanged(ev: CustomEvent): void {
     ev.stopPropagation();
-    fireEvent(this, 'forecast-info-config-changed', ev.detail.value);
+    const config = { ...ev.detail.value };
+
+    if (config.name === '') {
+      delete config.name;
+    }
+    if (config.icon === '') {
+      delete config.icon;
+    }
+    if (config.unit === '') {
+      delete config.unit;
+    }
+
+    fireEvent(this, 'forecast-info-config-changed', config);
   }
 
   private _defaultOptions: Array<{ value: string; label: string }> = [];

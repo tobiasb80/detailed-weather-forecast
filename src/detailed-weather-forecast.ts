@@ -355,13 +355,11 @@ export class DetailedWeatherForecast extends LitElement {
     return {
       type: 'custom:detailed-weather-forecast-card',
       entity: weatherEntity ?? 'weather.home',
-      header_attributes: [],
       show_header: true,
       show_background: true,
       compact_header_chips: false,
       hourly_forecast: true,
       daily_forecast: true,
-      orientation: 'vertical',
       use_night_header_backgrounds: true,
     };
   }

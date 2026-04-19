@@ -104,7 +104,7 @@ export interface HeaderWeatherAttribute {
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
   double_tap_action?: ActionConfig;
-  name: string;
+  name?: string;
   icon?: string;
   unit?: string;
   divisor?: number;
@@ -116,7 +116,7 @@ export interface HeaderEntity {
   tap_action?: ActionConfig;
   hold_action?: ActionConfig;
   double_tap_action?: ActionConfig;
-  name: string;
+  name?: string;
   icon?: string;
 }
 
@@ -130,7 +130,7 @@ export interface ExtraForecastAttributeConfig {
 
 export interface ForecastAttributeConfig {
   attribute: string;
-  name: string;
+  name?: string;
   icon?: string;
   unit?: string;
   divisor?: number;

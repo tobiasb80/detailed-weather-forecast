@@ -145,12 +145,10 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       show_header: config.show_header ?? true,
       hourly_forecast: config.hourly_forecast ?? true,
       daily_forecast: config.daily_forecast ?? true,
-      orientation: config.orientation ?? 'vertical',
       show_background: config.show_background ?? !(config.compact_header ?? false),
       compact_header_chips: config.compact_header_chips ?? false,
       show_animation: config.show_animation ?? true,
       header_chips: normalizedChips,
-      header_attributes: normalizedChips.filter((chip) => chip.type === 'attribute').map((chip) => chip.attribute),
     };
 
     this._refreshForecastOptions();
@@ -554,9 +552,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     if (type === 'header_chips' && newList.length >= 3) return;
 
     const newItem =
-      type === 'header_chips' || type === 'header_info'
-        ? { type: 'attribute', attribute: '', name: '' }
-        : { attribute: '', name: '' };
+      type === 'header_chips' || type === 'header_info' ? { type: 'attribute', attribute: '' } : { attribute: '' };
 
     newList.push(newItem as any);
     this._updateConfig({ [type]: newList } as Partial<DetailedWeatherForecastConfig>);
@@ -575,8 +571,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     while (newList.length <= index) {
       newList.push(
         (type === 'header_chips' || type === 'header_info'
-          ? { type: 'attribute', attribute: '', name: '' }
-          : { attribute: '', name: '' }) as any,
+          ? { type: 'attribute', attribute: '' }
+          : { attribute: '' }) as any,
       );
     }
 
@@ -1280,10 +1276,10 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           const icon = typeof chip.icon === 'string' ? chip.icon.trim() : undefined;
           const unit = typeof chip.unit === 'string' ? chip.unit.trim() : undefined;
           const divisor = chip.divisor;
+          const name = typeof chip.name === 'string' ? chip.name.trim() : undefined;
           const normalizedChip: any = {
             type: 'attribute',
             attribute,
-            name: chip.name ?? '',
           };
           if (chip.tap_action !== undefined) normalizedChip.tap_action = chip.tap_action;
           if (chip.hold_action !== undefined) normalizedChip.hold_action = chip.hold_action;
@@ -1291,6 +1287,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           if (icon !== undefined) normalizedChip.icon = icon;
           if (unit !== undefined) normalizedChip.unit = unit;
           if (divisor !== undefined) normalizedChip.divisor = divisor;
+          if (name) normalizedChip.name = name;
           normalized.push(normalizedChip);
           continue;
         }
@@ -1298,15 +1295,16 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
         if (chip.type === 'entity') {
           const entity = typeof chip.entity === 'string' ? chip.entity.trim() : '';
           const icon = typeof chip.icon === 'string' ? chip.icon.trim() : undefined;
+          const name = typeof chip.name === 'string' ? chip.name.trim() : undefined;
           const normalizedChip: any = {
             type: 'entity',
             entity,
-            name: chip.name ?? '',
           };
           if (chip.tap_action !== undefined) normalizedChip.tap_action = chip.tap_action;
           if (chip.hold_action !== undefined) normalizedChip.hold_action = chip.hold_action;
           if (chip.double_tap_action !== undefined) normalizedChip.double_tap_action = chip.double_tap_action;
           if (icon !== undefined) normalizedChip.icon = icon;
+          if (name) normalizedChip.name = name;
           normalized.push(normalizedChip);
         }
       }
@@ -1323,7 +1321,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
           .filter((attr) => attr.length > 0)
       : [];
 
-    return attributeEntries.map((attribute) => ({ type: 'attribute', attribute, name: attribute }));
+    return attributeEntries.map((attribute) => ({ type: 'attribute', attribute }));
   }
 
   private _updateConfig(changes: Partial<DetailedWeatherForecastConfig>) {
@@ -1343,10 +1341,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
     const normalizedChips = this._normalizeHeaderChips(updated);
     updated.header_chips = normalizedChips;
-    updated.header_attributes = normalizedChips
-      .filter((chip) => chip.type === 'attribute')
-      .map((chip) => chip.attribute)
-      .filter((attribute) => typeof attribute === 'string' && attribute.trim().length > 0);
 
     this._config = updated;
     fireEvent(this, 'config-changed', { config: updated });

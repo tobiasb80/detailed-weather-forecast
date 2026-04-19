@@ -184,6 +184,16 @@ export class HeaderInfoEditor extends LitElement {
       config.double_tap_action = undefined;
     }
 
+    if (config.name === '') {
+      delete config.name;
+    }
+    if (config.icon === '') {
+      delete config.icon;
+    }
+    if (config.unit === '') {
+      delete config.unit;
+    }
+
     this._type = config.type;
     fireEvent(this, 'header-info-config-changed', config);
   }
