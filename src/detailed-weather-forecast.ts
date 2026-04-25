@@ -693,6 +693,7 @@ export class DetailedWeatherForecast extends LitElement {
                         .forecastAttribute=${this._selectedDailyForecast}
                         .attributeConfigs=${this._config.daily_info ?? []}
                         .dailyForecast=${true}
+                        .config=${this._config}
                       ></dwf-forecast-attributes>`
                   : nothing}
                 ${showForecastDivider ? html`<div class="divider forecast-divider"></div>` : nothing}
@@ -726,6 +727,7 @@ export class DetailedWeatherForecast extends LitElement {
                 .weatherEntity=${this._state}
                 .forecastAttribute=${this._selectedHourlyForecast}
                 .attributeConfigs=${this._config.hourly_info ?? []}
+                .config=${this._config}
               ></dwf-forecast-attributes>`
           : nothing}
       </ha-card>
@@ -894,6 +896,7 @@ export class DetailedWeatherForecast extends LitElement {
           double_tap_action,
           icon: entityIcon,
           entity,
+          entity_picture: formatted.entity_picture,
         });
         return;
       }
@@ -950,20 +953,21 @@ export class DetailedWeatherForecast extends LitElement {
     display: string;
     missing: boolean;
     icon: string | undefined;
+    entity_picture: string | undefined;
   } {
     if (!this._state || !this._hass) {
-      return { entity, display: MISSING_ATTRIBUTE_TEXT, missing: true, icon: undefined };
+      return { entity, display: MISSING_ATTRIBUTE_TEXT, missing: true, icon: undefined, entity_picture: undefined };
     }
 
     const stateObj = this._hass.states[entity];
     if (!stateObj) {
-      return { entity, display: MISSING_ATTRIBUTE_TEXT, missing: true, icon: undefined };
+      return { entity, display: MISSING_ATTRIBUTE_TEXT, missing: true, icon: undefined, entity_picture: undefined };
     }
 
     const display = this._hass?.formatEntityState?.(stateObj);
 
     if (display === undefined) {
-      return { entity, display: MISSING_ATTRIBUTE_TEXT, missing: true, icon: undefined };
+      return { entity, display: MISSING_ATTRIBUTE_TEXT, missing: true, icon: undefined, entity_picture: undefined };
     }
 
     return {
@@ -971,6 +975,7 @@ export class DetailedWeatherForecast extends LitElement {
       display,
       missing: false,
       icon: stateObj.attributes.icon,
+      entity_picture: stateObj.attributes.entity_picture,
     };
   }
 

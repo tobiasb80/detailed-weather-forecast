@@ -296,6 +296,10 @@ export const getWeatherStateIcon = (
   dailyForecast?: boolean,
   iconMap?: WeatherIconMap,
 ): TemplateResult | undefined => {
+  if (item.entity_picture) {
+    return html`<img class="entity-picture-icon" src=${item.entity_picture} alt=${item.condition || ''} />`;
+  }
+
   const state = item.condition;
   const isPartlyCloudyNight = state === 'partlycloudy' && nightTime;
   const mapKey = isPartlyCloudyNight ? 'partlycloudy-night' : state;
@@ -346,6 +350,10 @@ export const getCurrentWeatherStateIcon = (
   nightTime?: boolean,
   iconMap?: WeatherIconMap,
 ): TemplateResult | undefined => {
+  if (entity.attributes.entity_picture) {
+    return html`<img class="entity-picture-icon" src=${entity.attributes.entity_picture} alt=${entity.state || ''} />`;
+  }
+
   const state = entity.state;
   const isPartlyCloudyNight = state === 'partlycloudy' && nightTime;
   const mapKey = isPartlyCloudyNight ? 'partlycloudy-night' : state;

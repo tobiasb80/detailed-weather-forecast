@@ -14,6 +14,7 @@ export type HeaderChipDisplay = {
   double_tap_action?: ActionConfig;
   icon?: string;
   entity?: string;
+  entity_picture?: string;
 };
 
 export interface HeaderTemperatureConfig {
@@ -62,6 +63,9 @@ export interface DetailedWeatherForecastConfig extends LovelaceCardConfig {
   fixed_condition?: string;
   fixed_time_of_day?: TimeOfDay['type'];
   moon_phase_entity?: string;
+  custom_condition_attribute?: string;
+  custom_translation_key_attribute?: string;
+  custom_translation_prefix?: string;
 }
 
 export const WEATHER_CONDITIONS = [
@@ -153,6 +157,7 @@ export interface ForecastAttribute {
   dew_point?: number;
   uv_index?: number;
   solar_forecast?: number;
+  entity_picture?: string;
 }
 
 export interface WeatherEntityAttributes extends HassEntityAttributeBase {

@@ -884,3 +884,19 @@ dwf-current-weather-attributes {
   transition: transform 0.35s ease;
   will-change: transform;
 }
+/* Entity Picture Icons equivalent to <ha-icon> styling */
+img.entity-picture-icon {
+  display: inline-flex;
+  width: var(--mdc-icon-size, 24px);
+  height: var(--mdc-icon-size, 24px);
+  border-radius: 50%;
+  object-fit: cover;
+  vertical-align: middle;
+}
+
+/* Let the image scale to 100% if placed within the large header/forecast icon containers */
+.weather-icon img.entity-picture-icon,
+.forecast-image-icon img.entity-picture-icon {
+  width: 100%;
+  height: 100%;
+}

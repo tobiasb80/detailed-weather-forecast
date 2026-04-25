@@ -65,7 +65,11 @@ export class DwfHeaderChips extends LitElement {
             : undefined}
         >
           ${hasChipAction ? html`<mwc-ripple></mwc-ripple>` : nothing}
-          ${chip.icon ? html`<ha-icon class="chip-icon" .icon=${chip.icon}></ha-icon>` : nothing}
+          ${chip.entity_picture
+            ? html`<img class="chip-icon entity-picture-icon" src=${chip.entity_picture} alt=${chip.label} />`
+            : chip.icon
+              ? html`<ha-icon class="chip-icon" .icon=${chip.icon}></ha-icon>`
+              : nothing}
           <span class="header-pill-text">${chip.display}</span>
         </div>
       `;

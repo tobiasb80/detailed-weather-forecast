@@ -42,6 +42,7 @@ export class DwfCurrentWeatherAttributes extends LitElement {
     let icon: string | undefined;
     let attribute: string | undefined;
     let name: string | undefined;
+    let entityPicture: string | undefined;
 
     if (attrConfig.type == 'entity') {
       // HeaderEntity
@@ -59,6 +60,7 @@ export class DwfCurrentWeatherAttributes extends LitElement {
       }
 
       icon = stateObj.attributes.icon;
+      entityPicture = stateObj.attributes.entity_picture;
       attribute = undefined;
       name = attrConfig.name || stateObj.attributes.friendly_name || attrConfig.entity;
     } else {
@@ -106,13 +108,15 @@ export class DwfCurrentWeatherAttributes extends LitElement {
           : undefined}
       >
         ${hasAnyAction ? html`<mwc-ripple></mwc-ripple>` : nothing}
-        <ha-attribute-icon
-          class="dwf-current-attribute-icon"
-          .hass=${this.hass}
-          .stateObj=${stateObj}
-          .attribute=${attribute}
-          .icon=${icon}
-        ></ha-attribute-icon>
+        ${entityPicture
+          ? html`<img class="dwf-current-attribute-icon entity-picture-icon" src=${entityPicture} alt=${name || ''} />`
+          : html`<ha-attribute-icon
+              class="dwf-current-attribute-icon"
+              .hass=${this.hass}
+              .stateObj=${stateObj}
+              .attribute=${attribute}
+              .icon=${icon}
+            ></ha-attribute-icon>`}
         <span class="dwf-current-attribute-name"> ${name} </span>
         <span class="dwf-current-attribute-value">${value}</span>
       </div>

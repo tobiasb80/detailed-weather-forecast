@@ -2,7 +2,7 @@ import { html, LitElement, nothing, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { formatDateWeekdayShort, formatTime } from '../date-time';
 import { localize } from '../localize/localize';
-import { ForecastAttribute, ForecastAttributeConfig, WeatherEntity } from '../types';
+import { DetailedWeatherForecastConfig, ForecastAttribute, ForecastAttributeConfig, WeatherEntity } from '../types';
 import { ExtendedHomeAssistant, formatForecastAttribute } from '../weather';
 
 @customElement('dwf-forecast-attributes')
@@ -12,6 +12,7 @@ export class DwfForecastAttributes extends LitElement {
   @property({ attribute: false }) forecastAttribute!: ForecastAttribute;
   @property({ attribute: false }) attributeConfigs: ForecastAttributeConfig[] = [];
   @property({ attribute: false }) dailyForecast = false;
+  @property({ attribute: false }) config?: DetailedWeatherForecastConfig;
 
   protected createRenderRoot() {
     return this;
@@ -33,9 +34,27 @@ export class DwfForecastAttributes extends LitElement {
 
     let headerCondition: string | undefined = undefined;
 
-    if (this.forecastAttribute['pictocode'] !== undefined) {
+    const customCondAttr = this.config?.custom_condition_attribute;
+    const customTransKeyAttr = this.config?.custom_translation_key_attribute;
+    const customTransPrefix = this.config?.custom_translation_prefix;
+
+    if (
+      customCondAttr &&
+      customTransKeyAttr &&
+      customTransPrefix &&
+      (this.forecastAttribute as any)[customCondAttr] !== undefined &&
+      (this.forecastAttribute as any)[customTransKeyAttr] !== undefined
+    ) {
+      const condValue = (this.forecastAttribute as any)[customCondAttr];
+      const transKey = (this.forecastAttribute as any)[customTransKeyAttr];
+      const translationPath = `${customTransPrefix}.${transKey}.${condValue}`;
+      headerCondition =
+        this.hass.localize(translationPath) ||
+        this.hass.formatEntityState?.({ ...this.weatherEntity, state: this.forecastAttribute.condition }) ||
+        this.forecastAttribute.condition;
+    } else if ((this.forecastAttribute as any)['pictocode'] !== undefined) {
       const key = this.dailyForecast ? 'card.pictocode_day' : 'card.pictocode_hour';
-      headerCondition = localize(`${key}.${this.forecastAttribute['pictocode']}`);
+      headerCondition = localize(`${key}.${(this.forecastAttribute as any)['pictocode']}`);
     } else {
       headerCondition =
         this.hass.formatEntityState?.({ ...this.weatherEntity, state: this.forecastAttribute.condition }) ||

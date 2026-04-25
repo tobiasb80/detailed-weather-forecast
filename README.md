@@ -75,8 +75,8 @@ header_chips:
     entity: sensor.precipitation_rate
 show_sun_times: true
 sun_use_home_coordinates: false
-sun_latitude: "48.137"
-sun_longitude: "11.575"
+sun_latitude: '48.137'
+sun_longitude: '11.575'
 icon_map:
   clear-night: wi:clear-night
 moon_phase_entity: sensor.moon_phase
@@ -136,6 +136,7 @@ You can display additional weather details or sensor states in the header area u
   > **⚠️ Warning**: If you override the default tap action of the condition text (using `header_condition.tap_action`), the toggle to show or hide the `header_info` list will no longer work!
 
 Both options support two modes (`type`):
+
 - `attribute`: Displays an attribute from the configured weather entity. Accepts `attribute`, `name`, `icon`, `unit`, and `divisor`.
 - `entity`: Displays the state of any other Home Assistant entity. Accepts `entity`, `name`, and `icon`.
 
@@ -163,6 +164,7 @@ header_info:
 ### Header Backgrounds
 
 The card provides two different types of header backgrounds to visualize the current weather condition (requires `show_background: true`):
+
 - **Animation (`show_animation: true`)**: Displays a dynamic, animated SVG background (e.g., moving clouds, falling rain, or snow).
 - **Static Image (`show_animation: false`)**: Displays a beautiful, static landscape artwork that matches the current weather condition. If `use_night_header_backgrounds` is enabled, the artwork will automatically switch to a night-themed variant after sunset.
 

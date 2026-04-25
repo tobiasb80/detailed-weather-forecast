@@ -103,7 +103,25 @@ export class DwfHeader extends LitElement {
       hasAction(this.config.header_condition?.hold_action) ||
       hasAction(this.config.header_condition?.double_tap_action);
 
-    if (this.weatherEntity.attributes['pictocode'] !== undefined) {
+    const customCondAttr = this.config.custom_condition_attribute;
+    const customTransKeyAttr = this.config.custom_translation_key_attribute;
+    const customTransPrefix = this.config.custom_translation_prefix;
+
+    if (
+      customCondAttr &&
+      customTransKeyAttr &&
+      customTransPrefix &&
+      this.weatherEntity.attributes[customCondAttr] !== undefined &&
+      this.weatherEntity.attributes[customTransKeyAttr] !== undefined
+    ) {
+      const condValue = this.weatherEntity.attributes[customCondAttr];
+      const transKey = this.weatherEntity.attributes[customTransKeyAttr];
+      const translationPath = `${customTransPrefix}.${transKey}.${condValue}`;
+      headerCondition =
+        this.hass?.localize(translationPath) ||
+        this.hass?.formatEntityState?.(this.weatherEntity) ||
+        this.weatherEntity.state;
+    } else if (this.weatherEntity.attributes['pictocode'] !== undefined) {
       headerCondition = localize(`card.pictocode_hour.${this.weatherEntity.attributes['pictocode']}`);
     } else {
       headerCondition = this.hass?.formatEntityState?.(this.weatherEntity) || this.weatherEntity.state;
