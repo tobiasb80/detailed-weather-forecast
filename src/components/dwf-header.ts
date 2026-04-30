@@ -121,8 +121,8 @@ export class DwfHeader extends LitElement {
         this.hass?.localize(translationPath) ||
         this.hass?.formatEntityState?.(this.weatherEntity) ||
         this.weatherEntity.state;
-    } else if (this.weatherEntity.attributes['pictocode'] !== undefined) {
-      headerCondition = localize(`card.pictocode_hour.${this.weatherEntity.attributes['pictocode']}`);
+    } else if (this.weatherEntity.attributes['pictocode_old'] !== undefined) {
+      headerCondition = localize(`card.pictocode_hour.${this.weatherEntity.attributes['pictocode_old']}`);
     } else {
       headerCondition = this.hass?.formatEntityState?.(this.weatherEntity) || this.weatherEntity.state;
     }

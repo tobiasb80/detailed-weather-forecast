@@ -47,7 +47,8 @@ type HaFormSelector =
   | { number: Record<number, never> }
   | { icon: Record<string, never> }
   | { ui_action: { default_action?: string; actions?: Array<'tap' | 'hold' | 'double_tap'> } }
-  | { select: { options: Array<{ value: string; label: string }>; custom_value?: boolean; multiple?: boolean } };
+  | { select: { options: Array<{ value: string; label: string }>; custom_value?: boolean; multiple?: boolean } }
+  | { ui_color: Record<string, never> };
 
 type HaFormSchema = {
   name: string;
@@ -59,6 +60,7 @@ type HaFormSchema = {
   disabled?: boolean;
   icon?: string;
   iconPath?: string;
+  default?: any;
 };
 
 type ToggleName = 'show_header' | 'hourly_forecast' | 'daily_forecast';
@@ -74,6 +76,79 @@ type ConfigEntryFragment = {
   entry_id: string;
   title?: string;
   domain?: string;
+};
+
+const DAY_COLORS = [
+  'day-gradient-start',
+  'day-gradient-end',
+  'sunset-gradient-start',
+  'sunset-gradient-end',
+  'sunrise-gradient-start',
+  'sunrise-gradient-end',
+  'partlycloudy-start',
+  'partlycloudy-end',
+  'cloudy-start',
+  'cloudy-end',
+  'fog-start',
+  'fog-end',
+  'rainy-start',
+  'rainy-end',
+  'exceptional-start',
+  'exceptional-end',
+  'snowy-start',
+  'snowy-end',
+];
+
+const NIGHT_COLORS = [
+  'night-gradient-start',
+  'night-gradient-end',
+  'partlycloudy-night-start',
+  'partlycloudy-night-end',
+  'cloudy-night-start',
+  'cloudy-night-end',
+  'fog-night-start',
+  'fog-night-end',
+  'rainy-night-start',
+  'rainy-night-end',
+  'exceptional-night-start',
+  'exceptional-night-end',
+  'snowy-night-start',
+  'snowy-night-end',
+];
+
+const DEFAULT_COLORS: Record<string, string> = {
+  'day-gradient-start': '#1a85d6',
+  'day-gradient-end': '#7ec5f0',
+  'sunset-gradient-start': '#110293',
+  'sunset-gradient-end': '#f82e2e',
+  'sunrise-gradient-start': '#066bb7',
+  'sunrise-gradient-end': '#ff6330',
+  'partlycloudy-start': '#5aaaf5',
+  'partlycloudy-end': '#b7d8f8',
+  'cloudy-start': '#788591',
+  'cloudy-end': '#b3bcc4',
+  'fog-start': '#959fa8',
+  'fog-end': '#c4cace',
+  'rainy-start': '#4b5560',
+  'rainy-end': '#6e7c8a',
+  'exceptional-start': '#121226',
+  'exceptional-end': '#34346e',
+  'snowy-start': '#9aa7b3',
+  'snowy-end': '#c8d3db',
+  'night-gradient-start': '#09102b',
+  'night-gradient-end': '#192060',
+  'partlycloudy-night-start': '#0a1835',
+  'partlycloudy-night-end': '#203a60',
+  'cloudy-night-start': '#23282e',
+  'cloudy-night-end': '#373e47',
+  'fog-night-start': '#2a2e33',
+  'fog-night-end': '#40464f',
+  'rainy-night-start': '#1b2026',
+  'rainy-night-end': '#2d353d',
+  'exceptional-night-start': '#080812',
+  'exceptional-night-end': '#1a1a40',
+  'snowy-night-start': '#2b343d',
+  'snowy-night-end': '#45505c',
 };
 
 const fireEvent = (node: HTMLElement, type: string, detail?: unknown) => {
@@ -173,6 +248,8 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
     const { general: generalSchema, header: headerSchema, chips: chipsSchema } = this._buildSchemas();
     const formData = this._config;
+    const showBackground = this._config.show_background !== false;
+    const showAnimation = this._config.show_animation !== false;
 
     return html`
       <ha-form
@@ -324,6 +401,22 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
               `,
               { nested: true },
             )}
+            ${showBackground && showAnimation
+              ? this._renderExpander(
+                  'colors',
+                  localize('editor.main.colors', '', ''),
+                  html`
+                    <ha-form
+                      .hass=${this.hass}
+                      .data=${{ ...DEFAULT_COLORS, ...(this._config.animation_background_colors ?? {}) }}
+                      .schema=${this._computeColorSchema()}
+                      .computeLabel=${this._computeLabel}
+                      @value-changed=${this._handleColorsValueChanged}
+                    ></ha-form>
+                  `,
+                  { nested: true },
+                )
+              : nothing}
           `,
         )}
       </div>
@@ -452,6 +545,44 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     }
 
     this._updateConfig(config);
+  }
+
+  private _computeColorSchema(): HaFormSchema[] {
+    const useNight = this._config?.use_night_header_backgrounds !== false;
+
+    const schema: HaFormSchema[] = DAY_COLORS.map((name) => ({
+      name,
+      selector: { ui_color: {} },
+      default: DEFAULT_COLORS[name],
+    }));
+
+    if (useNight) {
+      schema.push(
+        ...NIGHT_COLORS.map((name) => ({
+          name,
+          selector: { ui_color: {} },
+          default: DEFAULT_COLORS[name],
+        })),
+      );
+    }
+
+    return schema;
+  }
+
+  private _handleColorsValueChanged(event: CustomEvent<{ value: Record<string, string> }>) {
+    event.stopPropagation();
+    const colors = { ...event.detail.value };
+
+    for (const key in colors) {
+      const value = colors[key];
+      if (!value || (typeof value === 'string' && value.toLowerCase() === DEFAULT_COLORS[key]?.toLowerCase())) {
+        delete colors[key];
+      }
+    }
+
+    const updatedConfig: Partial<DetailedWeatherForecastConfig> = {};
+    updatedConfig.animation_background_colors = Object.keys(colors).length === 0 ? undefined : colors;
+    this._updateConfig(updatedConfig);
   }
 
   private _computeLabel = (schema: HaFormSchema) => {
@@ -1337,6 +1468,9 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
     if ('solar_forecast_entries' in changes && changes.solar_forecast_entries === undefined) {
       delete (updated as Partial<DetailedWeatherForecastConfig>).solar_forecast_entries;
+    }
+    if ('animation_background_colors' in changes && changes.animation_background_colors === undefined) {
+      delete (updated as Partial<DetailedWeatherForecastConfig>).animation_background_colors;
     }
 
     const normalizedChips = this._normalizeHeaderChips(updated);

@@ -66,6 +66,7 @@ export interface DetailedWeatherForecastConfig extends LovelaceCardConfig {
   custom_condition_attribute?: string;
   custom_translation_key_attribute?: string;
   custom_translation_prefix?: string;
+  animation_background_colors?: Record<string, string>;
 }
 
 export const WEATHER_CONDITIONS = [

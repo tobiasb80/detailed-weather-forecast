@@ -52,9 +52,9 @@ export class DwfForecastAttributes extends LitElement {
         this.hass.localize(translationPath) ||
         this.hass.formatEntityState?.({ ...this.weatherEntity, state: this.forecastAttribute.condition }) ||
         this.forecastAttribute.condition;
-    } else if ((this.forecastAttribute as any)['pictocode'] !== undefined) {
+    } else if ((this.forecastAttribute as any)['pictocode_old'] !== undefined) {
       const key = this.dailyForecast ? 'card.pictocode_day' : 'card.pictocode_hour';
-      headerCondition = localize(`${key}.${(this.forecastAttribute as any)['pictocode']}`);
+      headerCondition = localize(`${key}.${(this.forecastAttribute as any)['pictocode_old']}`);
     } else {
       headerCondition =
         this.hass.formatEntityState?.({ ...this.weatherEntity, state: this.forecastAttribute.condition }) ||

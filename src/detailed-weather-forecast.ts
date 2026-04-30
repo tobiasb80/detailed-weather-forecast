@@ -182,6 +182,7 @@ export class DetailedWeatherForecast extends LitElement {
     if (previousNowcastEntity !== defaults.nowcast_entity) {
       this._resetNowcastState();
     }
+
     this._entity = defaults.entity;
     // call set hass() to immediately adjust to a changed entity
     // while editing the entity in the card editor
@@ -562,6 +563,41 @@ export class DetailedWeatherForecast extends LitElement {
       return Object.keys(styles).length ? styleMap(styles) : nothing;
     })();
 
+    const customColors: Record<string, string> = {};
+    if (this._config?.animation_background_colors && typeof this._config.animation_background_colors === 'object') {
+      Object.entries(this._config.animation_background_colors).forEach(([key, value]) => {
+        if (value) {
+          const cssVar = key.startsWith('--') ? key : `--${key}`;
+          const colorVal = String(value).trim();
+          if (
+            colorVal.startsWith('#') ||
+            colorVal.startsWith('var(') ||
+            colorVal.startsWith('rgb') ||
+            colorVal.startsWith('hsl') ||
+            colorVal.includes(' ')
+          ) {
+            customColors[cssVar] = colorVal;
+          } else {
+            customColors[cssVar] = `var(--${colorVal}-color, ${colorVal})`;
+          }
+        }
+      });
+    }
+
+    const customColorStyles = (() => {
+      const cssVars = Object.entries(customColors)
+        .map(([key, value]) => `${key}: ${value};`)
+        .join(' ');
+      if (!cssVars) return nothing;
+      return html`
+        <style>
+          dwf-header, dwf-daily-list, dwf-hourly-list, dwf-nowcast, dwf-current-weather-attributes, dwf-forecast-attributes, dwf-header-chips {
+            ${cssVars}
+          }
+        </style>
+      `;
+    })();
+
     const cardStyle = (() => {
       const styles: Record<string, string> = { position: 'relative' };
       if (this._shouldApplyMasonryHeight()) {
@@ -570,6 +606,9 @@ export class DetailedWeatherForecast extends LitElement {
           styles['min-height'] = `${rowCount * 50}px`;
         }
       }
+
+      Object.assign(styles, customColors);
+
       return styleMap(styles);
     })();
 
@@ -634,7 +673,7 @@ export class DetailedWeatherForecast extends LitElement {
             -webkit-overflow-scrolling: touch;
           }
         </style>
-        ${!showHeader ? getAnimationTemplate() : nothing}
+        ${customColorStyles} ${!showHeader ? getAnimationTemplate() : nothing}
         ${showHeader
           ? html`
               <dwf-header

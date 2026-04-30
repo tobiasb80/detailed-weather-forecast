@@ -305,7 +305,7 @@ export const getWeatherStateIcon = (
   const mapKey = isPartlyCloudyNight ? 'partlycloudy-night' : state;
   const mappedIcon = iconMap?.[mapKey as keyof WeatherIconMap];
   const normalizedIcon = typeof mappedIcon === 'string' ? mappedIcon.trim() : '';
-  const pictocode = item['pictocode'];
+  const pictocode = item['pictocode_old'];
 
   if (pictocode) {
     let pictoCodeIcon;
@@ -359,7 +359,7 @@ export const getCurrentWeatherStateIcon = (
   const mapKey = isPartlyCloudyNight ? 'partlycloudy-night' : state;
   const mappedIcon = iconMap?.[mapKey as keyof WeatherIconMap];
   const normalizedIcon = typeof mappedIcon === 'string' ? mappedIcon.trim() : '';
-  const pictocode = entity.attributes['pictocode'];
+  const pictocode = entity.attributes['pictocode_old'];
 
   if (pictocode) {
     let pictoCodeIcon;
@@ -433,6 +433,7 @@ const supportsFeatureFromAttributes = (attributes: Record<string, any>, feature:
 const _formatAttributeValue = (
   hass: ExtendedHomeAssistant,
   weather: WeatherEntity,
+  sourceObj: Record<string, unknown>,
   attribute: string,
   rawValue: unknown,
   name?: string,
@@ -448,8 +449,13 @@ const _formatAttributeValue = (
 
   if (typeof rawValue === 'number') {
     if (attribute === 'wind_speed') {
-      const bearingValue = (weather.attributes as unknown as Record<string, unknown>)['wind_bearing'];
-      display = getWind(hass, weather, rawValue, typeof bearingValue === 'number' ? bearingValue : undefined);
+      const bearingValue = sourceObj['wind_bearing'];
+      display = getWind(
+        hass,
+        weather,
+        rawValue,
+        typeof bearingValue === 'number' || typeof bearingValue === 'string' ? bearingValue : undefined,
+      );
     } else if (attribute === 'wind_bearing') {
       display = getWindBearing(rawValue);
     } else if (divisor) {
@@ -512,7 +518,17 @@ export const formatWeatherAttribute = (
   }
 
   const rawValue = (weather.attributes as unknown as Record<string, unknown>)[attribute];
-  return _formatAttributeValue(hass, weather, attribute, rawValue, name, unit, icon, divisor);
+  return _formatAttributeValue(
+    hass,
+    weather,
+    weather.attributes as unknown as Record<string, unknown>,
+    attribute,
+    rawValue,
+    name,
+    unit,
+    icon,
+    divisor,
+  );
 };
 
 export const formatForecastAttribute = (
@@ -529,7 +545,17 @@ export const formatForecastAttribute = (
     return undefined;
   }
   const rawValue = (forecast as any)?.[attribute];
-  return _formatAttributeValue(hass, weather, attribute, rawValue, name, unit, icon, divisor);
+  return _formatAttributeValue(
+    hass,
+    weather,
+    forecast as unknown as Record<string, unknown>,
+    attribute,
+    rawValue,
+    name,
+    unit,
+    icon,
+    divisor,
+  );
 };
 
 export const formatWeatherAttributeName = (
