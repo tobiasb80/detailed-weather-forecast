@@ -1,14 +1,16 @@
 # Detailed Weather Forecast Card
 
-<img src="docs/img/detailed-weather-forecast.jpg" width="588">
+<img src="docs/img/detailed-weather-forecast.jpg" width="516">
 
-<img src="docs/img/detailed-weather-forecast-current-detail.jpg" width="942">
+<img src="docs/img/detailed-weather-forecast-current-detail.jpg" width="503">
 
-<img src="docs/img/detailed-weather-forecast-day-detail.jpg" width="942">
+<img src="docs/img/detailed-weather-forecast-day-detail.jpg" width="508">
 
-<img src="docs/img/detailed-weather-forecast-hour-detail.jpg" width="942">
+<img src="docs/img/detailed-weather-forecast-hour-detail.jpg" width="514">
 
-<img src="docs/img/detailed-weather-forecast-editor.jpg" width="968">
+<img src="docs/img/detailed-weather-forecast_simple.jpg" width="503">
+
+<img src="docs/img/detailed-weather-forecast-editor.jpg" width="1025">
 
 ## Overview
 
@@ -124,6 +126,7 @@ hourly_extra_attribute:
 | `hourly_info`                  | array            | `[]`                                    | A list of attribute objects to show in the expandable detail view for each hourly forecast item.                                                                                       |
 | `solar_forecast_entries`       | array            | all Energy solar forecasts              | Optional list of config entry IDs to include when `solar_forecast` is selected as an extra attribute. Leave empty to include none, or omit to include all Energy dashboard selections. |
 | `masonry_rows`                 | number           | none                                    | Masonry layout only: override the card height (1 row is handled as 50px by HA). Ignored in Sections view.                                                                              |
+| `animation_background_colors`  | object           | none                                    | Optional overrides for the background gradient colors (e.g. `day-gradient-start`, `night-gradient-end`).                                                                               |
 
 > Tip: The card editor prevents you from hiding every section at once, but in YAML you should also keep at least one of `show_header`, `daily_forecast`, or `hourly_forecast` enabled so the card has content to render.
 
