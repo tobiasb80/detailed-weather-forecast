@@ -47,7 +47,7 @@ export class DwfForecastAttributes extends LitElement {
     ) {
       const condValue = (this.forecastAttribute as any)[customCondAttr];
       const transKey = (this.forecastAttribute as any)[customTransKeyAttr];
-      const translationPath = `${customTransPrefix}.${transKey}.${condValue}`;
+      const translationPath = `${customTransPrefix}.${transKey}.state.${condValue}`;
       headerCondition =
         this.hass.localize(translationPath) ||
         this.hass.formatEntityState?.({ ...this.weatherEntity, state: this.forecastAttribute.condition }) ||

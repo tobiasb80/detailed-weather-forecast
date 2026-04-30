@@ -107,10 +107,6 @@ export class DwfHeader extends LitElement {
     const customTransKeyAttr = this.config.custom_translation_key_attribute;
     const customTransPrefix = this.config.custom_translation_prefix;
 
-    console.log('Custom condition attribute:', customCondAttr);
-    console.log('Custom translation key attribute:', customTransKeyAttr);
-    console.log('Custom translation prefix:', customTransPrefix);
-
     if (
       customCondAttr &&
       customTransKeyAttr &&
@@ -120,7 +116,7 @@ export class DwfHeader extends LitElement {
     ) {
       const condValue = this.weatherEntity.attributes[customCondAttr];
       const transKey = this.weatherEntity.attributes[customTransKeyAttr];
-      const translationPath = `${customTransPrefix}.${transKey}.${condValue}`;
+      const translationPath = `${customTransPrefix}.${transKey}.state.${condValue}`;
       console.log('Attempting to localize header condition with path:', translationPath);
       headerCondition =
         this.hass?.localize(translationPath) ||
