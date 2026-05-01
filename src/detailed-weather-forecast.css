@@ -690,6 +690,12 @@ ha-card {
   height: var(--icon-size);
 }
 
+.forecast-image-icon .entity-picture-icon {
+  width: var(--icon-size, 60px);
+  height: var(--icon-size, 60px);
+  object-fit: contain;
+}
+
 .forecast-image-icon ha-icon {
   --mdc-icon-size: var(--icon-size);
 }
