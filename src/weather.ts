@@ -293,7 +293,6 @@ export const getWeatherStateIcon = (
   item: ForecastAttribute,
   element: HTMLElement,
   nightTime?: boolean,
-  dailyForecast?: boolean,
   iconMap?: WeatherIconMap,
 ): TemplateResult | undefined => {
   if (item.entity_picture) {
@@ -305,21 +304,6 @@ export const getWeatherStateIcon = (
   const mapKey = isPartlyCloudyNight ? 'partlycloudy-night' : state;
   const mappedIcon = iconMap?.[mapKey as keyof WeatherIconMap];
   const normalizedIcon = typeof mappedIcon === 'string' ? mappedIcon.trim() : '';
-  const pictocode = item['pictocode_old'];
-
-  if (pictocode) {
-    let pictoCodeIcon;
-
-    if (dailyForecast) {
-      pictoCodeIcon = 'local:' + pictocode.toString().padStart(2, '0') + '_iday';
-    } else if (nightTime) {
-      pictoCodeIcon = 'local:' + pictocode.toString().padStart(2, '0') + '_night';
-    } else {
-      pictoCodeIcon = 'local:' + pictocode.toString().padStart(2, '0') + '_day';
-    }
-
-    return html`<ha-icon icon=${pictoCodeIcon}></ha-icon>`;
-  }
 
   if (normalizedIcon) {
     return html`<ha-icon icon=${normalizedIcon}></ha-icon>`;
@@ -359,19 +343,6 @@ export const getCurrentWeatherStateIcon = (
   const mapKey = isPartlyCloudyNight ? 'partlycloudy-night' : state;
   const mappedIcon = iconMap?.[mapKey as keyof WeatherIconMap];
   const normalizedIcon = typeof mappedIcon === 'string' ? mappedIcon.trim() : '';
-  const pictocode = entity.attributes['pictocode_old'];
-
-  if (pictocode) {
-    let pictoCodeIcon;
-
-    if (nightTime) {
-      pictoCodeIcon = 'local:' + pictocode.toString().padStart(2, '0') + '_night';
-    } else {
-      pictoCodeIcon = 'local:' + pictocode.toString().padStart(2, '0') + '_day';
-    }
-
-    return html`<ha-icon icon=${pictoCodeIcon}></ha-icon>`;
-  }
 
   if (normalizedIcon) {
     return html`<ha-icon icon=${normalizedIcon}></ha-icon>`;
@@ -591,32 +562,35 @@ export const getTimeOfDay = (latitude?: number, longitude?: number): TimeOfDay =
   const now = new Date();
 
   if (latitude !== undefined && longitude !== undefined) {
-    const times = SunCalc.getTimes(now, latitude, longitude);
+    const getTimes = SunCalc.getTimes || (SunCalc as any).default?.getTimes;
+    if (typeof getTimes === 'function') {
+      const times = getTimes(now, latitude, longitude);
 
-    if (times.sunrise && times.sunset) {
-      const currentTime = now.getTime();
-      const sunriseTime = times.sunrise.getTime();
-      const sunsetTime = times.sunset.getTime();
+      if (times.sunrise && times.sunset) {
+        const currentTime = now.getTime();
+        const sunriseTime = times.sunrise.getTime();
+        const sunsetTime = times.sunset.getTime();
 
-      // Time ranges with 30-minute transitions for sunrise and sunset
-      const sunriseStart = sunriseTime - 30 * 60 * 1000;
-      const sunriseEnd = sunriseTime + 30 * 60 * 1000;
-      const sunsetStart = sunsetTime - 30 * 60 * 1000;
-      const sunsetEnd = sunsetTime + 30 * 60 * 1000;
+        // Time ranges with 30-minute transitions for sunrise and sunset
+        const sunriseStart = sunriseTime - 30 * 60 * 1000;
+        const sunriseEnd = sunriseTime + 30 * 60 * 1000;
+        const sunsetStart = sunsetTime - 30 * 60 * 1000;
+        const sunsetEnd = sunsetTime + 30 * 60 * 1000;
 
-      if (currentTime >= sunriseStart && currentTime < sunriseEnd) {
-        return { type: 'sunrise', progress: (currentTime - sunriseStart) / (60 * 60 * 1000) };
+        if (currentTime >= sunriseStart && currentTime < sunriseEnd) {
+          return { type: 'sunrise', progress: (currentTime - sunriseStart) / (60 * 60 * 1000) };
+        }
+
+        if (currentTime >= sunriseEnd && currentTime < sunsetStart) {
+          return { type: 'day', progress: (currentTime - sunriseEnd) / (sunsetStart - sunriseEnd) };
+        }
+
+        if (currentTime >= sunsetStart && currentTime < sunsetEnd) {
+          return { type: 'sunset', progress: (currentTime - sunsetStart) / (60 * 60 * 1000) };
+        }
+
+        return { type: 'night', progress: 0 };
       }
-
-      if (currentTime >= sunriseEnd && currentTime < sunsetStart) {
-        return { type: 'day', progress: (currentTime - sunriseEnd) / (sunsetStart - sunriseEnd) };
-      }
-
-      if (currentTime >= sunsetStart && currentTime < sunsetEnd) {
-        return { type: 'sunset', progress: (currentTime - sunsetStart) / (60 * 60 * 1000) };
-      }
-
-      return { type: 'night', progress: 0 };
     }
   }
 

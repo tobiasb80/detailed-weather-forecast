@@ -411,7 +411,6 @@ ha-card {
 .forecast.daily {
   --min-gap: 30px;
   --icon-size: 60px;
-  --icon-container-width: 60px;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
@@ -421,8 +420,6 @@ ha-card {
   padding-top: 32px;
   --min-gap: 16px;
   --icon-size: 60px;
-  --icon-container-width: 60px;
-  --day-marker-width: 60px;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
@@ -470,34 +467,31 @@ ha-card {
 }
 
 .forecast.hourly .forecast-item {
-  width: var(--icon-container-width);
+  width: var(--icon-size);
   align-items: center;
   overflow: visible;
 }
 
 .forecast.hourly .day-marker {
-  --day-marker-translate-x: calc(
-    (var(--dynamic-gap, 20px) + var(--icon-container-width) - var(--day-marker-width)) / 2
-  );
+  --day-marker-translate-x: calc(var(--dynamic-gap, 20px) / 2);
   flex: 0 0 auto;
   align-self: start;
   position: sticky;
-  left: calc((((var(--day-marker-width) - var(--icon-container-width)) / 2) * -1) - var(--day-marker-translate-x));
+  left: calc(var(--day-marker-translate-x) * -1);
   transform: translateX(var(--day-marker-translate-x)) translateY(-100%);
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  font-weight: var(--ha-font-weight-bold, bold);
   color: white;
   background-color: var(--state-climate-cool-color);
   pointer-events: none;
   white-space: nowrap;
   z-index: 3;
   scroll-snap-align: none;
-  width: var(--day-marker-width);
-  margin-right: calc(var(--day-marker-width) * -1 - var(--dynamic-gap) / 2); /* Fallback if round() not available */
-  margin-right: calc(round(up, var(--day-marker-width) * -1 - var(--dynamic-gap) / 2, 1px));
+  width: var(--icon-size);
+  margin-right: calc(var(--icon-size) * -1 - var(--dynamic-gap) / 2); /* Fallback if round() not available */
+  margin-right: calc(round(up, var(--icon-size) * -1 - var(--dynamic-gap) / 2, 1px));
   margin-left: calc(var(--dynamic-gap) * -1 / 2);
 }
 
@@ -527,8 +521,10 @@ ha-card {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--icon-container-width);
-  margin: 0 auto;
+  min-width: var(--icon-size);
+  width: max-content;
+  max-width: none;
+  box-sizing: border-box;
   text-align: center;
   white-space: nowrap;
 }
@@ -577,14 +573,10 @@ ha-card {
   --precipitation-fill: 0%;
   --dwf-precipitation-indicator-color: var(--state-climate-cool-color);
   --dwf-precipitation-indicator-opacity: 0.2;
-  --dwf-precipitation-indicator-padding-inline: 8px;
-  --dwf-precipitation-indicator-padding-block: 0px;
   --dwf-precipitation-indicator-offset-top: 0px;
   --dwf-precipitation-indicator-offset-bottom: 0px;
   position: relative;
   display: inline-block;
-  padding-inline: var(--dwf-precipitation-indicator-padding-inline);
-  padding-block: var(--dwf-precipitation-indicator-padding-block);
   border-radius: var(--dwf-precipitation-indicator-radius, 4px);
   overflow: hidden;
   z-index: 0;
@@ -646,6 +638,7 @@ ha-card {
   display: grid;
   grid-auto-rows: max-content;
   align-content: start;
+  width: var(--icon-size);
 }
 
 /* Ensure the first two text rows don't overlap and size to their content */
@@ -674,9 +667,11 @@ ha-card {
 }
 .forecast.daily .forecast-item > .precipitation {
   grid-row: 6;
+  justify-self: center;
 }
 .forecast.daily .forecast-item > .precipitationprobability {
   grid-row: 7;
+  justify-self: center;
 }
 .forecast.daily .forecast-item > .daily-extra {
   grid-row: 8;
@@ -787,7 +782,6 @@ dwf-current-weather-attributes {
 
 .compact-header {
   --icon-size: 60px;
-  --icon-container-width: 60px;
   display: flex;
   flex-direction: column;
   color: var(--primary-text-color);
@@ -813,7 +807,7 @@ dwf-current-weather-attributes {
 .compact-header .weather-icon {
   display: flex;
   justify-content: center;
-  width: var(--icon-container-width);
+  width: var(--icon-size);
   position: relative;
   overflow: hidden;
 }

@@ -1,4 +1,4 @@
-import type { ActionConfig } from 'custom-card-helpers';
+import type { ActionConfig, HomeAssistant } from 'custom-card-helpers';
 import { hasAction } from 'custom-card-helpers';
 import type { ActionHandlerDetail } from 'custom-card-helpers/dist/types';
 import { css, html, LitElement, nothing, unsafeCSS } from 'lit';
@@ -14,6 +14,8 @@ export class DwfHeaderChips extends LitElement {
   `;
 
   @property({ type: Array }) public headerChips: HeaderChipDisplay[] = [];
+
+  @property({ attribute: false }) public hass?: HomeAssistant;
 
   private _handleAction(ev: CustomEvent<ActionHandlerDetail>, actionConfig?: ActionConfig, entity?: string) {
     this.dispatchEvent(
@@ -69,7 +71,13 @@ export class DwfHeaderChips extends LitElement {
             ? html`<img class="chip-icon entity-picture-icon" src=${chip.entity_picture} alt=${chip.label} />`
             : chip.icon
               ? html`<ha-icon class="chip-icon" .icon=${chip.icon}></ha-icon>`
-              : nothing}
+              : isEntity && this.hass && chip.entity && this.hass.states[chip.entity]
+                ? html`<ha-state-icon
+                    class="chip-icon"
+                    .hass=${this.hass}
+                    .stateObj=${this.hass.states[chip.entity]}
+                  ></ha-state-icon>`
+                : nothing}
           <span class="header-pill-text">${chip.display}</span>
         </div>
       `;

@@ -444,6 +444,18 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
                     @input=${this._handleSunInputChange}
                   />
                 </label>
+                <label class="coordinate-field">
+                  <span>${localize('editor.section.icon_size', '', '')}</span>
+                  <input
+                    type="number"
+                    name="daily_icon_size"
+                    min="20"
+                    step="1"
+                    placeholder=${localize('editor.section.default_60', '', '')}
+                    .value=${String((this._config as any).daily_icon_size ?? '')}
+                    @input=${this._handleSunInputChange}
+                  />
+                </label>
               </div>
             </div>
 
@@ -497,6 +509,18 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
                     step="1"
                     placeholder=${localize('editor.section.default_16', '', '')}
                     .value=${String(this._config.hourly_min_gap ?? '')}
+                    @input=${this._handleSunInputChange}
+                  />
+                </label>
+                <label class="coordinate-field">
+                  <span>${localize('editor.section.icon_size', '', '')}</span>
+                  <input
+                    type="number"
+                    name="hourly_icon_size"
+                    min="20"
+                    step="1"
+                    placeholder=${localize('editor.section.default_60', '', '')}
+                    .value=${String((this._config as any).hourly_icon_size ?? '')}
                     @input=${this._handleSunInputChange}
                   />
                 </label>

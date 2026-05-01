@@ -7,7 +7,6 @@ import { classMap } from 'lit/directives/class-map.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { actionHandler } from '../action-handler-directive';
 import * as customStyles from '../detailed-weather-forecast.css';
-import { localize } from '../localize/localize';
 import type { DetailedWeatherForecastConfig, WeatherEntity, HeaderChipDisplay } from '../types';
 import type { ExtendedHomeAssistant } from '../weather';
 import { getCurrentWeatherStateIcon, executeAction } from '../weather';
@@ -122,8 +121,6 @@ export class DwfHeader extends LitElement {
         this.hass?.localize(translationPath) ||
         this.hass?.formatEntityState?.(this.weatherEntity) ||
         this.weatherEntity.state;
-    } else if (this.weatherEntity.attributes['pictocode_old'] !== undefined) {
-      headerCondition = localize(`card.pictocode_hour.${this.weatherEntity.attributes['pictocode_old']}`);
     } else {
       headerCondition = this.hass?.formatEntityState?.(this.weatherEntity) || this.weatherEntity.state;
     }
@@ -131,6 +128,7 @@ export class DwfHeader extends LitElement {
     const chipsTemplate =
       compactChips && this.headerChipsDisplays.length > 0
         ? html`<dwf-header-chips
+            .hass=${this.hass}
             .headerChips=${this.headerChipsDisplays}
             @dwf-chip-click=${(e: CustomEvent) =>
               this._handleHeaderChipAction(e.detail.actionConfig, e.detail.entity, e.detail.action)}

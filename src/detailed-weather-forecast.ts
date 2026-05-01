@@ -166,6 +166,8 @@ export class DetailedWeatherForecast extends LitElement {
       icon_map: normalizedIconMap,
       daily_min_gap: normalizedDailyMinGap,
       hourly_min_gap: normalizedHourlyMinGap,
+      daily_icon_size: this._normalizeMinGapValue((config as any).daily_icon_size),
+      hourly_icon_size: this._normalizeMinGapValue((config as any).hourly_icon_size),
       hourly_extra_attribute: config.hourly_extra_attribute,
       daily_extra_attribute: config.daily_extra_attribute,
       solar_forecast_entries: Array.isArray(config.solar_forecast_entries) ? config.solar_forecast_entries : undefined,
@@ -549,6 +551,9 @@ export class DetailedWeatherForecast extends LitElement {
       if (this._config?.daily_min_gap !== undefined) {
         styles['--min-gap'] = `${this._config.daily_min_gap}px`;
       }
+      if ((this._config as any).daily_icon_size !== undefined) {
+        styles['--icon-size'] = `${(this._config as any).daily_icon_size}px`;
+      }
       return Object.keys(styles).length ? styleMap(styles) : nothing;
     })();
 
@@ -559,6 +564,9 @@ export class DetailedWeatherForecast extends LitElement {
       }
       if (this._config?.hourly_min_gap !== undefined) {
         styles['--min-gap'] = `${this._config.hourly_min_gap}px`;
+      }
+      if ((this._config as any).hourly_icon_size !== undefined) {
+        styles['--icon-size'] = `${(this._config as any).hourly_icon_size}px`;
       }
       return Object.keys(styles).length ? styleMap(styles) : nothing;
     })();
@@ -920,8 +928,8 @@ export class DetailedWeatherForecast extends LitElement {
         }
 
         const formatted = this._formatHeaderEntity(entity);
-        const tooltip = `${entity}: ${formatted.display}`;
-        const label = entity;
+        const tooltip = `${formatted.entity}: ${formatted.display}`;
+        const label = formatted.entity;
         const entityIcon = icon || formatted.icon;
 
         displays.push({
@@ -1449,7 +1457,12 @@ export class DetailedWeatherForecast extends LitElement {
     }
 
     const now = new Date();
-    const times = SunCalc.getTimes(now, coordinates.latitude, coordinates.longitude);
+    const getTimes = SunCalc.getTimes || (SunCalc as any).default?.getTimes;
+    if (typeof getTimes !== 'function') {
+      console.warn('SunCalc.getTimes is not available.');
+      return true;
+    }
+    const times = getTimes(now, coordinates.latitude, coordinates.longitude);
     const sunrise = times.sunrise?.getTime();
     const sunset = times.sunset?.getTime();
 
@@ -1483,7 +1496,7 @@ export class DetailedWeatherForecast extends LitElement {
         return undefined;
       }
       const styles = getComputedStyle(elem);
-      const itemWidth = parseInt(styles.getPropertyValue('--icon-container-width'));
+      const itemWidth = parseInt(styles.getPropertyValue('--icon-size'));
       const minGap = parseInt(styles.getPropertyValue('--min-gap'));
       if (Number.isNaN(itemWidth) || Number.isNaN(minGap)) {
         return undefined;

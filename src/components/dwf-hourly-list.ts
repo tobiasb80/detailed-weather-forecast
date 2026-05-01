@@ -208,7 +208,7 @@ export class DWFHourlyList extends LitElement {
         <div class="${dateClasses.join(' ')}">${dateLabel}</div>
         ${showAmPm ? html`<div class="ampm">${amPmLabel ?? ''}</div>` : ''}
         <div class="forecast-image-icon">
-          ${getWeatherStateIcon(item, this, this._shouldUseNightIcon(item, date), false, this.iconMap)}
+          ${getWeatherStateIcon(item, this, this._shouldUseNightIcon(item, date), this.iconMap)}
         </div>
         <div class="temp" style=${styleMap({ color: tempColor })}>${Math.round(item.temperature)}°</div>
         ${this._renderPrecipitationInfo(item, precipitationScale)} ${this._renderExtraAttribute(item)}
@@ -379,6 +379,12 @@ export class DWFHourlyList extends LitElement {
 
     const sunTimes: SunTimesByDay = {};
 
+    const getTimes = SunCalc.getTimes || (SunCalc as any).default?.getTimes;
+    if (typeof getTimes !== 'function') {
+      this._sunTimesByDay = {};
+      return;
+    }
+
     for (const item of this.forecast) {
       if (!item?.datetime) {
         continue;
@@ -395,7 +401,7 @@ export class DWFHourlyList extends LitElement {
       }
 
       const baseDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      let times = SunCalc.getTimes(baseDate, latitude, longitude);
+      let times = getTimes(baseDate, latitude, longitude);
       let sunrise = this._toTimestamp(times.sunrise);
       let sunset = this._toTimestamp(times.sunset);
       // Keep rendered day aligned with the calendar day of the forecast even if
@@ -404,7 +410,7 @@ export class DWFHourlyList extends LitElement {
       if (dayShift !== 0) {
         const shiftedDate = new Date(baseDate);
         shiftedDate.setDate(shiftedDate.getDate() + dayShift);
-        times = SunCalc.getTimes(shiftedDate, latitude, longitude);
+        times = getTimes(shiftedDate, latitude, longitude);
         sunrise = this._toTimestamp(times.sunrise);
         sunset = this._toTimestamp(times.sunset);
       }

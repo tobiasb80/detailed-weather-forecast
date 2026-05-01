@@ -68,7 +68,7 @@ export class DWFDailyList extends LitElement {
         <div class="day-of-month ${isSelected ? 'selected' : ''}">
           ${!newDay ? formatDateDayTwoDigit(date, this.hass.locale as any, this.hass.config as any) : ''}
         </div>
-        <div class="forecast-image-icon">${getWeatherStateIcon(item, this, false, true, this.iconMap)}</div>
+        <div class="forecast-image-icon">${getWeatherStateIcon(item, this, false, this.iconMap)}</div>
         <div class="temp" style=${styleMap({ color: tempColor })}>${Math.round(item.temperature)}°</div>
         <div class="templow" style=${tempLowColor ? styleMap({ color: tempLowColor }) : nothing}>
           ${this._hasValidValue(item.templow) ? html`${Math.round(item.templow!)}°` : '—'}

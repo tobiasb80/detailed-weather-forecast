@@ -1,7 +1,6 @@
 import { html, LitElement, nothing, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { formatDateWeekdayShort, formatTime } from '../date-time';
-import { localize } from '../localize/localize';
 import { DetailedWeatherForecastConfig, ForecastAttribute, ForecastAttributeConfig, WeatherEntity } from '../types';
 import { ExtendedHomeAssistant, formatForecastAttribute } from '../weather';
 
@@ -52,9 +51,6 @@ export class DwfForecastAttributes extends LitElement {
         this.hass.localize(translationPath) ||
         this.hass.formatEntityState?.({ ...this.weatherEntity, state: this.forecastAttribute.condition }) ||
         this.forecastAttribute.condition;
-    } else if ((this.forecastAttribute as any)['pictocode_old'] !== undefined) {
-      const key = this.dailyForecast ? 'card.pictocode_day' : 'card.pictocode_hour';
-      headerCondition = localize(`${key}.${(this.forecastAttribute as any)['pictocode_old']}`);
     } else {
       headerCondition =
         this.hass.formatEntityState?.({ ...this.weatherEntity, state: this.forecastAttribute.condition }) ||

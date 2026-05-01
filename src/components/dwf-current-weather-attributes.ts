@@ -110,13 +110,20 @@ export class DwfCurrentWeatherAttributes extends LitElement {
         ${hasAnyAction ? html`<mwc-ripple></mwc-ripple>` : nothing}
         ${entityPicture
           ? html`<img class="dwf-current-attribute-icon entity-picture-icon" src=${entityPicture} alt=${name || ''} />`
-          : html`<ha-attribute-icon
-              class="dwf-current-attribute-icon"
-              .hass=${this.hass}
-              .stateObj=${stateObj}
-              .attribute=${attribute}
-              .icon=${icon}
-            ></ha-attribute-icon>`}
+          : isEntity
+            ? html`<ha-state-icon
+                class="dwf-current-attribute-icon"
+                .hass=${this.hass}
+                .stateObj=${stateObj}
+                .icon=${icon}
+              ></ha-state-icon>`
+            : html`<ha-attribute-icon
+                class="dwf-current-attribute-icon"
+                .hass=${this.hass}
+                .stateObj=${stateObj}
+                .attribute=${attribute}
+                .icon=${icon}
+              ></ha-attribute-icon>`}
         <span class="dwf-current-attribute-name"> ${name} </span>
         <span class="dwf-current-attribute-value">${value}</span>
       </div>
