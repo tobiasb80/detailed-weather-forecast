@@ -166,8 +166,8 @@ export class DetailedWeatherForecast extends LitElement {
       icon_map: normalizedIconMap,
       daily_min_gap: normalizedDailyMinGap,
       hourly_min_gap: normalizedHourlyMinGap,
-      daily_icon_size: this._normalizeMinGapValue((config as any).daily_icon_size),
-      hourly_icon_size: this._normalizeMinGapValue((config as any).hourly_icon_size),
+      daily_icon_size: this._normalizeMinGapValue(config.daily_icon_size),
+      hourly_icon_size: this._normalizeMinGapValue(config.hourly_icon_size),
       hourly_extra_attribute: config.hourly_extra_attribute,
       daily_extra_attribute: config.daily_extra_attribute,
       solar_forecast_entries: Array.isArray(config.solar_forecast_entries) ? config.solar_forecast_entries : undefined,
@@ -551,8 +551,8 @@ export class DetailedWeatherForecast extends LitElement {
       if (this._config?.daily_min_gap !== undefined) {
         styles['--min-gap'] = `${this._config.daily_min_gap}px`;
       }
-      if ((this._config as any).daily_icon_size !== undefined) {
-        styles['--icon-size'] = `${(this._config as any).daily_icon_size}px`;
+      if (this._config?.daily_icon_size !== undefined) {
+        styles['--icon-size'] = `${this._config.daily_icon_size}px`;
       }
       return Object.keys(styles).length ? styleMap(styles) : nothing;
     })();
@@ -565,8 +565,8 @@ export class DetailedWeatherForecast extends LitElement {
       if (this._config?.hourly_min_gap !== undefined) {
         styles['--min-gap'] = `${this._config.hourly_min_gap}px`;
       }
-      if ((this._config as any).hourly_icon_size !== undefined) {
-        styles['--icon-size'] = `${(this._config as any).hourly_icon_size}px`;
+      if (this._config?.hourly_icon_size !== undefined) {
+        styles['--icon-size'] = `${this._config.hourly_icon_size}px`;
       }
       return Object.keys(styles).length ? styleMap(styles) : nothing;
     })();

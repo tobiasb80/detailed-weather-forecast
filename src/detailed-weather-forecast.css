@@ -894,9 +894,8 @@ img.entity-picture-icon {
   vertical-align: middle;
 }
 
-/* Let the image scale to 100% if placed within the large header/forecast icon containers */
-.weather-icon img.entity-picture-icon,
-.forecast-image-icon img.entity-picture-icon {
+/* Let the image scale to 100% if placed within the large header icon containers */
+.weather-icon img.entity-picture-icon {
   width: 100%;
   height: 100%;
 }

@@ -90,10 +90,8 @@
 
 .coordinate-field {
   display: flex;
-  flex: 1 1 120px;
   flex-direction: column;
   gap: 4px;
-  font-size: 14px;
 }
 
 .coordinate-field input {

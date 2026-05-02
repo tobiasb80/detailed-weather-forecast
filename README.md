@@ -107,6 +107,8 @@ hourly_extra_attribute:
 | `daily_forecast`               | boolean          | `true`                                  | Shows the daily forecast.                                                                                                                                                              |
 | `daily_min_gap`                | number           | `30`                                    | Minimum gap in pixels between daily forecast items. Must be `≥ 10`.                                                                                                                    |
 | `hourly_min_gap`               | number           | `16`                                    | Minimum gap in pixels between hourly forecast items. Must be `≥ 10`.                                                                                                                   |
+| `daily_icon_size`              | number           | `60`                                    | Size of the weather icons in the daily forecast in pixels. Must be `≥ 20`.                                                                                                             |
+| `hourly_icon_size`             | number           | `60`                                    | Size of the weather icons in the hourly forecast in pixels. Must be `≥ 20`.                                                                                                            |
 | `show_sun_times`               | boolean          | `false`                                 | Adds sunrise and sunset markers to the hourly forecast. Requires valid coordinates.                                                                                                    |
 | `sun_use_home_coordinates`     | boolean          | `true`                                  | Uses Home Assistant's home location for sun calculations when `show_sun_times` is enabled. Set to `false` to provide manual coordinates.                                               |
 | `sun_latitude`                 | number \| string | Home Assistant latitude                 | Latitude used when `sun_use_home_coordinates` is `false`. Accepts decimal degrees as string or number.                                                                                 |
@@ -206,6 +208,10 @@ icon_map:
 Supported keys: `clear-night`, `cloudy`, `fog`, `hail`, `lightning`, `lightning-rainy`, `partlycloudy`,
 `partlycloudy-night`, `pouring`, `rainy`, `snowy`, `snowy-rainy`, `sunny`, `windy`, `windy-variant`, `exceptional`.
 
+### Forecast Spacing & Icon Size
+
+You can control the horizontal spacing between the individual forecast items as well as the size of the weather icons. By default, the card will dynamically calculate the spacing to distribute the items evenly across the available width. If you prefer a fixed layout or want to adjust the icon sizes, you can use the `daily_min_gap`, `hourly_min_gap`, `daily_icon_size` and `hourly_icon_size` configuration options.
+
 ### Daily Extra Attribute
 
 Add a third text row beneath the temperature bar in the daily forecast. Choose any forecast attribute except the built-ins already shown (e.g., datetime, condition, temperature). You can use a `divisor` to convert values (e.g., converting seconds to hours).
@@ -213,6 +219,7 @@ Add a third text row beneath the temperature bar in the daily forecast. Choose a
 ```yaml
 daily_extra_attribute:
   attribute: sun_duration
+  name: 'Sun'
   unit: ' h'
   divisor: 3600
 ```

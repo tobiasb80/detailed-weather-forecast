@@ -48,6 +48,8 @@ export interface DetailedWeatherForecastConfig extends LovelaceCardConfig {
   use_night_header_backgrounds?: boolean;
   daily_min_gap?: number;
   hourly_min_gap?: number;
+  daily_icon_size?: number;
+  hourly_icon_size?: number;
   header_temperature?: HeaderTemperatureConfig;
   header_condition?: HeaderConditionConfig;
   hourly_extra_attribute?: ExtraForecastAttributeConfig;
