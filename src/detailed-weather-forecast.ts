@@ -657,25 +657,11 @@ export class DetailedWeatherForecast extends LitElement {
 
     const getAnimationTemplate = (slotName?: string) =>
       useAnimation
-        ? html`
-            <div
-              class="animation-container ${animationClass}"
-              slot=${slotName || nothing}
-              style="position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; border-radius: inherit;"
-            ></div>
-          `
+        ? html` <div class="animation-container ${animationClass}" slot=${slotName || nothing}></div> `
         : nothing;
 
     return html`
       <ha-card class="weather-card" style=${cardStyle}>
-        <style>
-          /* Fixes a bug on older iPads/iOS where flex center alignment cuts off the left side of overflowing content */
-          .forecast.daily,
-          .forecast.hourly {
-            justify-content: flex-start !important;
-            -webkit-overflow-scrolling: touch;
-          }
-        </style>
         ${customColorStyles} ${!showHeader ? getAnimationTemplate() : nothing}
         ${showHeader
           ? html`
