@@ -689,8 +689,12 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     return enabledCount <= 1 && this._isSectionEnabled(name, config);
   }
 
-  private _editListItem(type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info', index: number) {
+  private async _editListItem(type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info', index: number) {
     this._subElementEditorConfig = { type, index };
+    await this.updateComplete;
+    requestAnimationFrame(() => {
+      this.shadowRoot?.querySelector('.sub-element-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   private _deleteListItem(type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info', index: number) {
@@ -991,8 +995,12 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     `;
   }
 
-  private _editExtraAttribute(type: 'hourly_extra' | 'daily_extra') {
+  private async _editExtraAttribute(type: 'hourly_extra' | 'daily_extra') {
     this._subElementEditorConfig = { type };
+    await this.updateComplete;
+    requestAnimationFrame(() => {
+      this.shadowRoot?.querySelector('.sub-element-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   private _deleteExtraAttribute(type: 'hourly_extra' | 'daily_extra') {
