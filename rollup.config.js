@@ -5,7 +5,6 @@ import terser from '@rollup/plugin-terser';
 import serve from 'rollup-plugin-serve';
 import json from '@rollup/plugin-json';
 import { string } from 'rollup-plugin-string';
-import copy from 'rollup-plugin-copy';
 
 const dev = process.env.ROLLUP_WATCH;
 
@@ -26,9 +25,6 @@ const plugins = [
   json(),
   string({
     include: '**/*.css',
-  }),
-  copy({
-    targets: [{ src: 'src/img/*', dest: 'dist' }],
   }),
   dev && serve(serveopts),
   !dev && terser(),

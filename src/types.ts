@@ -61,7 +61,6 @@ export interface DetailedWeatherForecastConfig extends LovelaceCardConfig {
   hourly_info?: ForecastAttributeConfig[];
   show_background?: boolean;
   compact_header_chips?: boolean;
-  show_animation?: boolean;
   fixed_condition?: string;
   fixed_time_of_day?: TimeOfDay['type'];
   moon_phase_entity?: string;

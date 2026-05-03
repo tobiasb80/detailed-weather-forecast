@@ -30,7 +30,6 @@ import { AnimationManager } from './animations/animation-manager';
 import { enableMomentumScroll } from './utils/momentum-scroll';
 import type { ExtendedHomeAssistant } from './weather';
 import { formatWeatherAttribute, getSupportedForecastTypes, subscribeForecast, getTimeOfDay } from './weather';
-import { DEFAULT_WEATHER_IMAGE, WeatherImages } from './weather-images';
 
 // Styled console banner so your card is easy to spot in the browser console.
 // Stays visible in production — useful for version-mismatch debugging in HA.
@@ -175,9 +174,8 @@ export class DetailedWeatherForecast extends LitElement {
       header_info: config.header_info ?? [],
       daily_info: config.daily_info ?? [],
       hourly_info: config.hourly_info ?? [],
-      show_background: config.show_background ?? !(config.compact_header ?? false),
+      show_background: config.show_background ?? false,
       compact_header_chips: config.compact_header_chips ?? false,
-      show_animation: config.show_animation ?? true,
     };
 
     this._config = defaults;
@@ -489,7 +487,7 @@ export class DetailedWeatherForecast extends LitElement {
       // Hourly translation heights are handled inside dwf-hourly-list
     }
 
-    if (this._config?.show_animation !== false) {
+    if (this._config?.show_background) {
       const animationContainer = this.shadowRoot?.querySelector('.animation-container');
 
       if (animationContainer && this._animationManagerMounted !== animationContainer) {
@@ -628,11 +626,8 @@ export class DetailedWeatherForecast extends LitElement {
     const headerChips = this._computeHeaderChipDisplays();
     const useSnowNowcastFill = this._shouldUseSnowNowcastFill();
 
-    const useAnimation = this._config.show_animation !== false;
+    const useAnimation = Boolean(this._config.show_background);
     const headerStyles: Record<string, string> = {};
-    if (!useAnimation) {
-      headerStyles['background-image'] = `url(${this._getWeatherBgImage(this._state.state)})`;
-    }
 
     if (showInlineNowcast && !headerOnly) {
       headerStyles['--dwf-header-height'] = 'calc(4 * var(--row-height, 56px))';
@@ -1421,23 +1416,6 @@ export class DetailedWeatherForecast extends LitElement {
     }
 
     return numericValue;
-  }
-
-  private _getWeatherBgImage(state: string): string {
-    const variants = WeatherImages[state.replace(/-/g, '')];
-    const useNightBackgrounds = this._config?.use_night_header_backgrounds !== false;
-    const isDaytime = useNightBackgrounds ? this._isDaytimeNow() : true;
-    const fallback = useNightBackgrounds && !isDaytime ? DEFAULT_WEATHER_IMAGE.night : DEFAULT_WEATHER_IMAGE.day;
-
-    if (!variants) {
-      return fallback;
-    }
-
-    if (!useNightBackgrounds) {
-      return variants.day;
-    }
-
-    return isDaytime ? variants.day : variants.night;
   }
 
   private _shouldUseSnowNowcastFill(): boolean {

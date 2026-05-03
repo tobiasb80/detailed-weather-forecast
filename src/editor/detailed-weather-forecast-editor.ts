@@ -220,11 +220,10 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       show_header: config.show_header ?? true,
       hourly_forecast: config.hourly_forecast ?? true,
       daily_forecast: config.daily_forecast ?? true,
-      show_background: config.show_background ?? !(config.compact_header ?? false),
+      show_background: config.show_background ?? false,
       compact_header_chips: config.compact_header_chips ?? false,
-      show_animation: config.show_animation ?? true,
       header_chips: normalizedChips,
-    };
+    };    
 
     this._refreshForecastOptions();
     this._refreshSolarForecastOptions(true);
@@ -249,7 +248,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     const { general: generalSchema, header: headerSchema, chips: chipsSchema } = this._buildSchemas();
     const formData = this._config;
     const showBackground = this._config.show_background !== false;
-    const showAnimation = this._config.show_animation !== false;
 
     return html`
       <ha-form
@@ -401,7 +399,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
               `,
               { nested: true },
             )}
-            ${showBackground && showAnimation
+            ${showBackground
               ? this._renderExpander(
                   'colors',
                   localize('editor.main.colors', '', ''),
@@ -1257,7 +1255,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     const bgSchema: HaFormSchema[] = [{ name: 'show_background', selector: { boolean: {} } }];
 
     if (showBackground !== false) {
-      bgSchema.push({ name: 'show_animation', selector: { boolean: {} } });
       bgSchema.push({ name: 'use_night_header_backgrounds', selector: { boolean: {} } });
     }
 

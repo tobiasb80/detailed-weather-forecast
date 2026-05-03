@@ -3,8 +3,6 @@ import esbuild from 'rollup-plugin-esbuild';
 import serve from 'rollup-plugin-serve';
 import json from '@rollup/plugin-json';
 import { string } from 'rollup-plugin-string';
-import copy from 'rollup-plugin-copy';
-import fs from 'fs';
 
 const onwarn = (warning, warn) => {
   if (warning.code === 'THIS_IS_UNDEFINED' && warning.id?.includes('/node_modules/')) {
@@ -28,9 +26,6 @@ export default {
     json(),
     string({
       include: '**/*.css',
-    }),
-    copy({
-      targets: [{ src: 'src/img/*', dest: 'dist' }],
     }),
     serve({
       contentBase: './dist',

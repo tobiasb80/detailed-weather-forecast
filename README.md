@@ -6,13 +6,13 @@ A Lovelace weather forecast card for Home Assistant
 
 ## Overview
 
-Detailed Weather Forecast is a Lovelace custom weather forecast card for Home Assistant that combines a large weather header with interactive daily and hourly forecasts. The card displays the forecast from the selected `weather` entity, and adds visual context such as sunrise and sunset markers, precipitation values, and day or night specific artwork or animations.
+Detailed Weather Forecast is a Lovelace custom weather forecast card for Home Assistant that combines a large weather header with interactive daily and hourly forecasts. The card displays the forecast from the selected `weather` entity, and adds visual context such as sunrise and sunset markers, precipitation values, and day or night specific animations.
 
 This card is a further development of the [Weather Forecast Extended Card](https://github.com/Thyraz/weather-forecast-extended) and was also inspired by the [Weather Forecast Card](https://github.com/troinine/ha-weather-forecast-card). The main requirement for this card was a compact view, which nevertheless gives you the opportunity to see all available information about the current weather and the weather forecast via interaction.
 
 ## Features
 
-- Header area that shows the current condition and temperature with either an animated background or day and night background artwork.
+- Header area that shows the current condition and temperature with an animated background.
 - Synchronized daily and hourly forecasts with horizontal scrolling.
 - Dynamic color coding for temperatures to easily distinguish between different weather conditions.
 - Visual highlighting of precipitation amounts and probabilities.
@@ -66,7 +66,6 @@ daily_info:
 hourly_info:
   - attribute: cloud_coverage
 nowcast_always_show: true
-show_animation: true
 header_chips:
   - type: attribute
     attribute: humidity
@@ -98,8 +97,8 @@ hourly_extra_attribute:
 | `entity`                       | string           | required                                | Weather entity that supplies current conditions and forecast data.                                                                                                                     |
 | `nowcast_entity`               | string           | none                                    | Weather entity that supports `get_minute_forecast` and provides minute-level precipitation.                                                                                            |
 | `nowcast_always_show`          | boolean          | `false`                                 | When enabled, the nowcast chart stays visible even if no rain is predicted. Useful to keep the header layout consistent.                                                               |
-| `show_header`                  | boolean          | `true`                                  | Toggles hero header containing artwork, current temperature, and condition text.                                                                                                       |
-| `show_background`              | boolean          | `false`                                 | Toggles the background image in the header.                                                                                                                                            |
+| `show_header`                  | boolean          | `true`                                  | Toggles hero header containing the current temperature and condition text.                                                                                                             |
+| `show_background`              | boolean          | `false`                                 | Toggles the animated background in the header.                                                                                                                                         |
 | `hourly_forecast`              | boolean          | `true`                                  | Shows the hourly forecast. Requires the selected weather entity to provide hourly data.                                                                                                |
 | `daily_forecast`               | boolean          | `true`                                  | Shows the daily forecast.                                                                                                                                                              |
 | `daily_min_gap`                | number           | `30`                                    | Minimum gap in pixels between daily forecast items. Must be `≥ 10`.                                                                                                                    |
@@ -111,8 +110,7 @@ hourly_extra_attribute:
 | `sun_latitude`                 | number \| string | Home Assistant latitude                 | Latitude used when `sun_use_home_coordinates` is `false`. Accepts decimal degrees as string or number.                                                                                 |
 | `sun_longitude`                | number \| string | Home Assistant longitude                | Longitude used when `sun_use_home_coordinates` is `false`. Accepts decimal degrees as string or number.                                                                                |
 | `compact_header_chips`         | boolean          | `false`                                 | Uses a compact pill design for header chips.                                                                                                                                           |
-| `use_night_header_backgrounds` | boolean          | `true`                                  | Switches the header artwork to night variants when the sun is down. Set to `false` to always use the day theme.                                                                        |
-| `show_animation`               | boolean          | `false`                                 | Shows a weather animation in the header.                                                                                                                                               |
+| `use_night_header_backgrounds` | boolean          | `true`                                  | Switches the animated header background to night variants when the sun is down. Set to `false` to always use the day theme.                                                            |
 | `moon_phase_entity`            | string           | none                                    | Optional sensor entity to display the current moon phase.                                                                                                                              |
 | `icon_map`                     | object           | none                                    | Optional overrides for forecast condition icons. Keys are weather conditions, values are Home Assistant icon names (including custom icon sets).                                       |
 | `header_temperature`           | object           | none                                    | Configuration for the header temperature pill including `entity`, `tap_action`, `hold_action` and `double_tap_action`.                                                                 |
@@ -165,10 +163,7 @@ header_info:
 
 ### Header Backgrounds
 
-The card provides two different types of header backgrounds to visualize the current weather condition (requires `show_background: true`):
-
-- **Animation (`show_animation: true`)**: Displays a dynamic, animated SVG background (e.g., moving clouds, falling rain, or snow).
-- **Static Image (`show_animation: false`)**: Displays a beautiful, static landscape artwork that matches the current weather condition. If `use_night_header_backgrounds` is enabled, the artwork will automatically switch to a night-themed variant after sunset.
+The card provides an animated header background to visualize the current weather condition (requires `show_background: true`). If `use_night_header_backgrounds` is enabled, the animated background will automatically switch to a night-themed variant after sunset.
 
 ### Forecast Detailed Information
 
