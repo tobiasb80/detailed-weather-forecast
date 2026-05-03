@@ -223,7 +223,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       show_background: config.show_background ?? false,
       compact_header_chips: config.compact_header_chips ?? false,
       header_chips: normalizedChips,
-    };    
+    };
 
     this._refreshForecastOptions();
     this._refreshSolarForecastOptions(true);
