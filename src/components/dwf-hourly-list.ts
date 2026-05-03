@@ -217,13 +217,24 @@ export class DWFHourlyList extends LitElement {
   }
 
   private _getTemperatureColor(temperature: number): string {
-    if (temperature < 0) {
+    const isFahrenheit =
+      this.weatherEntity?.attributes?.temperature_unit === '°F' || this.hass?.config?.unit_system?.temperature === '°F';
+
+    const threshold0 = isFahrenheit ? 32 : 0;
+    const threshold10 = isFahrenheit ? 50 : 10;
+    const threshold20 = isFahrenheit ? 68 : 20;
+    const threshold30 = isFahrenheit ? 86 : 30;
+
+    if (temperature < threshold0) {
       return 'var(--blue-color, #2196f3)';
     }
-    if (temperature < 15) {
+    if (temperature < threshold10) {
+      return 'var(--light-blue-color, #03a9f4)';
+    }
+    if (temperature < threshold20) {
       return 'var(--green-color, #4caf50)';
     }
-    if (temperature < 25) {
+    if (temperature < threshold30) {
       return 'var(--orange-color, #ff9800)';
     }
     return 'var(--red-color, #f44336)';

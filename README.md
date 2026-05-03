@@ -1,32 +1,29 @@
 # Detailed Weather Forecast Card
 
-<img src="docs/img/detailed-weather-forecast.jpg" width="516">
+A Lovelace weather forecast card for Home Assistant
 
-<img src="docs/img/detailed-weather-forecast-current-detail.jpg" width="503">
-
-<img src="docs/img/detailed-weather-forecast-day-detail.jpg" width="508">
-
-<img src="docs/img/detailed-weather-forecast-hour-detail.jpg" width="514">
-
-<img src="docs/img/detailed-weather-forecast_simple.jpg" width="503">
-
-<img src="docs/img/detailed-weather-forecast-editor.jpg" width="1025">
+![Detailed Weather Forecast Card](https://github.com/tobiasb80/detailed-weather-forecast/blob/main/docs/img/detailed-weather-forecast.jpg?raw=true)
 
 ## Overview
 
-Detailed Weather Forecast is a Lovelace custom card for Home Assistant that combines a large weather header with interactive daily and hourly forecasts. The card displays the forecast from the selected `weather` entity, and adds visual context such as sunrise and sunset markers, precipitation values, and day or night specific artwork or animations.
+Detailed Weather Forecast is a Lovelace custom weather forecast card for Home Assistant that combines a large weather header with interactive daily and hourly forecasts. The card displays the forecast from the selected `weather` entity, and adds visual context such as sunrise and sunset markers, precipitation values, and day or night specific artwork or animations.
 
-This card is a further development of the [Weather Forecast Extended Card](https://github.com/Thyraz/weather-forecast-extended) and was also inspired by the [Weather Forecast Card](https://github.com/troinine/ha-weather-forecast-card). The card was primarily developed for my own dashboard, but can of course also be used by other users. The main requirement for this card was a compact view, which nevertheless gives you the opportunity to see all available information about the current weather and the weather forecast via interaction.
+This card is a further development of the [Weather Forecast Extended Card](https://github.com/Thyraz/weather-forecast-extended) and was also inspired by the [Weather Forecast Card](https://github.com/troinine/ha-weather-forecast-card). The main requirement for this card was a compact view, which nevertheless gives you the opportunity to see all available information about the current weather and the weather forecast via interaction.
 
 ## Features
 
 - Header area that shows the current condition and temperature with either an animated background or day and night background artwork.
-- Daily and hourly forecast sections that can be shown together or independently.
+- Synchronized daily and hourly forecasts with horizontal scrolling.
+- Dynamic color coding for temperatures to easily distinguish between different weather conditions.
+- Visual highlighting of precipitation amounts and probabilities.
+- Expandable detail views for the current weather, as well as daily and hourly forecast items.
+- Support to display a configurable extra attribute (e.g., wind speed, UV index) as a third row in the daily and hourly forecast.
 - Optional sunrise and sunset times embedded in the hourly forecast, using either the Home Assistant location or custom coordinates for sun calculations.
 - Support to display daily / hourly solar forecast.
 - Optional minute-level nowcast precipitation chart via `get_minute_forecast` actions (OpenWeatherMap, DWD nowcast).
 - Configurable header chips that can display weather entity attributes or other entities in the header.
 - Optional tap actions and icons on the header pills / chips.
+- Support for custom weather icons and an optional moon phase display.
 - Support for 12 or 24 hour time formats and localized date labels using the Home Assistant user settings.
 - UI card editor
 
