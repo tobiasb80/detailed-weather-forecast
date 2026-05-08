@@ -71,7 +71,6 @@ ha-card {
     min-height 0.3s ease;
 }
 
-
 .animation-container.night {
   background: linear-gradient(var(--night-gradient-start), var(--night-gradient-end));
 }

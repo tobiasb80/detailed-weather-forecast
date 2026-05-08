@@ -129,6 +129,7 @@ export interface HeaderEntity {
 
 export interface ExtraForecastAttributeConfig {
   attribute: string;
+  name?: string;
   unit?: string;
   divisor?: number;
   color?: string;

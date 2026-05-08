@@ -48,6 +48,7 @@ const computeSchema = memoizeOne(
         },
         optional: true,
       },
+      { name: 'name', selector: { text: {} }, optional: true },
       {
         name: 'unit',
         selector: { text: {} },
@@ -113,6 +114,12 @@ export class ExtraAttributeEditor extends LitElement {
 
     if (newConfig.unit === '') {
       delete newConfig.unit;
+    }
+    if (newConfig.name === '') {
+      delete newConfig.name;
+    }
+    if (newConfig.color === '') {
+      delete newConfig.color;
     }
 
     fireEvent(this, 'extra-attribute-config-changed', newConfig);

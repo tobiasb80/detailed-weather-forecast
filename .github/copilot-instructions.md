@@ -22,7 +22,7 @@ yarn lint
 - `src/editor/detailed-weather-forecast-editor.ts` — visual editor (`LovelaceCardEditor`)
 - `src/types.ts` — card config and type definitions
 - `src/localize/localize.ts` — localization helper
-- `src/localize/languages/en.json` and `src/localize/languages/nb.json` — translation files
+- `src/localize/languages/en.json` and `src/localize/languages/de.json` — translation files
 - `rollup.config.js` and `rollup.config.dev.js` — production and dev build config
 
 ## Architecture and patterns

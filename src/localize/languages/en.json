@@ -85,7 +85,7 @@
       "dim_values_smaller_than": "Dim values smaller than:",
       "no_threshold": "No threshold",
       "forecast_spacing_description": "Minimum distance between forecast items in pixels (10px or greater)",
-      "icon_size": "Icon size",
+      "icon_size": "Icon size in pixels (20px or greater)",
       "default_60": "Default 60",
       "default_30": "Default 30",
       "daily_forecast_info": "Daily Forecast Info",
