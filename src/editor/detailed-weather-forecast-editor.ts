@@ -689,6 +689,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
   private async _editListItem(type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info', index: number) {
     this._subElementEditorConfig = { type, index };
+    window.dispatchEvent(new CustomEvent('dwf-editor-focus-element', { detail: { type } }));
     await this.updateComplete;
     requestAnimationFrame(() => {
       this.shadowRoot?.querySelector('.sub-element-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -702,6 +703,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     const newList = [...(this._config[type] as any[])];
     newList.splice(index, 1);
     this._updateConfig({ [type]: newList } as Partial<DetailedWeatherForecastConfig>);
+    window.dispatchEvent(new CustomEvent('dwf-editor-focus-element', { detail: { type } }));
   }
 
   private _addListItem(type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info') {
@@ -995,6 +997,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
   private async _editExtraAttribute(type: 'hourly_extra' | 'daily_extra') {
     this._subElementEditorConfig = { type };
+    window.dispatchEvent(new CustomEvent('dwf-editor-focus-element', { detail: { type } }));
     await this.updateComplete;
     requestAnimationFrame(() => {
       this.shadowRoot?.querySelector('.sub-element-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1004,6 +1007,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
   private _deleteExtraAttribute(type: 'hourly_extra' | 'daily_extra') {
     const field = type === 'hourly_extra' ? 'hourly_extra_attribute' : 'daily_extra_attribute';
     this._updateConfig({ [field]: undefined });
+    window.dispatchEvent(new CustomEvent('dwf-editor-focus-element', { detail: { type } }));
   }
 
   private _extraAttributeChanged(e: CustomEvent, type: 'hourly_extra' | 'daily_extra') {
@@ -1063,6 +1067,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
     this._dragOriginalList = undefined; // Drop was successful, do not reset anymore
     this._updateConfig({ [type]: this._config![type] });
+    window.dispatchEvent(new CustomEvent('dwf-editor-focus-element', { detail: { type } }));
   }
 
   private _getIconMapValue(condition: WeatherCondition): string {

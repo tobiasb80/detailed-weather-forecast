@@ -93,6 +93,12 @@ const SOLAR_FORECAST_ATTRIBUTE = 'solar_forecast';
 const NOWCAST_SERVICE_NAME = 'get_minute_forecast';
 
 export class DetailedWeatherForecast extends LitElement {
+  // Static properties to persist UI state in the editor during config changes
+  private static _editorShowAttributes = false;
+  private static _editorDailySelected?: string; // datetime
+  private static _editorDailyShowAttributes?: string; // datetime
+  private static _editorHourlySelected?: string; // datetime
+
   // internal reactive states
   @state() private _config: DetailedWeatherForecastConfig;
   @state() private _entity: string;
@@ -109,9 +115,10 @@ export class DetailedWeatherForecast extends LitElement {
   @state() private _solarForecastByDay: Record<string, number> = {};
   @state() private _nowcastForecast: NowcastForecastItem[] = [];
   @state() private _nowcastHasRain = false;
-  @state() private _showAttributes = false;
+  @state() private _showAttributes = DetailedWeatherForecast._editorShowAttributes;
   @state() private _selectedHourlyForecast?: ForecastAttribute;
   @state() private _selectedDailyForecast?: ForecastAttribute;
+  @state() private _visuallySelectedDaily?: ForecastAttribute;
   @state() private _animationManagerMounted: Element | null = null;
 
   // private property
@@ -413,12 +420,33 @@ export class DetailedWeatherForecast extends LitElement {
     });
   }
 
+  private _handleEditorFocusElement = (ev: Event) => {
+    const type = (ev as CustomEvent).detail?.type;
+    if (type === 'header_info') {
+      this._showAttributes = true;
+      DetailedWeatherForecast._editorShowAttributes = true;
+    } else if (type === 'daily_info' || type === 'daily_extra') {
+      if (!this._selectedDailyForecast && this._forecastDailyEvent?.forecast?.length) {
+        this._selectedDailyForecast = this._forecastDailyEvent.forecast[0];
+        DetailedWeatherForecast._editorDailyShowAttributes = this._selectedDailyForecast.datetime;
+      }
+      this._visuallySelectedDaily = this._selectedDailyForecast;
+      DetailedWeatherForecast._editorDailySelected = this._visuallySelectedDaily?.datetime;
+    } else if (type === 'hourly_info' || type === 'hourly_extra') {
+      if (!this._selectedHourlyForecast && this._forecastHourlyEvent?.forecast?.length) {
+        this._selectedHourlyForecast = this._forecastHourlyEvent.forecast[0];
+        DetailedWeatherForecast._editorHourlySelected = this._selectedHourlyForecast.datetime;
+      }
+    }
+  };
+
   // Lit callbacks
   connectedCallback() {
     super.connectedCallback();
     if (this.hasUpdated && this._config && this._hass) {
       this._subscribeForecastEvents();
     }
+    window.addEventListener('dwf-editor-focus-element', this._handleEditorFocusElement);
   }
 
   disconnectedCallback() {
@@ -434,6 +462,7 @@ export class DetailedWeatherForecast extends LitElement {
 
     this._animationManager.destroy();
     this._animationManagerMounted = null;
+    window.removeEventListener('dwf-editor-focus-element', this._handleEditorFocusElement);
   }
 
   updated(changedProps: PropertyValues) {
@@ -441,6 +470,29 @@ export class DetailedWeatherForecast extends LitElement {
 
     const forecastHourlyChanged = changedProps.has('_forecastHourlyEvent');
     const forecastDailyChanged = changedProps.has('_forecastDailyEvent');
+
+    if (forecastDailyChanged && this._forecastDailyEvent?.forecast?.length) {
+      const forecast = this._forecastDailyEvent.forecast;
+      if (!this._visuallySelectedDaily) {
+        this._visuallySelectedDaily = DetailedWeatherForecast._editorDailySelected
+          ? forecast.find((f) => f.datetime === DetailedWeatherForecast._editorDailySelected) || forecast[0]
+          : forecast[0];
+      }
+      if (!this._selectedDailyForecast && DetailedWeatherForecast._editorDailyShowAttributes) {
+        this._selectedDailyForecast = forecast.find(
+          (f) => f.datetime === DetailedWeatherForecast._editorDailyShowAttributes,
+        );
+      }
+    }
+
+    if (forecastHourlyChanged && this._forecastHourlyEvent?.forecast?.length) {
+      const forecast = this._forecastHourlyEvent.forecast;
+      if (!this._selectedHourlyForecast && DetailedWeatherForecast._editorHourlySelected) {
+        this._selectedHourlyForecast = forecast.find(
+          (f) => f.datetime === DetailedWeatherForecast._editorHourlySelected,
+        );
+      }
+    }
 
     if (!this._config || !this._hass) {
       return;
@@ -678,6 +730,7 @@ export class DetailedWeatherForecast extends LitElement {
                 .headerStyles=${headerStyles}
                 @dwf-toggle-attributes=${() => {
                   this._showAttributes = !this._showAttributes;
+                  DetailedWeatherForecast._editorShowAttributes = this._showAttributes;
                 }}
               >
                 ${getAnimationTemplate('background')}
@@ -703,6 +756,8 @@ export class DetailedWeatherForecast extends LitElement {
                           <dwf-daily-list
                             .hass=${this._hass}
                             .weatherEntity=${this._state}
+                            .selectedForecast=${this._visuallySelectedDaily}
+                            .showForecastAttribute=${this._selectedDailyForecast}
                             .forecast=${dailyForecast}
                             .precipitationUnit=${this._state.attributes.precipitation_unit}
                             .extraConfig=${this._config.daily_extra_attribute}
@@ -733,6 +788,7 @@ export class DetailedWeatherForecast extends LitElement {
                           <dwf-hourly-list
                             .hass=${this._hass}
                             .weatherEntity=${this._state}
+                            .selectedItem=${this._selectedHourlyForecast}
                             .forecast=${hourlyForecast}
                             .showSunTimes=${showSunTimes}
                             .sunCoordinates=${sunCoordinates}
@@ -1526,6 +1582,9 @@ export class DetailedWeatherForecast extends LitElement {
 
   private _handleDailySelected(ev: CustomEvent<ForecastAttribute | null>) {
     const forecastItem = ev.detail;
+    this._visuallySelectedDaily = forecastItem ?? undefined;
+    DetailedWeatherForecast._editorDailySelected = this._visuallySelectedDaily?.datetime;
+
     if (!forecastItem || !this._forecastHourlyEvent?.forecast?.length) {
       return;
     }
@@ -1583,10 +1642,12 @@ export class DetailedWeatherForecast extends LitElement {
 
   private _handleHourlySelected(e: CustomEvent<ForecastAttribute | null>) {
     this._selectedHourlyForecast = e.detail ?? undefined;
+    DetailedWeatherForecast._editorHourlySelected = this._selectedHourlyForecast?.datetime;
   }
 
   private _handleDailyShowAttributes(e: CustomEvent<ForecastAttribute | null>) {
     this._selectedDailyForecast = e.detail ?? undefined;
+    DetailedWeatherForecast._editorDailyShowAttributes = this._selectedDailyForecast?.datetime;
   }
 }
 

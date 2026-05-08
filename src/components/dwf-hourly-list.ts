@@ -1,7 +1,9 @@
-import { LitElement, html, nothing, TemplateResult, PropertyValues } from 'lit';
+import type { HomeAssistant } from 'custom-card-helpers';
+import { html, LitElement, nothing, PropertyValues, TemplateResult } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
-import { customElement, property, state } from 'lit/decorators.js';
 import * as SunCalc from 'suncalc';
+import { formatDateWeekdayShort, formatDayPeriod, formatHourMinute, useAmPm } from '../date-time';
 import type {
   ExtraForecastAttributeConfig,
   ForecastAttribute,
@@ -11,9 +13,7 @@ import type {
   WeatherEntity,
   WeatherIconMap,
 } from '../types';
-import { formatDayPeriod, formatDateWeekdayShort, formatHourMinute, useAmPm } from '../date-time';
 import { formatForecastAttribute, getWeatherStateIcon } from '../weather';
-import type { HomeAssistant } from 'custom-card-helpers';
 
 const PRECIPITATION_DISPLAY_THRESHOLD = 0.3;
 const HOURLY_PRECIPITATION_MIN_SCALE = 1;
@@ -29,7 +29,7 @@ export class DWFHourlyList extends LitElement {
   @property({ attribute: false }) precipitationUnit?: string;
   @property({ attribute: false }) extraConfig?: ExtraForecastAttributeConfig;
   @property({ attribute: false }) iconMap?: WeatherIconMap;
-  @state() private selectedItem?: ForecastAttribute;
+  @property({ attribute: false }) selectedItem?: ForecastAttribute;
   private _sunTimesByDay: SunTimesByDay = {};
   private _currentDayKey?: string;
   private _boundHandleScroll = this._handleScroll.bind(this);
@@ -133,10 +133,8 @@ export class DWFHourlyList extends LitElement {
     let detail: ForecastAttribute | null;
 
     if (this.selectedItem?.datetime === item.datetime) {
-      this.selectedItem = undefined;
       detail = null;
     } else {
-      this.selectedItem = item;
       detail = item;
     }
 

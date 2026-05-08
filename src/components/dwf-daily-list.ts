@@ -1,10 +1,10 @@
-import { LitElement, html, nothing, PropertyValues, TemplateResult } from 'lit';
-import { styleMap } from 'lit/directives/style-map.js';
-import { customElement, property, state } from 'lit/decorators.js';
-import { formatDateDayTwoDigit, formatDateWeekdayShort, isNewDay } from '../date-time';
-import { formatForecastAttribute, getWeatherStateIcon } from '../weather';
 import type { HomeAssistant } from 'custom-card-helpers';
+import { html, LitElement, nothing, TemplateResult } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+import { styleMap } from 'lit/directives/style-map.js';
+import { formatDateDayTwoDigit, formatDateWeekdayShort, isNewDay } from '../date-time';
 import type { ExtraForecastAttributeConfig, ForecastAttribute, WeatherEntity, WeatherIconMap } from '../types';
+import { formatForecastAttribute, getWeatherStateIcon } from '../weather';
 
 const PRECIPITATION_DISPLAY_THRESHOLD = 0.3;
 const DAILY_PRECIPITATION_MIN_SCALE = 4;
@@ -18,20 +18,12 @@ export class DWFDailyList extends LitElement {
   @property({ attribute: false }) precipitationUnit?: string;
   @property({ attribute: false }) extraConfig?: ExtraForecastAttributeConfig;
   @property({ attribute: false }) iconMap?: WeatherIconMap;
-  @state() private _selectedForecast?: ForecastAttribute;
-  @state() private _showForecastAttribute?: ForecastAttribute;
+  @property({ attribute: false }) selectedForecast?: ForecastAttribute;
+  @property({ attribute: false }) showForecastAttribute?: ForecastAttribute;
 
   protected createRenderRoot() {
     // Render in light DOM so parent CSS applies
     return this;
-  }
-
-  updated(changedProperties: PropertyValues) {
-    if (changedProperties.has('forecast')) {
-      if (this.forecast?.length && !this._selectedForecast) {
-        this._selectedForecast = this.forecast[0];
-      }
-    }
   }
 
   render() {
@@ -57,7 +49,7 @@ export class DWFDailyList extends LitElement {
     const tempColor = this._getTemperatureColor(item.temperature);
     const tempLowColor = this._hasValidValue(item.templow) ? this._getTemperatureColor(item.templow!) : undefined;
 
-    const isSelected = this._selectedForecast?.datetime === item.datetime;
+    const isSelected = this.selectedForecast?.datetime === item.datetime;
 
     return html`
       <div class="forecast-item" @click=${() => this._handleSelect(item)}>
@@ -83,17 +75,15 @@ export class DWFDailyList extends LitElement {
 
     let detailShow: ForecastAttribute | null = null;
 
-    if (this._showForecastAttribute && this._selectedForecast?.datetime !== item.datetime) {
+    if (this.showForecastAttribute && this.selectedForecast?.datetime !== item.datetime) {
       detailShow = item;
-    } else if (!this._showForecastAttribute && this._selectedForecast?.datetime === item.datetime) {
+    } else if (!this.showForecastAttribute && this.selectedForecast?.datetime === item.datetime) {
       detailShow = item;
     } else {
       detailShow = undefined;
     }
 
-    if (detailShow?.datetime !== this._showForecastAttribute?.datetime) {
-      this._showForecastAttribute = detailShow;
-
+    if (detailShow?.datetime !== this.showForecastAttribute?.datetime) {
       this.dispatchEvent(
         new CustomEvent('dwf-daily-list-item-show-attributes', {
           detail: detailShow,
@@ -104,9 +94,7 @@ export class DWFDailyList extends LitElement {
     }
 
     // Select the new item
-    if (item.datetime !== this._selectedForecast?.datetime) {
-      this._selectedForecast = item;
-
+    if (item.datetime !== this.selectedForecast?.datetime) {
       this.dispatchEvent(
         new CustomEvent('dwf-daily-list-item-selected', {
           detail: item,
@@ -130,7 +118,16 @@ export class DWFDailyList extends LitElement {
     });
 
     if (forecastItemIndex > -1) {
-      this._selectedForecast = this.forecast[forecastItemIndex];
+      const item = this.forecast[forecastItemIndex];
+      if (item.datetime !== this.selectedForecast?.datetime) {
+        this.dispatchEvent(
+          new CustomEvent('dwf-daily-list-item-selected', {
+            detail: item,
+            bubbles: true,
+            composed: true,
+          }),
+        );
+      }
 
       // Wait for the update to complete, so we can get the correct element
       this.updateComplete.then(() => {
