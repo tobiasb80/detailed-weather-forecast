@@ -158,6 +158,7 @@ export class DetailedWeatherForecast extends LitElement {
       show_sun_times: config.show_sun_times ?? false,
       sun_use_home_coordinates: config.sun_use_home_coordinates ?? true,
       use_night_header_backgrounds: config.use_night_header_backgrounds ?? true,
+      rain_sensor_entity: config.rain_sensor_entity,
       moon_phase_entity: config.moon_phase_entity,
       header_temperature: config.header_temperature,
       header_condition: config.header_condition,
@@ -844,11 +845,22 @@ export class DetailedWeatherForecast extends LitElement {
       }
     }
 
+    const rainSensorEntity = this._config?.rain_sensor_entity;
+    let precipitationIntensity: number | undefined;
+    if (rainSensorEntity && this._hass?.states[rainSensorEntity]) {
+      const state = this._hass.states[rainSensorEntity].state;
+      const intensity = Number(state);
+      if (isFinite(intensity)) {
+        precipitationIntensity = intensity;
+      }
+    }
+
     return {
       condition,
       timeOfDay,
       cloudCover: this._getCloudCover(),
       moonPhase: this._moonPhaseState?.state,
+      precipitationIntensity,
     };
   }
 
@@ -1562,7 +1574,7 @@ export class DetailedWeatherForecast extends LitElement {
     if ('scrollBehavior' in document.documentElement.style) {
       hourlyContainer.scrollTo({ left: Math.max(0, offset), behavior: 'smooth' });
     } else {
-      hourlyContainer.scrollLeft = Math.max(0, offset); // Fallback für alte iPads
+      hourlyContainer.scrollLeft = Math.max(0, offset); // Fallback for older iPads
     }
     window.setTimeout(() => {
       this._isProgrammaticScroll = false;

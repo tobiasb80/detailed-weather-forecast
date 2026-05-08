@@ -176,7 +176,7 @@ export class HeaderInfoEditor extends LitElement {
     ev.stopPropagation();
     const config = { ...ev.detail.value };
 
-    // Wenn die Aktion auf "Keine" gesetzt wird, entfernen wir sie
+    // If the action is set to "None", we remove it
     if (config.hold_action?.action === 'none') {
       config.hold_action = undefined;
     }

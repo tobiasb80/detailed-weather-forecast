@@ -46,6 +46,7 @@ export interface DetailedWeatherForecastConfig extends LovelaceCardConfig {
   sun_latitude?: number | string;
   sun_longitude?: number | string;
   use_night_header_backgrounds?: boolean;
+  rain_sensor_entity?: string;
   daily_min_gap?: number;
   hourly_min_gap?: number;
   daily_icon_size?: number;

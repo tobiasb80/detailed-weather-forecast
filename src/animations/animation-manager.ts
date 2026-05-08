@@ -15,6 +15,7 @@ export class AnimationManager {
     timeOfDay: TimeOfDay;
     cloudCover?: number;
     moonPhase?: string;
+    precipitationIntensity?: number;
   } | null;
   private handleVisibilityChange = (): void => {
     if (document.hidden) {
@@ -25,7 +26,13 @@ export class AnimationManager {
   };
 
   constructor(
-    getDrawParams: () => { condition: string; timeOfDay: TimeOfDay; cloudCover?: number; moonPhase?: string } | null,
+    getDrawParams: () => {
+      condition: string;
+      timeOfDay: TimeOfDay;
+      cloudCover?: number;
+      moonPhase?: string;
+      precipitationIntensity?: number;
+    } | null,
   ) {
     this.getDrawParams = getDrawParams;
   }
@@ -147,7 +154,7 @@ export class AnimationManager {
       return;
     }
 
-    const { condition, timeOfDay, cloudCover, moonPhase } = params;
+    const { condition, timeOfDay, cloudCover, moonPhase, precipitationIntensity } = params;
     if ((this as any)._lastLoggedCondition !== condition) {
       (this as any)._lastLoggedCondition = condition;
     }
@@ -159,6 +166,6 @@ export class AnimationManager {
 
     const conditionLower = condition.toLowerCase();
 
-    this.animator?.draw(conditionLower, width, height, timeOfDay, cloudCover, moonPhase);
+    this.animator?.draw(conditionLower, width, height, timeOfDay, cloudCover, moonPhase, precipitationIntensity);
   }
 }

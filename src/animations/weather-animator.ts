@@ -127,6 +127,7 @@ export class WeatherAnimator {
     timeOfDayInput: TimeOfDay,
     cloudCover?: number,
     moonPhase?: string,
+    precipitationIntensity?: number,
   ): void {
     const currentTime = Date.now() * 0.001;
     const conditionLower = condition.toLowerCase();
@@ -241,6 +242,19 @@ export class WeatherAnimator {
         cloudDensity = cloudCover ?? 0.7;
         cloudColor = isNight ? '30, 35, 45' : '160, 165, 170';
         break;
+    }
+
+    if (precipitationIntensity !== undefined) {
+      if (precipitationIntensity > 0) {
+        if (!hasRain) {
+          hasRain = true;
+        }
+        heavyRain = precipitationIntensity > 5;
+        hasClouds = true;
+      } else {
+        hasRain = false;
+        heavyRain = false;
+      }
     }
 
     // 1. Sun & Moon Layer
@@ -392,18 +406,27 @@ export class WeatherAnimator {
     const moonY = height * 0.3;
     const r = 25;
 
-    this.ctx.globalAlpha = 0.9;
+    // Slight glow for the illuminated part of the moon
+    this.ctx.globalAlpha = 0.95;
+    this.ctx.shadowBlur = 10;
+    this.ctx.shadowColor = 'rgba(255, 255, 255, 0.3)';
     this.ctx.fillStyle = '#F0F0F0';
     this.ctx.beginPath();
     this.ctx.arc(moonX, moonY, r, 0, Math.PI * 2);
     this.ctx.fill();
+    this.ctx.shadowBlur = 0; // Reset for the mask
 
     this.ctx.save();
     this.ctx.beginPath();
-    this.ctx.arc(moonX, moonY, r, 0, Math.PI * 2);
+    this.ctx.arc(moonX, moonY, r, 0, Math.PI * 2); // Clip exactly to the moon radius
     this.ctx.clip();
 
-    this.ctx.fillStyle = '#1a1a2e';
+    // Use "destination-out" to erase the unilluminated parts of the moon
+    this.ctx.globalCompositeOperation = 'destination-out';
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+    // Slightly blur the terminator (shadow boundary)
+    this.ctx.shadowBlur = 4;
+    this.ctx.shadowColor = 'rgba(0, 0, 0, 1)';
 
     if (!moonPhase) {
       this.ctx.beginPath();
@@ -412,20 +435,23 @@ export class WeatherAnimator {
     } else {
       switch (moonPhase) {
         case 'new_moon':
-          this.ctx.fillRect(moonX - r, moonY - r, r * 2, r * 2);
+          this.ctx.fillRect(moonX - r - 5, moonY - r - 5, r * 2 + 10, r * 2 + 10);
           break;
         case 'waxing_crescent':
-          this.ctx.fillRect(moonX - r, moonY - r, r, r * 2);
+          this.ctx.fillRect(moonX - r - 5, moonY - r - 5, r + 5, r * 2 + 10);
           this.ctx.beginPath();
           this.ctx.ellipse(moonX, moonY, r * 0.5, r, 0, 0, Math.PI * 2);
           this.ctx.fill();
           break;
         case 'first_quarter':
-          this.ctx.fillRect(moonX - r, moonY - r, r, r * 2);
+          this.ctx.fillRect(moonX - r - 5, moonY - r - 5, r + 5, r * 2 + 10);
           break;
         case 'waxing_gibbous':
-          this.ctx.fillRect(moonX - r, moonY - r, r, r * 2);
+          this.ctx.fillRect(moonX - r - 5, moonY - r - 5, r + 5, r * 2 + 10);
+          this.ctx.globalCompositeOperation = 'source-over';
           this.ctx.fillStyle = '#F0F0F0';
+          this.ctx.shadowBlur = 4;
+          this.ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
           this.ctx.beginPath();
           this.ctx.ellipse(moonX, moonY, r * 0.5, r, 0, 0, Math.PI * 2);
           this.ctx.fill();
@@ -433,17 +459,20 @@ export class WeatherAnimator {
         case 'full_moon':
           break;
         case 'waning_gibbous':
-          this.ctx.fillRect(moonX, moonY - r, r, r * 2);
+          this.ctx.fillRect(moonX, moonY - r - 5, r + 5, r * 2 + 10);
+          this.ctx.globalCompositeOperation = 'source-over';
           this.ctx.fillStyle = '#F0F0F0';
+          this.ctx.shadowBlur = 4;
+          this.ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
           this.ctx.beginPath();
           this.ctx.ellipse(moonX, moonY, r * 0.5, r, 0, 0, Math.PI * 2);
           this.ctx.fill();
           break;
         case 'last_quarter':
-          this.ctx.fillRect(moonX, moonY - r, r, r * 2);
+          this.ctx.fillRect(moonX, moonY - r - 5, r + 5, r * 2 + 10);
           break;
         case 'waning_crescent':
-          this.ctx.fillRect(moonX, moonY - r, r, r * 2);
+          this.ctx.fillRect(moonX, moonY - r - 5, r + 5, r * 2 + 10);
           this.ctx.beginPath();
           this.ctx.ellipse(moonX, moonY, r * 0.5, r, 0, 0, Math.PI * 2);
           this.ctx.fill();
@@ -452,7 +481,18 @@ export class WeatherAnimator {
     }
 
     this.ctx.restore();
+
+    // Earthshine: Lets the completely unilluminated part of the moon faintly shine through
+    this.ctx.globalCompositeOperation = 'source-over';
+    this.ctx.globalAlpha = 0.15;
+    this.ctx.fillStyle = '#FFFFFF';
+    this.ctx.beginPath();
+    this.ctx.arc(moonX, moonY, r, 0, Math.PI * 2);
+    this.ctx.fill();
+
     this.ctx.globalAlpha = 1;
+    this.ctx.shadowBlur = 0;
+    this.ctx.shadowColor = 'transparent';
   }
 
   // --- CLOUDS ---

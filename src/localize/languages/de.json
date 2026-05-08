@@ -20,6 +20,7 @@
       "compact_header_chips": "Kompakte Header-Chips (Pillen-Design)",
       "moon_phase_entity": "Mondphasen-Entität (Optional)",
       "use_night_header_backgrounds": "Separate Header-Hintergründe für nächtliche Bedingungen verwenden",
+      "rain_sensor_entity": "Regensensor-Entität (Optional)",
       "nowcast_entity": "Nowcast-Entität (Für den Niederschlag der nächsten Stunde. Die Entitätsintegration muss eine `get_minute_forecast`-Aktion bereitstellen, um die Daten abzurufen.)",
       "nowcast_layout": "Nowcast-Layout",
       "nowcast_always_show": "Nowcast immer anzeigen",

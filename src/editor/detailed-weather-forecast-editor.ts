@@ -754,7 +754,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       ev.stopPropagation();
     }
 
-    // Rekursiv das wirklich aktive Element finden (auch durch Shadow DOMs wie bei ha-form)
+    // Recursively find the truly active element (also through Shadow DOMs like in ha-form)
     let active = this.shadowRoot?.activeElement;
     while (active?.shadowRoot?.activeElement) {
       active = active.shadowRoot.activeElement;
@@ -765,12 +765,12 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
     const editorConfig = this._subElementEditorConfig;
 
-    // Erhöhe den Timeout (150ms), damit HA-Dropdowns ihre Schließ-Animation beenden können
+    // Increase timeout (150ms) to allow HA dropdowns to finish their closing animation
     window.setTimeout(async () => {
       this._subElementEditorConfig = undefined;
       if (editorConfig) {
         await this.updateComplete;
-        // Noch einen Frame warten, bis das DOM fertig gezeichnet und berechnet ist, bevor gescrollt wird
+        // Wait another frame for the DOM to be fully rendered and calculated before scrolling
         requestAnimationFrame(() => {
           const el =
             editorConfig.index !== undefined
@@ -1040,7 +1040,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info',
     index: number,
   ) {
-    ev.preventDefault(); // Wird benötigt, um das Fallenlassen (Drop) zu erlauben
+    ev.preventDefault(); // Required to allow dropping
     if (this._draggedListType === type && this._draggedIndex !== index) {
       if (ev.dataTransfer) {
         ev.dataTransfer.dropEffect = 'move';
@@ -1061,7 +1061,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       return;
     }
 
-    this._dragOriginalList = undefined; // Drop war erfolgreich, nicht mehr zurücksetzen
+    this._dragOriginalList = undefined; // Drop was successful, do not reset anymore
     this._updateConfig({ [type]: this._config![type] });
   }
 
@@ -1248,14 +1248,20 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
   private _generalSchema: HaFormSchema[] = [{ name: 'entity', selector: { entity: { domain: 'weather' } } }];
 
   private _buildHeaderSchema = memoizeOne((showBackground?: boolean, nowcastEntity?: string): HaFormSchema[] => {
-    const schema: HaFormSchema[] = [
-      { name: 'moon_phase_entity', selector: { entity: { domain: 'sensor' } }, optional: true },
-    ];
+    const schema: HaFormSchema[] = [];
 
     const bgSchema: HaFormSchema[] = [{ name: 'show_background', selector: { boolean: {} } }];
 
     if (showBackground !== false) {
       bgSchema.push({ name: 'use_night_header_backgrounds', selector: { boolean: {} } });
+      bgSchema.push({ name: 'moon_phase_entity', selector: { entity: { domain: 'sensor' } }, optional: true });
+      bgSchema.push({
+        name: 'rain_sensor_entity',
+        selector: {
+          entity: { domain: 'sensor', device_class: 'precipitation_intensity' },
+        },
+        optional: true,
+      });
     }
 
     schema.push({
