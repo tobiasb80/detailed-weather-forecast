@@ -36,19 +36,6 @@
   --overlay-opacity: 0.1;
 }
 
-ha-card {
-  /* Auto-size by default, but also respect explicit heights from the parent */
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: transparent;
-  box-shadow: none;
-  position: relative;
-  z-index: 0;
-  isolation: isolate;
-}
-
 .weather-card {
   position: relative;
   width: var(--card-width);
