@@ -116,7 +116,6 @@ export class DwfHeader extends LitElement {
       const condValue = this.weatherEntity.attributes[customCondAttr];
       const transKey = this.weatherEntity.attributes[customTransKeyAttr];
       const translationPath = `${customTransPrefix}.${transKey}.state.${condValue}`;
-      console.log('Attempting to localize header condition with path:', translationPath);
       headerCondition =
         this.hass?.localize(translationPath) ||
         this.hass?.formatEntityState?.(this.weatherEntity) ||
