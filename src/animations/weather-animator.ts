@@ -9,21 +9,21 @@ const getSunPosition = (timeOfDay: TimeOfDay, width: number, height: number): Po
   if (timeOfDay.type === 'sunrise') {
     const progress = timeOfDay.progress;
     return {
-      x: width * (0.3 + progress * 0.4),
-      y: height * (0.85 - progress * 0.55),
+      x: width * (0.15 + progress * 0.15), // From 15% to 30% of width
+      y: height * (0.85 - progress * 0.4), // Rises from 85% to 45% of height
     };
   } else if (timeOfDay.type === 'sunset') {
     const progress = timeOfDay.progress;
     return {
-      x: width * (0.5 + progress * 0.3),
-      y: height * (0.3 + progress * 0.55),
+      x: width * (0.7 + progress * 0.15), // From 70% to 85% of width
+      y: height * (0.45 + progress * 0.4), // Drops from 45% to 85% of height
     };
   } else if (timeOfDay.type === 'day') {
     const progress = timeOfDay.progress;
     const angle = progress * Math.PI;
     return {
-      x: width * (0.5 + Math.sin(angle) * 0.25),
-      y: height * (0.25 - Math.sin(angle) * 0.1),
+      x: width * (0.3 + progress * 0.4), // Moves steadily from 30% to 70%
+      y: height * (0.45 - Math.sin(angle) * 0.3), // Arc: Start 45%, Peak 15%, End 45%
     };
   } else {
     // Night: moon position
