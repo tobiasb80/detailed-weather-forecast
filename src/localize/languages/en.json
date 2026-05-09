@@ -1,0 +1,114 @@
+{
+  "common": {
+    "version": "Version"
+  },
+  "editor": {
+    "card": {
+      "type": "Type",
+      "divisor": "Divisor"
+    },
+    "main": {
+      "entity": "Weather Entity",
+      "header_temperature": "Header Temperature",
+      "header_condition": "Header Condition",
+      "tap_action": "Tap action",
+      "hold_action": "Hold action",
+      "double_tap_action": "Double tap action",
+      "interactions": "Interactions",
+      "show_background": "Show background in the header",
+      "colors": "Background colors",
+      "compact_header_chips": "Compact header chips (pill design)",
+      "moon_phase_entity": "Moon Phase Entity (Optional)",
+      "use_night_header_backgrounds": "Use separate header backgrounds for nightly conditions",
+      "rain_sensor_entity": "Rain Sensor Entity (Optional)",
+      "nowcast_entity": "Nowcast Entity (For next-hour precipitation. The entity integration must provide a `get_minute_forecast` action to fetch the data.)",
+      "nowcast_layout": "Nowcast layout",
+      "nowcast_always_show": "Always show nowcast",
+      "hourly_extra_attribute": "Hourly extra attribute (third line)",
+      "daily_extra_attribute": "Daily extra attribute (third line)",
+      "loading_forecast_attributes": "Loading available weather attributes...",
+      "header_chip": {
+        "type": "Header chip {index}: mode",
+        "attribute": "Header chip {index}: attribute",
+        "icon": "Header chip {index}: icon",
+        "tap_action": "Header chip {index}: tap action",
+        "unit": "Header chip {index}: unit",
+        "divisor": "Header chip {index}: divisor",
+        "label": "Header chip {index}"
+      }
+    },
+    "chip": {
+      "attribute": "Attribute",
+      "entity": "Entity"
+    },
+    "weather_condition": {
+      "clear-night": "Clear night",
+      "cloudy": "Cloudy",
+      "fog": "Fog",
+      "hail": "Hail",
+      "lightning": "Lightning",
+      "lightning-rainy": "Lightning rainy",
+      "partlycloudy": "Partly cloudy",
+      "partlycloudy-night": "Partly cloudy night",
+      "pouring": "Pouring",
+      "rainy": "Rainy",
+      "snowy": "Snowy",
+      "snowy-rainy": "Snowy rainy",
+      "sunny": "Sunny",
+      "windy": "Windy",
+      "windy-variant": "Windy variant",
+      "exceptional": "Exceptional"
+    },
+    "section": {
+      "gps_coordinates": "GPS Coordinates",
+      "gps_coordinates_description": "Needed for sunrise/sunset markers and day/night backgrounds",
+      "use_home_assistant_location": "Use Home Assistant location",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "solar_forecast": "Solar Forecast",
+      "solar_forecast_description": "The forecast needs to be assigned to a solar panel configuration in the Energy dashboard settings. Otherwise it can't be used here.",
+      "energy_solar_forecasts": "Energy solar forecasts",
+      "no_energy_solar_forecasts_configured": "No Energy solar forecasts configured.",
+      "custom_icons": "Custom Icons",
+      "custom_icons_description": "Override the default weather icons with any icon available in Home Assistant.",
+      "header": "Header",
+      "chips": "Chips",
+      "chips_description": "Choose Attribute or entity for up to three header chips.",
+      "nowcast": "Nowcast",
+      "nowcast_description": "Controls the minute-by-minute precipitation chart shown inside the header.",
+      "header_info": "Weather condition info",
+      "header_info_description": "Configure attributes and entities to be displayed below the header when the weather condition is clicked.",
+      "add_attribute": "Add Attribute",
+      "daily_forecast": "Daily forecast",
+      "extra_attribute_color": "Extra attribute color",
+      "clear": "Clear",
+      "dim_values_smaller_than": "Dim values smaller than:",
+      "no_threshold": "No threshold",
+      "forecast_spacing_description": "Minimum distance between forecast items in pixels (10px or greater)",
+      "icon_size": "Icon size in pixels (20px or greater)",
+      "default_60": "Default 60",
+      "default_30": "Default 30",
+      "daily_forecast_info": "Daily Forecast Info",
+      "daily_forecast_info_description": "Configure attributes to be displayed below the daily forecast when a day is selected.",
+      "hourly_forecast": "Hourly forecast",
+      "sunrise_sunset": "Sunrise & Sunset",
+      "show_sunrise_sunset": "Show sunrise & sunset",
+      "default_16": "Default 16",
+      "hourly_forecast_info": "Hourly Forecast Info",
+      "hourly_forecast_info_description": "Configure attributes to be displayed below the hourly forecast when an hour is selected."
+    },
+    "common": {
+      "none": "None",
+      "solar_forecast": "Solar forecast"
+    },
+    "selector": {
+      "weather_attribute": "Weather Attribute",
+      "entity": "Entity"
+    }
+  },
+  "card": {
+    "nowcast": {
+      "now": "Now"
+    }
+  }
+}
