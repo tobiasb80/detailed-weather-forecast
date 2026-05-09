@@ -160,7 +160,7 @@ export class WeatherAnimator {
         hasSunMoon = true;
         hasClouds = true;
         cloudDensity = cloudCover ?? 0.3;
-        cloudColor = isNight ? '40, 45, 55' : '190, 195, 200';
+        cloudColor = isNight ? '75, 85, 105' : '215, 225, 235';
         break;
       case 'cloudy':
         hasClouds = true;

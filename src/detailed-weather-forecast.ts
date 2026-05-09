@@ -98,6 +98,8 @@ export class DetailedWeatherForecast extends LitElement {
   private static _editorDailySelected?: string; // datetime
   private static _editorDailyShowAttributes?: string; // datetime
   private static _editorHourlySelected?: string; // datetime
+  private static _editorPreviewCondition?: string;
+  private static _editorPreviewTimeOfDay?: string;
 
   // internal reactive states
   @state() private _config: DetailedWeatherForecastConfig;
@@ -420,22 +422,45 @@ export class DetailedWeatherForecast extends LitElement {
     });
   }
 
-  private _handleEditorFocusElement = (ev: Event) => {
-    const type = (ev as CustomEvent).detail?.type;
+  private _handleEditorPreviewBackground = (ev: Event) => {
+    const { condition, timeOfDay } = (ev as CustomEvent).detail;
+    DetailedWeatherForecast._editorPreviewCondition = condition;
+    DetailedWeatherForecast._editorPreviewTimeOfDay = timeOfDay;
+    this.requestUpdate();
+  };
+
+  private _handleEditorPreviewBackgroundClear = () => {
+    DetailedWeatherForecast._editorPreviewCondition = undefined;
+    DetailedWeatherForecast._editorPreviewTimeOfDay = undefined;
+    this.requestUpdate();
+  };
+
+  private _handleEditorToggleAttributes = (ev: Event) => {
+    const { type, open } = (ev as CustomEvent).detail;
     if (type === 'header_info') {
-      this._showAttributes = true;
-      DetailedWeatherForecast._editorShowAttributes = true;
-    } else if (type === 'daily_info' || type === 'daily_extra') {
-      if (!this._selectedDailyForecast && this._forecastDailyEvent?.forecast?.length) {
-        this._selectedDailyForecast = this._forecastDailyEvent.forecast[0];
-        DetailedWeatherForecast._editorDailyShowAttributes = this._selectedDailyForecast.datetime;
+      this._showAttributes = open;
+      DetailedWeatherForecast._editorShowAttributes = open;
+    } else if (type === 'daily_info') {
+      if (open) {
+        if (!this._selectedDailyForecast && this._forecastDailyEvent?.forecast?.length) {
+          this._selectedDailyForecast = this._forecastDailyEvent.forecast[0];
+          DetailedWeatherForecast._editorDailyShowAttributes = this._selectedDailyForecast.datetime;
+        }
+        if (!this._visuallySelectedDaily && this._forecastDailyEvent?.forecast?.length) {
+          this._visuallySelectedDaily = this._forecastDailyEvent.forecast[0];
+          DetailedWeatherForecast._editorDailySelected = this._visuallySelectedDaily.datetime;
+        }
+      } else {
+        this._selectedDailyForecast = undefined;
+        DetailedWeatherForecast._editorDailyShowAttributes = undefined;
       }
-      this._visuallySelectedDaily = this._selectedDailyForecast;
-      DetailedWeatherForecast._editorDailySelected = this._visuallySelectedDaily?.datetime;
-    } else if (type === 'hourly_info' || type === 'hourly_extra') {
-      if (!this._selectedHourlyForecast && this._forecastHourlyEvent?.forecast?.length) {
+    } else if (type === 'hourly_info') {
+      if (open && !this._selectedHourlyForecast && this._forecastHourlyEvent?.forecast?.length) {
         this._selectedHourlyForecast = this._forecastHourlyEvent.forecast[0];
         DetailedWeatherForecast._editorHourlySelected = this._selectedHourlyForecast.datetime;
+      } else if (!open) {
+        this._selectedHourlyForecast = undefined;
+        DetailedWeatherForecast._editorHourlySelected = undefined;
       }
     }
   };
@@ -446,7 +471,9 @@ export class DetailedWeatherForecast extends LitElement {
     if (this.hasUpdated && this._config && this._hass) {
       this._subscribeForecastEvents();
     }
-    window.addEventListener('dwf-editor-focus-element', this._handleEditorFocusElement);
+    window.addEventListener('dwf-editor-preview-background', this._handleEditorPreviewBackground);
+    window.addEventListener('dwf-editor-preview-background-clear', this._handleEditorPreviewBackgroundClear);
+    window.addEventListener('dwf-editor-toggle-attributes', this._handleEditorToggleAttributes);
   }
 
   disconnectedCallback() {
@@ -462,7 +489,9 @@ export class DetailedWeatherForecast extends LitElement {
 
     this._animationManager.destroy();
     this._animationManagerMounted = null;
-    window.removeEventListener('dwf-editor-focus-element', this._handleEditorFocusElement);
+    window.removeEventListener('dwf-editor-preview-background', this._handleEditorPreviewBackground);
+    window.removeEventListener('dwf-editor-preview-background-clear', this._handleEditorPreviewBackgroundClear);
+    window.removeEventListener('dwf-editor-toggle-attributes', this._handleEditorToggleAttributes);
   }
 
   updated(changedProps: PropertyValues) {
@@ -696,9 +725,12 @@ export class DetailedWeatherForecast extends LitElement {
     `;
 
     let timeOfDay = this._getTimeOfDay();
-    let currentCondition = this._config.fixed_condition || this._state.state;
+    let currentCondition = this._state.state;
 
-    if (this._config.use_night_header_backgrounds === false) {
+    if (DetailedWeatherForecast._editorPreviewCondition && DetailedWeatherForecast._editorPreviewTimeOfDay) {
+      currentCondition = DetailedWeatherForecast._editorPreviewCondition;
+      timeOfDay = { type: DetailedWeatherForecast._editorPreviewTimeOfDay as any, progress: 0.5 };
+    } else if (this._config.use_night_header_backgrounds === false) {
       if (timeOfDay.type !== 'day') {
         timeOfDay = { type: 'day', progress: 0.5 };
       }
@@ -880,8 +912,6 @@ export class DetailedWeatherForecast extends LitElement {
   }
 
   private _getTimeOfDay(): TimeOfDay {
-    if (this._config.fixed_time_of_day) return { type: this._config.fixed_time_of_day, progress: 0 };
-
     const coordinates = this._getLocationCoordinates();
     return getTimeOfDay(coordinates?.latitude, coordinates?.longitude);
   }
@@ -890,9 +920,12 @@ export class DetailedWeatherForecast extends LitElement {
     if (!this._state) return null;
 
     let timeOfDay = this._getTimeOfDay();
-    let condition = this._config.fixed_condition || this._state.state;
+    let condition = this._state.state;
 
-    if (this._config?.use_night_header_backgrounds === false) {
+    if (DetailedWeatherForecast._editorPreviewCondition && DetailedWeatherForecast._editorPreviewTimeOfDay) {
+      condition = DetailedWeatherForecast._editorPreviewCondition;
+      timeOfDay = { type: DetailedWeatherForecast._editorPreviewTimeOfDay as any, progress: 0.5 };
+    } else if (this._config?.use_night_header_backgrounds === false) {
       if (timeOfDay.type !== 'day') {
         timeOfDay = { type: 'day', progress: 0.5 };
       }

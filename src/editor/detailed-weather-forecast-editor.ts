@@ -410,6 +410,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
                       .schema=${this._computeColorSchema()}
                       .computeLabel=${this._computeLabel}
                       @value-changed=${this._handleColorsValueChanged}
+                      @focusin=${this._handleColorFocus}
                     ></ha-form>
                   `,
                   { nested: true },
@@ -595,6 +596,14 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     event.stopPropagation();
     const colors = { ...event.detail.value };
 
+    const oldColors = { ...DEFAULT_COLORS, ...(this._config?.animation_background_colors ?? {}) };
+    for (const key of [...DAY_COLORS, ...NIGHT_COLORS]) {
+      if (colors[key] !== oldColors[key]) {
+        this._dispatchPreviewEvent(key);
+        break;
+      }
+    }
+
     for (const key in colors) {
       const value = colors[key];
       if (!value || (typeof value === 'string' && value.toLowerCase() === DEFAULT_COLORS[key]?.toLowerCase())) {
@@ -651,6 +660,49 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     this._updateConfig({ [key]: isChecked } as Partial<DetailedWeatherForecastConfig>);
   }
 
+  private _dispatchPreviewEvent(key: string) {
+    let condition = 'sunny';
+    let timeOfDay = 'day';
+
+    if (key.includes('night-gradient')) {
+      condition = 'clear-night';
+      timeOfDay = 'night';
+    } else if (key.includes('sunset')) {
+      condition = 'sunny';
+      timeOfDay = 'sunset';
+    } else if (key.includes('sunrise')) {
+      condition = 'sunny';
+      timeOfDay = 'sunrise';
+    } else if (key.includes('day-gradient')) {
+      condition = 'sunny';
+      timeOfDay = 'day';
+    } else {
+      const parts = key.split('-');
+      if (parts.includes('night')) {
+        timeOfDay = 'night';
+        condition = parts[0];
+      } else {
+        timeOfDay = 'day';
+        condition = parts[0];
+      }
+    }
+
+    window.dispatchEvent(new CustomEvent('dwf-editor-preview-background', { detail: { condition, timeOfDay } }));
+  }
+
+  private _handleColorFocus = (ev: FocusEvent) => {
+    const path = ev.composedPath();
+    for (const el of path) {
+      if ((el as any).schema?.name) {
+        const name = (el as any).schema.name;
+        if (DAY_COLORS.includes(name) || NIGHT_COLORS.includes(name)) {
+          this._dispatchPreviewEvent(name);
+          break;
+        }
+      }
+    }
+  };
+
   private _handleSunInputChange(event: Event) {
     const target = event.currentTarget as HTMLInputElement | null;
     if (!target) {
@@ -669,6 +721,24 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       return;
     }
     this._expandedSections = { ...this._expandedSections, [id]: target.open };
+
+    if (id === 'colors' && !target.open) {
+      window.dispatchEvent(new CustomEvent('dwf-editor-preview-background-clear'));
+    }
+
+    if (id === 'header-info') {
+      window.dispatchEvent(
+        new CustomEvent('dwf-editor-toggle-attributes', { detail: { type: 'header_info', open: target.open } }),
+      );
+    } else if (id === 'daily-info') {
+      window.dispatchEvent(
+        new CustomEvent('dwf-editor-toggle-attributes', { detail: { type: 'daily_info', open: target.open } }),
+      );
+    } else if (id === 'hourly-info') {
+      window.dispatchEvent(
+        new CustomEvent('dwf-editor-toggle-attributes', { detail: { type: 'hourly_info', open: target.open } }),
+      );
+    }
   }
 
   private _handleExpanderSummaryClick(event: Event, disabled: boolean) {
@@ -689,7 +759,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
   private async _editListItem(type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info', index: number) {
     this._subElementEditorConfig = { type, index };
-    window.dispatchEvent(new CustomEvent('dwf-editor-focus-element', { detail: { type } }));
     await this.updateComplete;
     requestAnimationFrame(() => {
       this.shadowRoot?.querySelector('.sub-element-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -703,7 +772,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     const newList = [...(this._config[type] as any[])];
     newList.splice(index, 1);
     this._updateConfig({ [type]: newList } as Partial<DetailedWeatherForecastConfig>);
-    window.dispatchEvent(new CustomEvent('dwf-editor-focus-element', { detail: { type } }));
   }
 
   private _addListItem(type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info') {
@@ -997,7 +1065,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
   private async _editExtraAttribute(type: 'hourly_extra' | 'daily_extra') {
     this._subElementEditorConfig = { type };
-    window.dispatchEvent(new CustomEvent('dwf-editor-focus-element', { detail: { type } }));
     await this.updateComplete;
     requestAnimationFrame(() => {
       this.shadowRoot?.querySelector('.sub-element-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1007,7 +1074,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
   private _deleteExtraAttribute(type: 'hourly_extra' | 'daily_extra') {
     const field = type === 'hourly_extra' ? 'hourly_extra_attribute' : 'daily_extra_attribute';
     this._updateConfig({ [field]: undefined });
-    window.dispatchEvent(new CustomEvent('dwf-editor-focus-element', { detail: { type } }));
   }
 
   private _extraAttributeChanged(e: CustomEvent, type: 'hourly_extra' | 'daily_extra') {
@@ -1067,7 +1133,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
 
     this._dragOriginalList = undefined; // Drop was successful, do not reset anymore
     this._updateConfig({ [type]: this._config![type] });
-    window.dispatchEvent(new CustomEvent('dwf-editor-focus-element', { detail: { type } }));
   }
 
   private _getIconMapValue(condition: WeatherCondition): string {
@@ -1754,6 +1819,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this._teardownForecastOptionSubscriptions();
+    window.dispatchEvent(new CustomEvent('dwf-editor-preview-background-clear'));
   }
 }
 
