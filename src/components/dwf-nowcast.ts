@@ -6,7 +6,8 @@ import { localize } from '../localize/localize';
 
 type NowcastForecastItem = {
   datetime: string;
-  precipitation: number;
+  precipitation?: number;
+  value?: number;
 };
 
 const NOWCAST_MINUTES = 60;
@@ -125,19 +126,33 @@ export class DWFNowcast extends LitElement {
     const normalized = (Array.isArray(this.forecast) ? this.forecast : [])
       .map((item) => {
         const timestamp = new Date(item.datetime).getTime();
+        const precip = item.precipitation ?? item.value;
         return {
           timestamp,
-          value: Number.isFinite(item.precipitation) ? Math.max(0, item.precipitation) : 0,
+          value: Number.isFinite(precip) ? Math.max(0, precip!) : 0,
         };
       })
       .filter((item) => Number.isFinite(item.timestamp))
       .sort((a, b) => a.timestamp - b.timestamp);
 
-    const values = normalized.map((item) => item.value);
-    const series = values.slice(0, NOWCAST_MINUTES);
-    while (series.length < NOWCAST_MINUTES) {
-      series.push(0);
+    const series: number[] = new Array(NOWCAST_MINUTES).fill(0);
+    if (normalized.length === 0) {
+      return series;
     }
+
+    const firstTimestamp = normalized[0].timestamp;
+    let currentIndex = 0;
+
+    for (let i = 0; i < NOWCAST_MINUTES; i++) {
+      const targetTime = firstTimestamp + i * 60000;
+
+      while (currentIndex < normalized.length - 1 && normalized[currentIndex + 1].timestamp <= targetTime) {
+        currentIndex++;
+      }
+
+      series[i] = normalized[currentIndex].value;
+    }
+
     return series;
   }
 

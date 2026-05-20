@@ -41,7 +41,7 @@ const ICON_MAP_LABELS: Record<WeatherCondition, string> = {
 };
 
 type HaFormSelector =
-  | { entity: { domain?: string; device_class?: string | string[] } }
+  | { entity: { domain?: string | string[]; device_class?: string | string[] } }
   | { boolean: Record<string, never> }
   | { text: Record<string, never> }
   | { number: Record<number, never> }
@@ -1346,7 +1346,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       type: 'expandable',
       flatten: true,
       schema: [
-        { name: 'nowcast_entity', selector: { entity: { domain: 'weather' } }, optional: true },
+        { name: 'nowcast_entity', selector: { entity: { domain: ['weather', 'sensor'] } }, optional: true },
         { name: 'nowcast_always_show', selector: { boolean: {} }, optional: true, disabled: !nowcastEntity },
       ],
     });

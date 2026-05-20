@@ -20,7 +20,7 @@ This card is a further development of the [Weather Forecast Extended Card](https
 - Support to display a configurable extra attribute (e.g., wind speed, UV index) as a third row in the daily and hourly forecast.
 - Optional sunrise and sunset times embedded in the hourly forecast, using either the Home Assistant location or custom coordinates for sun calculations.
 - Support to display daily / hourly solar forecast.
-- Optional minute-level nowcast precipitation chart via `get_minute_forecast` actions (OpenWeatherMap, DWD nowcast).
+- Optional minute-level nowcast precipitation chart via `get_minute_forecast` actions (OpenWeatherMap, DWD nowcast) or a sensor providing a forecast array in its `data` attribute (DWD Weather).
 - Configurable header chips that can display weather entity attributes or other entities in the header.
 - Optional tap actions and icons on the header pills / chips.
 - Support for custom weather icons and an optional moon phase display.
@@ -95,7 +95,7 @@ hourly_extra_attribute:
 | ------------------------------ | ---------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `type`                         | string           | `custom:detailed-weather-forecast-card` | Lovelace card type identifier.                                                                                                                                                         |
 | `entity`                       | string           | required                                | Weather entity that supplies current conditions and forecast data.                                                                                                                     |
-| `nowcast_entity`               | string           | none                                    | Weather entity that supports `get_minute_forecast` and provides minute-level precipitation.                                                                                            |
+| `nowcast_entity`               | string           | none                                    | Weather entity that supports `get_minute_forecast` or a sensor providing a forecast array in its `data` attribute.                                                                     |
 | `nowcast_always_show`          | boolean          | `false`                                 | When enabled, the nowcast chart stays visible even if no rain is predicted. Useful to keep the header layout consistent.                                                               |
 | `show_header`                  | boolean          | `true`                                  | Toggles hero header containing the current temperature and condition text.                                                                                                             |
 | `show_background`              | boolean          | `false`                                 | Toggles the animated background in the header.                                                                                                                                         |

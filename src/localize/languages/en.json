@@ -21,7 +21,7 @@
       "moon_phase_entity": "Moon Phase Entity (Optional)",
       "use_night_header_backgrounds": "Use separate header backgrounds for nightly conditions",
       "rain_sensor_entity": "Rain Sensor Entity (Optional)",
-      "nowcast_entity": "Nowcast Entity (For next-hour precipitation. The entity integration must provide a `get_minute_forecast` action to fetch the data.)",
+      "nowcast_entity": "Nowcast Entity (For next-hour precipitation. A weather entity must provide a `get_minute_forecast` action. Alternatively, a sensor can be used that provides an array with the forecast in the `data` attribute.)",
       "nowcast_layout": "Nowcast layout",
       "nowcast_always_show": "Always show nowcast",
       "hourly_extra_attribute": "Hourly extra attribute (third line)",

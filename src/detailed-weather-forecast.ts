@@ -79,6 +79,7 @@ type NowcastForecastItem = {
 type NowcastServiceForecastItem = {
   datetime?: string;
   precipitation?: number | string;
+  value?: number | string;
 };
 
 type NowcastServiceEntityResponse = {
@@ -1298,6 +1299,18 @@ export class DetailedWeatherForecast extends LitElement {
 
   private async _loadNowcastData(requestId: number, entityId: string) {
     try {
+      if (entityId.startsWith('sensor.')) {
+        const stateObj = this._hass!.states[entityId];
+        if (stateObj && stateObj.attributes?.data) {
+          const entries = stateObj.attributes.data;
+          const forecast = this._extractNowcastForecast(entries);
+          this._setNowcastForecast(forecast);
+        } else {
+          this._clearNowcastForecast();
+        }
+        return;
+      }
+
       const serviceDomain = await this._resolveNowcastServiceDomain(entityId, requestId);
       if (!serviceDomain || requestId !== this._nowcastRequestId) {
         this._clearNowcastForecast();
@@ -1316,7 +1329,8 @@ export class DetailedWeatherForecast extends LitElement {
         return;
       }
 
-      const forecast = this._extractNowcastForecast(response, entityId);
+      const entries = response?.response?.[entityId]?.forecast;
+      const forecast = this._extractNowcastForecast(entries);
       this._setNowcastForecast(forecast);
     } catch {
       this._clearNowcastForecast();
@@ -1347,9 +1361,8 @@ export class DetailedWeatherForecast extends LitElement {
     }
   }
 
-  private _extractNowcastForecast(response: NowcastServiceResponse, entityId: string): NowcastForecastItem[] {
+  private _extractNowcastForecast(entries: NowcastServiceForecastItem[] | undefined): NowcastForecastItem[] {
     const items: NowcastForecastItem[] = [];
-    const entries = response?.response?.[entityId]?.forecast;
     if (!Array.isArray(entries)) {
       return items;
     }
@@ -1364,13 +1377,14 @@ export class DetailedWeatherForecast extends LitElement {
         return;
       }
 
-      const rawValue = entry?.precipitation;
+      const rawValue = entry?.precipitation ?? entry?.value;
       const precipitation = typeof rawValue === 'number' ? rawValue : Number(rawValue);
       if (!Number.isFinite(precipitation)) {
         return;
       }
 
       items.push({ datetime, precipitation: Math.max(0, precipitation) });
+      console.log(`[DWF] Nowcast forecast item: datetime=${datetime}, precipitation=${precipitation}`);
     });
 
     return items.sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
