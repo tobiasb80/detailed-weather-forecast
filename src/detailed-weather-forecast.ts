@@ -713,7 +713,7 @@ export class DetailedWeatherForecast extends LitElement {
     const headerChips = this._computeHeaderChipDisplays();
     const useSnowNowcastFill = this._shouldUseSnowNowcastFill();
 
-    const useAnimation = Boolean(this._config.show_background);
+    const useAnimation = Boolean(this._config.show_background && this._config.show_header);
     const headerStyles: Record<string, string> = {};
 
     if (showInlineNowcast && !headerOnly) {
