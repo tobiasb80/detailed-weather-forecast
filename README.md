@@ -27,6 +27,8 @@ This card is a further development of the [Weather Forecast Extended Card](https
 - Support for 12 or 24 hour time formats and localized date labels using the Home Assistant user settings.
 - UI card editor
 
+![Detailed Weather Forecast Card Animation](https://github.com/tobiasb80/detailed-weather-forecast/blob/main/docs/img/detailed-weather-forecast_states.gif?raw=true)
+
 ## Installation
 
 ### HACS (recommended)
