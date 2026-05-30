@@ -2,7 +2,7 @@
 
 A Lovelace weather forecast card for Home Assistant
 
-![Detailed Weather Forecast Card](https://github.com/tobiasb80/detailed-weather-forecast/blob/main/docs/img/detailed-weather-forecast.jpg?raw=true)
+![Detailed Weather Forecast Card](https://github.com/tobiasb80/detailed-weather-forecast/blob/main/docs/img/detailed-weather-forecast.gif?raw=true)
 
 ## Overview
 
