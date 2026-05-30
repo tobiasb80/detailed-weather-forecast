@@ -1388,7 +1388,6 @@ export class DetailedWeatherForecast extends LitElement {
       }
 
       items.push({ datetime, precipitation: Math.max(0, precipitation) });
-      console.log(`[DWF] Nowcast forecast item: datetime=${datetime}, precipitation=${precipitation}`);
     });
 
     return items.sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
