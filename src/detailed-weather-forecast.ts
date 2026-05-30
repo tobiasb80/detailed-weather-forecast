@@ -540,6 +540,10 @@ export class DetailedWeatherForecast extends LitElement {
       this._refreshNowcastData();
     }
 
+    if (forecastHourlyChanged || forecastDailyChanged) {
+      this._updateGap();
+    }
+
     const card = this.shadowRoot?.querySelector('ha-card') as HTMLElement | null;
     const daily = this.shadowRoot?.querySelector('.forecast.daily') as HTMLElement | null;
     const hourly = this.shadowRoot?.querySelector('.forecast.hourly') as HTMLElement | null;
@@ -1566,12 +1570,12 @@ export class DetailedWeatherForecast extends LitElement {
     }
 
     const containerWidth = container.clientWidth;
-    if (containerWidth === this._oldContainerWidth) {
-      return;
-    }
 
-    const computeGap = (elem: HTMLElement | null): number | undefined => {
-      if (!elem) {
+    const dailyCount = this._forecastDailyEvent?.forecast?.length ?? 0;
+    const hourlyCount = this._forecastHourlyEvent?.forecast?.length ?? 0;
+
+    const computeGap = (elem: HTMLElement | null, count: number): number | undefined => {
+      if (!elem || count === 0) {
         return undefined;
       }
       const styles = getComputedStyle(elem);
@@ -1582,21 +1586,23 @@ export class DetailedWeatherForecast extends LitElement {
       }
       const padding = 16;
       const maxItems = Math.floor((containerWidth + minGap - 2 * padding) / (itemWidth + minGap));
-      if (maxItems < 2) {
+      const n = Math.min(maxItems, count);
+
+      if (n < 2) {
         return undefined;
       }
-      const totalItemWidth = maxItems * itemWidth;
-      return Math.round((containerWidth - 2 * padding - totalItemWidth) / (maxItems - 1));
+      const totalItemWidth = n * itemWidth;
+      return (containerWidth - 2 * padding - totalItemWidth) / (n - 1);
     };
 
-    const dailyGap = computeGap(daily);
+    const dailyGap = computeGap(daily, dailyCount);
     if (dailyGap !== undefined && dailyGap !== this._dailyGap) {
       this._dailyGap = dailyGap;
     } else if (dailyGap === undefined && this._dailyGap !== undefined) {
       this._dailyGap = undefined;
     }
 
-    const hourlyGap = computeGap(hourly);
+    const hourlyGap = computeGap(hourly, hourlyCount);
     if (hourlyGap !== undefined && hourlyGap !== this._hourlyGap) {
       this._hourlyGap = hourlyGap;
     } else if (hourlyGap === undefined && this._hourlyGap !== undefined) {
