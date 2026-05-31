@@ -57,7 +57,7 @@ interface WindowWithCustomCards extends Window {
 const MISSING_ATTRIBUTE_TEXT = 'missing';
 
 // Private types
-type ForecastType = 'hourly' | 'daily';
+type ForecastType = 'hourly' | 'daily' | 'twice_daily';
 type SubscriptionMap = Record<ForecastType, Promise<() => void> | undefined>;
 
 type EnergyPreferences = {
@@ -125,7 +125,7 @@ export class DetailedWeatherForecast extends LitElement {
   @state() private _animationManagerMounted: Element | null = null;
 
   // private property
-  private _subscriptions: SubscriptionMap = { hourly: undefined, daily: undefined };
+  private _subscriptions: SubscriptionMap = { hourly: undefined, daily: undefined, twice_daily: undefined };
   private _resizeObserver?: ResizeObserver;
   private _oldContainerWidth?: number;
   private _hass?: ExtendedHomeAssistant;
@@ -385,15 +385,18 @@ export class DetailedWeatherForecast extends LitElement {
     (Object.values(this._subscriptions) as Promise<() => void>[]).forEach((sub) => {
       sub?.then((unsub) => unsub());
     });
-    this._subscriptions = { hourly: undefined, daily: undefined };
+    this._subscriptions = { hourly: undefined, daily: undefined, twice_daily: undefined };
   }
 
   private async _subscribeForecast(type: ForecastType) {
     if (this._subscriptions[type]) return;
 
     this._subscriptions[type] = subscribeForecast(this._hass!, this._entity, type, (event) => {
-      if (type === 'hourly') this._forecastHourlyEvent = event;
-      if (type === 'daily') this._forecastDailyEvent = event;
+      if (type === 'hourly') {
+        this._forecastHourlyEvent = event;
+      } else {
+        this._forecastDailyEvent = event;
+      }
     }).catch((e) => {
       this._subscriptions[type] = undefined;
       throw e;
@@ -415,8 +418,8 @@ export class DetailedWeatherForecast extends LitElement {
 
     const supportedForecastTypes = getSupportedForecastTypes(this._state);
 
-    (['hourly', 'daily'] as ForecastType[]).forEach((type) => {
-      const configKey = `${type}_forecast` as 'hourly_forecast' | 'daily_forecast';
+    (['hourly', 'daily', 'twice_daily'] as ForecastType[]).forEach((type) => {
+      const configKey = type === 'hourly' ? 'hourly_forecast' : 'daily_forecast';
       if (this._config[configKey] && supportedForecastTypes.includes(type)) {
         this._subscribeForecast(type);
       }
@@ -832,7 +835,17 @@ export class DetailedWeatherForecast extends LitElement {
                             .precipitationUnit=${this._state.attributes.precipitation_unit}
                             .extraConfig=${this._config.hourly_extra_attribute}
                             .iconMap=${this._config.icon_map}
-                            @dwf-hourly-scrolled-to-new-day=${this._handleHourlyNewDay}
+                            .dailyForecastType=${dailyEnabled
+                              ? this._forecastDailyEvent?.type === 'twice_daily'
+                                ? 'twice_daily'
+                                : this._forecastDailyEvent?.type === 'daily'
+                                  ? 'daily'
+                                  : undefined
+                              : undefined}
+                            @dwf-hourly-scrolled-to-new-day=${dailyEnabled ? this._handleHourlyChange : undefined}
+                            @dwf-hourly-scrolled-to-new-forecast-item=${dailyEnabled
+                              ? this._handleHourlyChange
+                              : undefined}
                             @dwf-hourly-list-item-selected=${this._handleHourlySelected}
                           ></dwf-hourly-list>
                         </div>
@@ -858,7 +871,7 @@ export class DetailedWeatherForecast extends LitElement {
 
   // Private methods
 
-  private _handleHourlyNewDay(e: CustomEvent<{ date: Date }>) {
+  private _handleHourlyChange(e: CustomEvent<{ date: Date }>) {
     if (this._isProgrammaticScroll) {
       return;
     }
@@ -1647,22 +1660,39 @@ export class DetailedWeatherForecast extends LitElement {
     }
 
     const targetDate = new Date(datetime);
+    const targetTime = targetDate.getTime();
     const targetDay = targetDate.getDate();
     const targetMonth = targetDate.getMonth();
     const targetYear = targetDate.getFullYear();
 
     const hourlyForecast = this._forecastHourlyEvent.forecast;
-    const targetIndex = hourlyForecast.findIndex((entry) => {
-      const entryDate = new Date(entry.datetime);
-      return (
-        entryDate.getDate() === targetDay &&
-        entryDate.getMonth() === targetMonth &&
-        entryDate.getFullYear() === targetYear
-      );
-    });
+    const shouldSearchExactHour = this._forecastDailyEvent?.type === 'twice_daily';
+
+    let targetIndex = -1;
+    if (shouldSearchExactHour) {
+      targetIndex = hourlyForecast.findIndex((entry) => {
+        const entryDate = new Date(entry.datetime);
+        return entryDate.getTime() === targetTime;
+      });
+    }
+
+    const dayIndices = hourlyForecast
+      .map((entry, index) => {
+        const entryDate = new Date(entry.datetime);
+        return entryDate.getDate() === targetDay &&
+          entryDate.getMonth() === targetMonth &&
+          entryDate.getFullYear() === targetYear
+          ? index
+          : -1;
+      })
+      .filter((idx) => idx !== -1);
+
+    if (dayIndices.length === 0) {
+      return;
+    }
 
     if (targetIndex === -1) {
-      return;
+      targetIndex = dayIndices[0];
     }
 
     const hourlyContainer = this.shadowRoot?.querySelector<HTMLElement>('.forecast.hourly');

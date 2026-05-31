@@ -13,6 +13,8 @@ import type {
   WeatherEntity,
   WeatherIconMap,
 } from '../types';
+
+type DailyForecastType = 'daily' | 'twice_daily';
 import { formatForecastAttribute, getWeatherStateIcon } from '../weather';
 
 const PRECIPITATION_DISPLAY_THRESHOLD = 0.3;
@@ -30,8 +32,10 @@ export class DWFHourlyList extends LitElement {
   @property({ attribute: false }) extraConfig?: ExtraForecastAttributeConfig;
   @property({ attribute: false }) iconMap?: WeatherIconMap;
   @property({ attribute: false }) selectedItem?: ForecastAttribute;
+  @property({ attribute: false }) dailyForecastType?: DailyForecastType;
   private _sunTimesByDay: SunTimesByDay = {};
   private _currentDayKey?: string;
+  private _lastScrollDateTime?: number;
   private _boundHandleScroll = this._handleScroll.bind(this);
 
   protected createRenderRoot() {
@@ -109,21 +113,39 @@ export class DWFHourlyList extends LitElement {
       }
     }
 
+    if (!this.dailyForecastType) {
+      return;
+    }
+
     if (firstVisibleItem) {
       const datetime = firstVisibleItem.dataset.datetime;
       if (datetime) {
         const date = new Date(datetime);
-        const dayKey = this._formatDayKey(date);
-
-        if (this._currentDayKey !== dayKey) {
-          this._currentDayKey = dayKey;
-          this.dispatchEvent(
-            new CustomEvent('dwf-hourly-scrolled-to-new-day', {
-              detail: { date: date },
-              bubbles: true,
-              composed: true,
-            }),
-          );
+        const itemTime = date.getTime();
+        if (Number.isFinite(itemTime) && itemTime !== this._lastScrollDateTime) {
+          this._lastScrollDateTime = itemTime;
+          const dayKey = this._formatDayKey(date);
+          if (this.dailyForecastType === 'daily') {
+            if (this._currentDayKey !== dayKey) {
+              this._currentDayKey = dayKey;
+              this.dispatchEvent(
+                new CustomEvent('dwf-hourly-scrolled-to-new-day', {
+                  detail: { date: date },
+                  bubbles: true,
+                  composed: true,
+                }),
+              );
+            }
+          } else {
+            this._currentDayKey = dayKey;
+            this.dispatchEvent(
+              new CustomEvent('dwf-hourly-scrolled-to-new-forecast-item', {
+                detail: { date: date },
+                bubbles: true,
+                composed: true,
+              }),
+            );
+          }
         }
       }
     }

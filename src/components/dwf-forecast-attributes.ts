@@ -1,6 +1,7 @@
 import { html, LitElement, nothing, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { formatDateWeekdayShort, formatTime } from '../date-time';
+import { localize } from '../localize/localize';
 import { DetailedWeatherForecastConfig, ForecastAttribute, ForecastAttributeConfig, WeatherEntity } from '../types';
 import { ExtendedHomeAssistant, formatForecastAttribute } from '../weather';
 
@@ -23,13 +24,21 @@ export class DwfForecastAttributes extends LitElement {
     }
 
     const date = new Date(this.forecastAttribute.datetime);
-    const dateFormatted = this.dailyForecast
-      ? `${formatDateWeekdayShort(date, this.hass.locale as any, this.hass.config as any)}`
-      : `${formatDateWeekdayShort(date, this.hass.locale as any, this.hass.config as any)}, ${formatTime(
-          date,
-          this.hass.locale as any,
-          this.hass.config as any,
-        )}`;
+    const dayShort = formatDateWeekdayShort(date, this.hass.locale as any, this.hass.config as any);
+    const timeStr = formatTime(date, this.hass.locale as any, this.hass.config as any);
+    const isDaytime = (this.forecastAttribute as any).is_daytime;
+
+    let dateFormatted: string;
+    if (this.dailyForecast) {
+      if (typeof isDaytime === 'boolean') {
+        dateFormatted = `${dayShort}, ${localize(isDaytime ? 'common.day' : 'common.night')}`;
+      } else {
+        dateFormatted = dayShort;
+      }
+    } else {
+      // For hourly forecasts, keep the original behavior: weekday + time (no Day/Night suffix)
+      dateFormatted = `${dayShort}, ${timeStr}`;
+    }
 
     let headerCondition: string | undefined = undefined;
 

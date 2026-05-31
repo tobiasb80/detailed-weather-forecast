@@ -3,6 +3,7 @@ import { html, LitElement, nothing, TemplateResult } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { formatDateDayTwoDigit, formatDateWeekdayShort, isNewDay } from '../date-time';
+import { localize } from '../localize/localize';
 import type { ExtraForecastAttributeConfig, ForecastAttribute, WeatherEntity, WeatherIconMap } from '../types';
 import { formatForecastAttribute, getWeatherStateIcon } from '../weather';
 
@@ -58,12 +59,19 @@ export class DWFDailyList extends LitElement {
           ${formatDateWeekdayShort(date, this.hass.locale as any, this.hass.config as any)}
         </div>
         <div class="day-of-month ${isSelected ? 'selected' : ''}">
-          ${!newDay ? formatDateDayTwoDigit(date, this.hass.locale as any, this.hass.config as any) : ''}
+          ${(() => {
+            if (typeof item.is_daytime === 'boolean') {
+              return item.is_daytime ? localize('common.day') : localize('common.night');
+            }
+            return !newDay ? formatDateDayTwoDigit(date, this.hass.locale as any, this.hass.config as any) : '';
+          })()}
         </div>
-        <div class="forecast-image-icon">${getWeatherStateIcon(item, this, false, this.iconMap)}</div>
+        <div class="forecast-image-icon">
+          ${getWeatherStateIcon(item, this, this._shouldUseNightIcon(item), this.iconMap)}
+        </div>
         <div class="temp" style=${styleMap({ color: tempColor })}>${Math.round(item.temperature)}°</div>
         <div class="templow" style=${tempLowColor ? styleMap({ color: tempLowColor }) : nothing}>
-          ${this._hasValidValue(item.templow) ? html`${Math.round(item.templow!)}°` : '—'}
+          ${this._hasValidValue(item.templow) ? html`${Math.round(item.templow!)}°` : nothing}
         </div>
         ${this._renderPrecipitationInfo(item, precipitationScale)} ${this._renderExtraAttribute(item)}
       </div>
@@ -106,15 +114,18 @@ export class DWFDailyList extends LitElement {
   }
 
   public selectDate(date: Date) {
-    const targetDay = date.getDate();
-    const targetMonth = date.getMonth();
-    const targetYear = date.getFullYear();
+    const targetTime = date.getTime();
 
-    const forecastItemIndex = this.forecast.findIndex((item) => {
-      const itemDate = new Date(item.datetime);
-      return (
-        itemDate.getDate() === targetDay && itemDate.getMonth() === targetMonth && itemDate.getFullYear() === targetYear
-      );
+    // Select the last forecast item with a datetime before or equal to the target date/time.
+    let forecastItemIndex = -1;
+    let bestTime = -Infinity;
+
+    this.forecast.forEach((item, index) => {
+      const itemTime = new Date(item.datetime).getTime();
+      if (itemTime <= targetTime && itemTime > bestTime) {
+        bestTime = itemTime;
+        forecastItemIndex = index;
+      }
     });
 
     if (forecastItemIndex > -1) {
@@ -324,6 +335,17 @@ export class DWFDailyList extends LitElement {
     const highestValue = Math.max(...values);
     const unconstrained = Math.max(minScale, highestValue);
     return Math.min(unconstrained, maxScale);
+  }
+
+  private _shouldUseNightIcon(item: ForecastAttribute): boolean {
+    if (item.is_daytime === false) {
+      return true;
+    }
+    if (item.is_daytime === true) {
+      return false;
+    }
+
+    return false;
   }
 }
 

@@ -110,5 +110,9 @@
     "nowcast": {
       "now": "Jetzt"
     }
+  },
+  "common": {
+    "day": "Tag",
+    "night": "Nacht"
   }
 }

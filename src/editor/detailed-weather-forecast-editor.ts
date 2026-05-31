@@ -748,13 +748,41 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     event.preventDefault();
   }
 
+  private _isFeatureSupported(name: ToggleName): boolean {
+    if (!this.hass || !this._config?.entity) {
+      return true;
+    }
+    const stateObj = this.hass.states[this._config.entity];
+    if (!stateObj) {
+      return false;
+    }
+
+    if (name === 'show_header') {
+      return true;
+    }
+
+    const supported = this._getSupportedForecastTypes(stateObj as any);
+    if (name === 'daily_forecast') {
+      return supported.includes('daily') || supported.includes('twice_daily');
+    }
+    if (name === 'hourly_forecast') {
+      return supported.includes('hourly');
+    }
+
+    return true;
+  }
+
   private _isToggleDisabled(name: ToggleName, config: DetailedWeatherForecastConfig): boolean {
+    if (!this._isFeatureSupported(name)) {
+      return true;
+    }
+
     const toggleNames: ToggleName[] = ['show_header', 'daily_forecast', 'hourly_forecast'];
-    const enabledCount = toggleNames.reduce(
-      (count, key) => (this._isSectionEnabled(key, config) ? count + 1 : count),
-      0,
+    const supportedAndEnabled = toggleNames.filter(
+      (key) => this._isFeatureSupported(key as ToggleName) && this._isSectionEnabled(key as ToggleName, config),
     );
-    return enabledCount <= 1 && this._isSectionEnabled(name, config);
+
+    return supportedAndEnabled.length <= 1 && this._isSectionEnabled(name, config);
   }
 
   private async _editListItem(type: 'header_chips' | 'header_info' | 'daily_info' | 'hourly_info', index: number) {
@@ -1245,10 +1273,6 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
     `;
   }
 
-  private _ensureSolarForecastOptions() {
-    this._refreshSolarForecastOptions(false);
-  }
-
   private _refreshSolarForecastOptions(force: boolean) {
     if (!this.hass || this._solarForecastOptionsPromise) {
       return;
@@ -1571,6 +1595,19 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       type: 'custom:detailed-weather-forecast-card',
     };
 
+    if (changes.entity && this.hass) {
+      const stateObj = this.hass.states[changes.entity];
+      if (stateObj) {
+        const supported = this._getSupportedForecastTypes(stateObj as any);
+        if (!supported.includes('daily') && !supported.includes('twice_daily')) {
+          updated.daily_forecast = false;
+        }
+        if (!supported.includes('hourly')) {
+          updated.hourly_forecast = false;
+        }
+      }
+    }
+
     if ('solar_forecast_entries' in changes && changes.solar_forecast_entries === undefined) {
       delete (updated as Partial<DetailedWeatherForecastConfig>).solar_forecast_entries;
     }
@@ -1625,8 +1662,11 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       if (supported.includes('hourly')) {
         needed.add('hourly');
       }
-      if (supported.includes('daily') || supported.includes('twice_daily')) {
+      if (supported.includes('daily')) {
         needed.add('daily');
+      }
+      if (supported.includes('twice_daily')) {
+        needed.add('twice_daily');
       }
       if (!needed.size) {
         needed.add('daily');
@@ -1635,7 +1675,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
       const nextLoading = { ...this._forecastOptionsLoading };
       let loadingChanged = false;
 
-      (['hourly', 'daily'] as ModernForecastType[]).forEach((type) => {
+      (['hourly', 'daily', 'twice_daily'] as ModernForecastType[]).forEach((type) => {
         if (!needed.has(type)) {
           this._teardownForecastOptionSubscriptions([type]);
           if (nextLoading[type]) {
@@ -1797,7 +1837,7 @@ export class DetailedWeatherForecastEditor extends LitElement implements Lovelac
   }
 
   private _teardownForecastOptionSubscriptions(types?: ModernForecastType[]) {
-    const targets = types ?? (['hourly', 'daily'] as ModernForecastType[]);
+    const targets = types ?? (['hourly', 'daily', 'twice_daily'] as ModernForecastType[]);
     const nextLoading = { ...this._forecastOptionsLoading };
     let loadingChanged = false;
 
