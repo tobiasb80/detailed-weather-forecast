@@ -13,7 +13,7 @@ This card is a further development of the [Weather Forecast Extended Card](https
 ## Features
 
 - Header area that shows the current condition and temperature with an animated background.
-- Synchronized daily and hourly forecasts with horizontal scrolling.
+- Synchronized daily, hourly, and twice-daily forecasts with horizontal scrolling.
 - Dynamic color coding for temperatures to easily distinguish between different weather conditions.
 - Visual highlighting of precipitation amounts and probabilities.
 - Expandable detail views for the current weather, as well as daily and hourly forecast items.
