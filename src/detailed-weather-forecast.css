@@ -419,7 +419,7 @@
 .forecast.daily {
   --min-gap: 30px;
   --icon-size: 60px;
-  cursor: grab;
+  cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -428,7 +428,7 @@
   padding-top: 32px;
   --min-gap: 16px;
   --icon-size: 60px;
-  cursor: grab;
+  cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
 }
