@@ -1,6 +1,8 @@
 {
   "common": {
-    "version": "Version"
+    "version": "Version",
+    "day": "Tag",
+    "night": "Nacht"
   },
   "editor": {
     "card": {
@@ -110,9 +112,5 @@
     "nowcast": {
       "now": "Jetzt"
     }
-  },
-  "common": {
-    "day": "Tag",
-    "night": "Nacht"
   }
 }
