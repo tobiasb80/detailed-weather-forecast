@@ -36,6 +36,7 @@ export class DWFHourlyList extends LitElement {
   private _sunTimesByDay: SunTimesByDay = {};
   private _currentDayKey?: string;
   private _lastScrollDateTime?: number;
+  private _isProgrammaticScroll = false;
   private _boundHandleScroll = this._handleScroll.bind(this);
 
   protected createRenderRoot() {
@@ -100,18 +101,12 @@ export class DWFHourlyList extends LitElement {
   }
 
   private _handleScroll(event: Event) {
-    const container = event.target as HTMLElement;
-    const containerRect = container.getBoundingClientRect();
-
-    const items = this.querySelectorAll('.forecast-item');
-    let firstVisibleItem: HTMLElement | undefined;
-    for (const item of Array.from(items)) {
-      const itemRect = (item as HTMLElement).getBoundingClientRect();
-      if (itemRect.left >= containerRect.left) {
-        firstVisibleItem = item as HTMLElement;
-        break;
-      }
+    if (this._isProgrammaticScroll) {
+      return;
     }
+
+    const container = event.target as HTMLElement;
+    const firstVisibleItem = this._getFirstVisibleItem(container);
 
     if (!this.dailyForecastType) {
       return;
@@ -125,27 +120,16 @@ export class DWFHourlyList extends LitElement {
         if (Number.isFinite(itemTime) && itemTime !== this._lastScrollDateTime) {
           this._lastScrollDateTime = itemTime;
           const dayKey = this._formatDayKey(date);
-          if (this.dailyForecastType === 'daily') {
-            if (this._currentDayKey !== dayKey) {
-              this._currentDayKey = dayKey;
-              this.dispatchEvent(
-                new CustomEvent('dwf-hourly-scrolled-to-new-day', {
-                  detail: { date: date },
-                  bubbles: true,
-                  composed: true,
-                }),
-              );
-            }
-          } else {
-            this._currentDayKey = dayKey;
-            this.dispatchEvent(
-              new CustomEvent('dwf-hourly-scrolled-to-new-forecast-item', {
-                detail: { date: date },
-                bubbles: true,
-                composed: true,
-              }),
-            );
-          }
+          // Always notify parent about the currently visible forecast item.
+          // Use a single event name to simplify handling across daily modes.
+          this._currentDayKey = dayKey;
+          this.dispatchEvent(
+            new CustomEvent('dwf-hourly-scrolled-to-new-forecast-item', {
+              detail: { date: date },
+              bubbles: true,
+              composed: true,
+            }),
+          );
         }
       }
     }
@@ -564,6 +548,128 @@ export class DWFHourlyList extends LitElement {
     }
 
     return evaluate(sunset);
+  }
+
+  // Helper: determine the first visible hourly item based on container viewport.
+  // Uses the container's horizontal midpoint to identify the "first visible" item.
+  // Returns undefined if no item is visible.
+  private _getFirstVisibleItem(container: HTMLElement): HTMLElement | undefined {
+    const items = Array.from(this.querySelectorAll('.forecast-item')) as HTMLElement[];
+    if (!items.length) {
+      return undefined;
+    }
+
+    const containerRect = container.getBoundingClientRect();
+    const containerMid = containerRect.left + containerRect.width / 2;
+
+    for (const item of items) {
+      const itemRect = item.getBoundingClientRect();
+      if (itemRect.right >= containerMid) {
+        return item;
+      }
+    }
+
+    return undefined;
+  }
+
+  // Public API: scroll to a date if needed.
+  // Returns true if a programmatic scroll was initiated, false otherwise.
+  public scrollToDate(targetDate: Date, dailyForecastType?: DailyForecastType): boolean {
+    if (!targetDate || !this.forecast?.length) return false;
+
+    const targetTime = targetDate.getTime();
+    if (!Number.isFinite(targetTime)) return false;
+
+    const shouldSearchExactHour = dailyForecastType === 'twice_daily';
+
+    // Find target index
+    let targetIndex = -1;
+    if (shouldSearchExactHour) {
+      targetIndex = this.forecast.findIndex((entry) => {
+        const entryDate = new Date(entry.datetime);
+        return entryDate.getTime() === targetTime;
+      });
+    }
+
+    // fallback: first index within the target calendar day
+    if (targetIndex === -1) {
+      const targetDay = targetDate.getDate();
+      const targetMonth = targetDate.getMonth();
+      const targetYear = targetDate.getFullYear();
+      const dayIndices = this.forecast
+        .map((entry, index) => {
+          const entryDate = new Date(entry.datetime);
+          return entryDate.getDate() === targetDay &&
+            entryDate.getMonth() === targetMonth &&
+            entryDate.getFullYear() === targetYear
+            ? index
+            : -1;
+        })
+        .filter((idx) => idx !== -1);
+
+      if (!dayIndices.length) return false;
+      targetIndex = dayIndices[0];
+    }
+
+    const container = this.closest('.forecast.hourly') as HTMLElement | null;
+    if (!container) return false;
+
+    // Determine the first actually visible hourly item from the left edge.
+    const items = Array.from(this.querySelectorAll('.forecast-item')) as HTMLElement[];
+    let firstVisibleItem: HTMLElement | undefined;
+    if (items.length) {
+      firstVisibleItem = this._getFirstVisibleItem(container);
+    }
+
+    const windowMs = shouldSearchExactHour ? 12 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+    if (firstVisibleItem) {
+      const fvDatetime = firstVisibleItem.dataset.datetime;
+      if (fvDatetime) {
+        const fvTime = new Date(fvDatetime).getTime();
+        if (Number.isFinite(fvTime)) {
+          // Only suppress scrolling when the first visible item is within the upcoming window
+          // from the target date. (e.g., target is tomorrow 00:00, and we can already see 10:00 of tomorrow)
+          if (fvTime >= targetTime && fvTime < targetTime + windowMs) {
+            return false;
+          }
+        }
+      }
+    }
+
+    // if the target item is already visible, no scroll is necessary
+    const targetItem = items[targetIndex];
+    if (targetItem) {
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = targetItem.getBoundingClientRect();
+      if (targetRect.right > containerRect.left && targetRect.left < containerRect.right) {
+        return false;
+      }
+    }
+
+    // compute offset to target item
+    let offset = 0;
+    if (targetIndex >= 0) {
+      const hourlyItems = items;
+      const targetItem = hourlyItems[targetIndex];
+      if (targetItem) {
+        const containerRect = container.getBoundingClientRect();
+        const itemRect = targetItem.getBoundingClientRect();
+        offset = itemRect.left - containerRect.left + container.scrollLeft - 16; // account for padding
+      }
+    }
+
+    this._isProgrammaticScroll = true;
+    if ('scrollBehavior' in document.documentElement.style) {
+      container.scrollTo({ left: Math.max(0, offset), behavior: 'smooth' });
+    } else {
+      container.scrollLeft = Math.max(0, offset);
+    }
+
+    window.setTimeout(() => {
+      this._isProgrammaticScroll = false;
+    }, 1000);
+
+    return true;
   }
 }
 

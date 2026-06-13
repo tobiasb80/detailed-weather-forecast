@@ -842,7 +842,6 @@ export class DetailedWeatherForecast extends LitElement {
                                   ? 'daily'
                                   : undefined
                               : undefined}
-                            @dwf-hourly-scrolled-to-new-day=${dailyEnabled ? this._handleHourlyChange : undefined}
                             @dwf-hourly-scrolled-to-new-forecast-item=${dailyEnabled
                               ? this._handleHourlyChange
                               : undefined}
@@ -1695,31 +1694,10 @@ export class DetailedWeatherForecast extends LitElement {
       targetIndex = dayIndices[0];
     }
 
-    const hourlyContainer = this.shadowRoot?.querySelector<HTMLElement>('.forecast.hourly');
-    if (!hourlyContainer) {
-      return;
+    const hourlyList = this.shadowRoot?.querySelector('dwf-hourly-list') as any;
+    if (hourlyList && typeof hourlyList.scrollToDate === 'function') {
+      hourlyList.scrollToDate(targetDate, this._forecastDailyEvent?.type);
     }
-
-    let offset = 0;
-    if (targetIndex > 0) {
-      const hourlyItems = Array.from(hourlyContainer.querySelectorAll<HTMLElement>('.forecast-item'));
-      const targetItem = hourlyItems[targetIndex];
-      if (targetItem) {
-        const containerRect = hourlyContainer.getBoundingClientRect();
-        const itemRect = targetItem.getBoundingClientRect();
-        offset = itemRect.left - containerRect.left + hourlyContainer.scrollLeft - 16; // account for padding
-      }
-    }
-
-    this._isProgrammaticScroll = true;
-    if ('scrollBehavior' in document.documentElement.style) {
-      hourlyContainer.scrollTo({ left: Math.max(0, offset), behavior: 'smooth' });
-    } else {
-      hourlyContainer.scrollLeft = Math.max(0, offset); // Fallback for older iPads
-    }
-    window.setTimeout(() => {
-      this._isProgrammaticScroll = false;
-    }, 1000);
   }
 
   private _handleHourlySelected(e: CustomEvent<ForecastAttribute | null>) {

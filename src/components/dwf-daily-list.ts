@@ -129,16 +129,11 @@ export class DWFDailyList extends LitElement {
     });
 
     if (forecastItemIndex > -1) {
-      const item = this.forecast[forecastItemIndex];
-      if (item.datetime !== this.selectedForecast?.datetime) {
-        this.dispatchEvent(
-          new CustomEvent('dwf-daily-list-item-selected', {
-            detail: item,
-            bubbles: true,
-            composed: true,
-          }),
-        );
+      if (this.forecast[forecastItemIndex].datetime == this.selectedForecast?.datetime) {
+        return; // Already selected, no action needed
       }
+
+      this._handleSelect(this.forecast[forecastItemIndex]);
 
       // Wait for the update to complete, so we can get the correct element
       this.updateComplete.then(() => {
