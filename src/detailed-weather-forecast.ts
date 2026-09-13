@@ -25,6 +25,7 @@ import {
   ForecastAttribute,
   ForecastEvent,
   WeatherEntity,
+  GridCardOptions,
 } from './types';
 import { AnimationManager } from './animations/animation-manager';
 import { enableMomentumScroll } from './utils/momentum-scroll';
@@ -373,6 +374,17 @@ export class DetailedWeatherForecast extends LitElement {
       hourly_forecast: true,
       daily_forecast: true,
       use_night_header_backgrounds: true,
+    };
+  }
+
+  /**
+   * Provide Sections dashboard grid sizing hints to Home Assistant.
+   * Height is content-driven; only columns are suggested here.
+   */
+  public getGridOptions(): GridCardOptions {
+    return {
+      columns: 12,
+      rows: 'auto',
     };
   }
 

@@ -199,3 +199,18 @@ export interface TimeOfDay {
   type: 'sunrise' | 'day' | 'sunset' | 'night';
   progress: number;
 }
+
+export interface GridCardOptions {
+  /** Suggested default column width for the card in Sections view */
+  columns?: number | 'full';
+  /** Minimum columns the card should occupy */
+  min_columns?: number;
+  /** Maximum columns the card may occupy */
+  max_columns?: number;
+  /** Suggested default row height for the card in Sections view */
+  rows?: number | 'auto';
+  /** Minimum rows the card should occupy */
+  min_rows?: number;
+  /** Maximum rows the card may occupy */
+  max_rows?: number;
+}
