@@ -25,7 +25,7 @@ jobs:
           node-version: '24'
 
       - name: Enable Corepack
-        run: corepack enable --install-directory /usr/local/bin
+        run: corepack enable
 
       - name: Check version and tag
         id: version_check
