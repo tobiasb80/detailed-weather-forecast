@@ -18,8 +18,8 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Install Yarn 4
-        run: npm install -g yarn@4.12.0
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install --immutable
