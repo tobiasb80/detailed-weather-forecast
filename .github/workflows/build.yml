@@ -18,13 +18,19 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Setup Corepack
+      - name: Setup Corepack and Yarn
         run: |
-          corepack enable
+          corepack enable --install-directory ~/.local/bin
+          export PATH="$HOME/.local/bin:$PATH"
           corepack prepare yarn@4.12.0 --activate
+          yarn --version
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          yarn install --immutable
 
       - name: Build
-        run: yarn build
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          yarn build
