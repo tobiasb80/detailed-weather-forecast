@@ -39,7 +39,6 @@
 .weather-card {
   position: relative;
   width: var(--card-width);
-  min-height: var(--card-height, 200px);
   border-radius: var(--ha-card-border-radius, 12px);
   overflow: visible;
 }
@@ -375,7 +374,7 @@
   flex-direction: column;
   justify-content: flex-start;
   flex: 0 1 auto;
-  touch-action: pan-x;
+  touch-action: pan-x pan-y;
   overscroll-behavior-x: contain;
 }
 
